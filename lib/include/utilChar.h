@@ -20,6 +20,7 @@
     #define _tcschr wcschr
     #define _tcsncat wcsncat
     #define _ftprintf fwprintf
+    #define _istdigit iswdigit
 
 #else
 
@@ -34,6 +35,7 @@
     #define _tcschr strchr
     #define _tcsncat strncat
     #define _ftprintf fprintf
+    #define _istdigit isdigit
 
 #endif
 

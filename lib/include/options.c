@@ -19,7 +19,7 @@ struct optionsContext_t
 {
     const option_t* optionsP;
     optionsError_t err;
-    TCHAR* errMessage;
+    TCHAR* errMessageP;
 };
 
 
@@ -260,15 +260,15 @@ isValidOption(const option_t* optionP)
 
 
 static const option_t*
-findOptionLong(const option_t* optionsP, const TCHAR* longName)
+findOptionLong(const option_t* optionsP, const TCHAR* longNameP)
 {
     const option_t* optionP;
     assert(optionsP != NULL);
-    assert(longName != NULL);
+    assert(longNameP != NULL);
     for (optionP = optionsP; isValidOption(optionP); optionP++)
     {
         if (   optionP->longName != NULL
-            && _tcscmp(longName, optionP->longName) == 0)
+            && _tcscmp(longNameP, optionP->longName) == 0)
         {
             return optionP;
         }
@@ -297,54 +297,54 @@ findOptionShort(const option_t* optionsP, TCHAR shortName)
 static void
 optionsSetErrorDetails(optionsContext_t* contextP,
                        optionsError_t err,
-                       const TCHAR* longName, TCHAR shortName,
+                       const TCHAR* longNameP, TCHAR shortName,
                        const TCHAR* valP)
 {
-    const TCHAR* name;
+    const TCHAR* nameP;
     TCHAR shortNameBuf[3] = _T("-?");
     TCHAR* s = NULL;
 
     assert(contextP != NULL);
-    assert((longName == NULL) != (shortName == '\0'));
+    assert((longNameP == NULL) != (shortName == '\0'));
 
     shortNameBuf[1] = shortName;
 
-    name = (longName != NULL)
-           ? longName
-           : shortNameBuf;
+    nameP = (longNameP != NULL)
+            ? longNameP
+            : shortNameBuf;
 
     switch (err)
     {
         case optionsErrorNone:
             break;
         case optionsErrorInvalid:
-            s = format(_T("Invalid option: %s"), name);
+            s = format(_T("Invalid option: %s"), nameP);
             break;
         case optionsErrorInsufficientArgs:
-            s = format(_T("Insufficient arguments to option %s"), name);
+            s = format(_T("Insufficient arguments to option %s"), nameP);
             break;
         case optionsErrorMismatch:
             assert(valP != NULL);
             s = format(_T("Invalid argument to option %s: %s"),
-                       name, valP);
+                       nameP, valP);
             break;
         case optionsErrorOverflow:
             s = format(_T("Integer overflow: %s"), valP);
             break;
         case optionsErrorBadPlacement:
-            s = format(_T("Value required after option %s"), name);
+            s = format(_T("Value required after option %s"), nameP);
             break;
         case optionsErrorUnknown:
         default:
-            s = format(_T("Unknown error handling option %s."), name);
+            s = format(_T("Unknown error handling option %s."), nameP);
             break;
     }
 
     {
-        TCHAR* oldMessage = contextP->errMessage;
+        TCHAR* oldMessageP = contextP->errMessageP;
         contextP->err = err;
-        contextP->errMessage = s;
-        free(oldMessage);
+        contextP->errMessageP = s;
+        free(oldMessageP);
     }
 }
 
@@ -352,7 +352,7 @@ optionsSetErrorDetails(optionsContext_t* contextP,
 const TCHAR*
 optionsGetErrorMessage(const optionsContext_t* contextP)
 {
-    return (contextP->errMessage == NULL) ? _T("") : contextP->errMessage;;
+    return (contextP->errMessageP == NULL) ? _T("") : contextP->errMessageP;;
 }
 
 
@@ -447,40 +447,40 @@ MAKE_SETTER(setDouble, double, &);
 
 
 static optionsError_t
-set(const option_t* optionP, const TCHAR* valStr)
+set(const option_t* optionP, const TCHAR* valStrP)
 {
     optionsError_t err = optionsErrorNone;
 
     assert(optionP != NULL);
 
-    if (valStr == NULL)
+    if (valStrP == NULL)
     {
         err = optionsErrorInsufficientArgs;
     }
     else switch (optionP->type)
     {
         case optionsTypeUnchecked:
-            err = setUnchecked(optionP, valStr);
+            err = setUnchecked(optionP, valStrP);
             break;
 
         case optionsTypeInt:
         {
             int val;
-            err = parseInt(valStr, &val);
+            err = parseInt(valStrP, &val);
             if (err == optionsErrorNone) { err = setInt(optionP, val); }
             break;
         }
         case optionsTypeUInt:
         {
             unsigned int val;
-            err = parseUInt(valStr, &val);
+            err = parseUInt(valStrP, &val);
             if (err == optionsErrorNone) { err = setUInt(optionP, val); }
             break;
         }
         case optionsTypeDouble:
         {
             double val;
-            err = parseDouble(valStr, &val);
+            err = parseDouble(valStrP, &val);
             if (err == optionsErrorNone) { err = setDouble(optionP, val); }
             break;
         }
@@ -498,19 +498,19 @@ set(const option_t* optionP, const TCHAR* valStr)
 
 
 static optionsError_t
-getAndSetOptional(const option_t* optionP, const TCHAR* valStr)
+getAndSetOptional(const option_t* optionP, const TCHAR* valStrP)
 {
     optionsError_t err = optionsErrorNone;
     assert(optionP != NULL);
     if (optionP->type == optionsTypeBool)
     {
         bool val = true;
-        if (valStr != NULL) { err = parseBool(valStr, &val); }
+        if (valStrP != NULL) { err = parseBool(valStrP, &val); }
         if (err == optionsErrorNone) { err = setBool(optionP, val); }
     }
     else
     {
-        err = set(optionP, valStr);
+        err = set(optionP, valStrP);
     }
 
     return err;
@@ -523,31 +523,31 @@ optionsParse(optionsContext_t* contextP,
 {
     optionsError_t err = optionsErrorNone;
 
-    TCHAR** argNext;
-    TCHAR* arg;
+    TCHAR** argNextPP;
+    TCHAR* argP;
 
     assert(contextP != NULL && argv != NULL);
 
     /* Assume argv[0] is the program name. */
-    argNext = argv + 1;
+    argNextPP = argv + 1;
 
-    while (   (arg = *argNext) != NULL
-           && arg[0] == _T('-'))
+    while (   (argP = *argNextPP) != NULL
+           && argP[0] == _T('-'))
     {
         assert(err == optionsErrorNone);
 
-        if (arg[1] == '\0')
+        if (argP[1] == '\0')
         {
             /* - */
             break;
         }
 
-        argNext++;
+        argNextPP++;
 
-        if (arg[1] == _T('-'))
+        if (argP[1] == _T('-'))
         {
-            TCHAR* argName = arg + 2;
-            if (argName[0] == '\0')
+            TCHAR* argNameP = argP + 2;
+            if (argNameP[0] == '\0')
             {
                 /* -- */
                 break;
@@ -556,35 +556,35 @@ optionsParse(optionsContext_t* contextP,
             {
                 /* --longName */
                 const option_t* optionP = NULL;
-                const TCHAR* valStr = NULL;
+                const TCHAR* valStrP = NULL;
 
                 {
-                    TCHAR* p = _tcschr(argName, _T('='));
+                    TCHAR* p = _tcschr(argNameP, _T('='));
                     if (p != NULL)
                     {
                         *p = '\0';
-                        valStr = p + 1;
+                        valStrP = p + 1;
                     }
                 }
 
-                optionP = findOptionLong(contextP->optionsP, argName);
+                optionP = findOptionLong(contextP->optionsP, argNameP);
                 if (optionP == NULL)
                 {
                     err = optionsErrorInvalid;
-                    optionsSetErrorDetails(contextP, err, arg, '\0', NULL);
+                    optionsSetErrorDetails(contextP, err, argP, '\0', NULL);
                     goto abort;
                 }
                 else
                 {
-                    bool optionalArg = valStr == NULL && optionP->type != optionsTypeBool;
-                    if (optionalArg) { valStr = *argNext; }
-                    err = getAndSetOptional(optionP, valStr);
-                    if (err == optionsErrorNone && optionalArg) { argNext++; }
+                    bool optionalArg = valStrP == NULL && optionP->type != optionsTypeBool;
+                    if (optionalArg) { valStrP = *argNextPP; }
+                    err = getAndSetOptional(optionP, valStrP);
+                    if (err == optionsErrorNone && optionalArg) { argNextPP++; }
                 }
 
                 if (err != optionsErrorNone)
                 {
-                    optionsSetErrorDetails(contextP, err, arg, '\0', valStr);
+                    optionsSetErrorDetails(contextP, err, argP, '\0', valStrP);
                     goto abort;
                 }
 
@@ -594,39 +594,39 @@ optionsParse(optionsContext_t* contextP,
         else
         {
             const option_t* optionP;
-            const TCHAR* valStr;
+            const TCHAR* valStrP;
             size_t len;
             size_t j;
 
             {
-                const TCHAR* p = _tcschr(arg, _T('='));
+                const TCHAR* p = _tcschr(argP, _T('='));
                 if (p == NULL)
                 {
-                    len = _tcslen(arg);
-                    valStr = NULL;
+                    len = _tcslen(argP);
+                    valStrP = NULL;
                 }
                 else
                 {
-                    len = p - arg;
-                    valStr = p + 1;
+                    len = p - argP;
+                    valStrP = p + 1;
                 }
             }
 
             for (j = 1; j < len; j++)
             {
-                optionP = findOptionShort(contextP->optionsP, arg[j]);
+                optionP = findOptionShort(contextP->optionsP, argP[j]);
                 if (optionP == NULL)
                 {
                     err = optionsErrorInvalid;
-                    optionsSetErrorDetails(contextP, err, NULL, arg[j], NULL);
+                    optionsSetErrorDetails(contextP, err, NULL, argP[j], NULL);
                     goto abort;
                 }
                 else if (j + 1 == len)
                 {
-                    bool optionalArg = valStr == NULL && optionP->type != optionsTypeBool;
-                    if (optionalArg) { valStr = *argNext; }
-                    err = getAndSetOptional(optionP, valStr);
-                    if (err == optionsErrorNone && optionalArg) { argNext++; }
+                    bool optionalArg = valStrP == NULL && optionP->type != optionsTypeBool;
+                    if (optionalArg) { valStrP = *argNextPP; }
+                    err = getAndSetOptional(optionP, valStrP);
+                    if (err == optionsErrorNone && optionalArg) { argNextPP++; }
                 }
                 else if (optionP->type == optionsTypeBool)
                 {
@@ -640,7 +640,7 @@ optionsParse(optionsContext_t* contextP,
 
                 if (err != optionsErrorNone)
                 {
-                    optionsSetErrorDetails(contextP, err, NULL, arg[j], valStr);
+                    optionsSetErrorDetails(contextP, err, NULL, argP[j], valStrP);
                     goto abort;
                 }
 
@@ -651,7 +651,7 @@ optionsParse(optionsContext_t* contextP,
 
 abort:
     contextP->err = err;
-    return argNext;
+    return argNextPP;
 }
 
 
@@ -664,7 +664,7 @@ optionsNewContext(void)
     {
         contextP->optionsP = NULL;
         contextP->err = optionsErrorNone;
-        contextP->errMessage = NULL;
+        contextP->errMessageP = NULL;
     }
     return contextP;
 }
@@ -673,7 +673,7 @@ optionsNewContext(void)
 void
 optionsFreeContext(optionsContext_t* contextP)
 {
-    free(contextP->errMessage);
+    free(contextP->errMessageP);
     free(contextP);
 }
 
