@@ -11,8 +11,18 @@ extern "C" {
 typedef enum
 {
     optionsErrorNone,
+
+    /* An option handler can return optionsErrorNoOptionalArg to indicate
+     * that it chose not to consume the next argument.
+     */
     optionsErrorNoOptionalArg,
+
+    /* An option handler can return optionsErrorCancel to cancel processing
+     * without the action being treated as an error (i.e. no error
+     * diagnostics).
+     */
     optionsErrorCancel,
+
     optionsErrorInvalid,
     optionsErrorInsufficientArgs,
     optionsErrorMismatch,
@@ -52,6 +62,7 @@ void optionsSet(optionsContext_t* contextP, const option_t* optionsP);
 
 TCHAR** optionsParse(optionsContext_t* contextP, TCHAR** argv);
 optionsError_t optionsParseBool(const TCHAR* s, void* valP);
+optionsError_t optionsParseOptionalBool(const TCHAR* s, void* valP);
 optionsError_t optionsParseInt(const TCHAR* s, void* valP);
 optionsError_t optionsParseUInt(const TCHAR* s, void* valP);
 optionsError_t optionsParseDouble(const TCHAR* s, void* valP);

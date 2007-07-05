@@ -25,6 +25,19 @@ struct optionsContext_t
 };
 
 
+/** optionsParseBool
+  *
+  *     Parses a boolean value from the given string.
+  *
+  * PARAMETERS:
+  *     IN s     : A non-NULL string representing a boolean value (0 or 1).
+  *     OUT valP : A pointer to an unsigned char.
+  *                On success, set to the interpreted boolean value.
+  *
+  * RETURNS:
+  *     optionsErrorNone
+  *     optionsErrorMismatch
+  */
 optionsError_t
 optionsParseBool(const TCHAR* s, void* valP)
 {
@@ -55,13 +68,36 @@ optionsParseBool(const TCHAR* s, void* valP)
 }
 
 
+/** optionsParseOptionalBool
+  *
+  *     Parses a boolean value from the given string if possible.
+  *
+  * PARAMETERS:
+  *     IN s     : A non-NULL string representing a boolean value (0 or 1).
+  *     OUT valP : A pointer to an unsigned char.
+  *                On success, set to the interpreted boolean value.
+  *
+  * RETURNS:
+  *     optionsErrorNone
+  *     optionsErrorNoOptionalArg
+  */
+optionsError_t
+optionsParseOptionalBool(const TCHAR* s, void* valP)
+{
+    optionsError_t err = optionsParseBool(s, valP);
+    if (err != optionsErrorNone) { err = optionsErrorNoOptionalArg; }
+    return err;
+}
+
+
 /** optionsParseInt
   *
   *     Parses an integer from the given string.
   *
   * PARAMETERS:
   *     IN s     : A non-NULL string representing a base-10 integer.
-  *     OUT valP : On success, set to the interpreted integer.
+  *     OUT valP : A pointer to an int.
+  *                On success, set to the interpreted integer.
   *
   * RETURNS:
   *     optionsErrorNone
@@ -122,7 +158,8 @@ optionsParseInt(const TCHAR* s, void* valP)
   * PARAMETERS:
   *     IN s     : A non-NULL string representing an unsigned base-10
   *                  integer.
-  *     OUT valP : On success, set to the interpreted integer.
+  *     OUT valP : A pointer to an unsigned int.
+  *                On success, set to the interpreted integer.
   *
   * RETURNS:
   *     optionsErrorNone
@@ -176,6 +213,22 @@ optionsParseUInt(const TCHAR* s, unsigned int* valP)
 }
 
 
+/** optionsParseDouble
+  *
+  *     Parses a double from the given string.
+  *
+  * PARAMETERS:
+  *     IN s     : A non-NULL string representing a base-10 floating-point
+  *                  number.
+  *     OUT valP : A pointer to a double.
+  *                On success, set to the interpreted double.
+  *
+  * RETURNS:
+  *     optionsErrorNone
+  *     optionsErrorMismatch
+  *     optionsErrorOverflow
+  *     optionsErrorUnknown
+  */
 optionsError_t
 optionsParseDouble(const TCHAR* s, void* valP)
 {
@@ -216,6 +269,18 @@ optionsParseDouble(const TCHAR* s, void* valP)
 }
 
 
+/** optionsParseString
+  *
+  *     Obtains a string.
+  *
+  * PARAMETERS:
+  *     IN s     : A non-NULL string.
+  *     OUT valP : A pointer to pointer-to-char.
+  *                On success, set to the input string.
+  *
+  * RETURNS:
+  *     optionsErrorNone
+  */
 optionsError_t
 optionsParseString(const TCHAR* s, void* valP)
 {
@@ -227,6 +292,18 @@ optionsParseString(const TCHAR* s, void* valP)
 }
 
 
+/** vformat
+  *
+  *     Allocates a formatted string with vprintf semantics.
+  *
+  * PARAMETERS:
+  *     IN fmtP : printf-style format specifier.  Must not be NULL.
+  *     IN args : Arguments to insert into the formatted string.
+  *
+  * RETURNS:
+  *     The formatted string.  The caller is responsible for freeing this
+  *       when no longer needed.
+  */
 static TCHAR*
 vformat(const TCHAR* fmtP, va_list args)
 {
@@ -256,12 +333,14 @@ vformat(const TCHAR* fmtP, va_list args)
 }
 
 
+/* See vformat. */
 static TCHAR*
 format(const TCHAR* fmtP, ...)
 {
     TCHAR* s;
 
     va_list args;
+    assert(fmtP != NULL);
     va_start(args, fmtP);
     s = vformat(fmtP, args);
     va_end(args);
@@ -270,6 +349,15 @@ format(const TCHAR* fmtP, ...)
 }
 
 
+/** isValidOption
+  *
+  * PARAMETERS:
+  *     IN optionP : Specification for an individual option.
+  *
+  * RETURNS:
+  *     true if the specified option is valid, false if it's a sentinel
+  *       value.
+  */
 static bool
 isValidOption(const option_t* optionP)
 {
@@ -279,6 +367,19 @@ isValidOption(const option_t* optionP)
 }
 
 
+/** findOptionLong
+  *
+  *     Finds a the option specification for a "long" option (i.e., an
+  *     option of the form "--option").
+  *
+  * PARAMETERS:
+  *     IN optionsP  : The list of option specifications.
+  *     IN longNameP : The "long" option to search for.
+  *
+  * RETURNS:
+  *     A pointer to the corresponding option specification or NULL if not
+  *       found.
+  */
 static const option_t*
 findOptionLong(const option_t* optionsP, const TCHAR* longNameP)
 {
@@ -297,6 +398,19 @@ findOptionLong(const option_t* optionsP, const TCHAR* longNameP)
 }
 
 
+/** findOptionShort
+  *
+  *     Finds a the option specification for a "short" option (i.e., an
+  *     option of the form "-o").
+  *
+  * PARAMETERS:
+  *     IN optionsP : The list of option specifications.
+  *     shortName   : The "short" option to search for.
+  *
+  * RETURNS:
+  *     A pointer to the corresponding option specification or NULL if not
+  *       found.
+  */
 static const option_t*
 findOptionShort(const option_t* optionsP, TCHAR shortName)
 {
@@ -314,11 +428,26 @@ findOptionShort(const option_t* optionsP, TCHAR shortName)
 }
 
 
+/** setErrorDetails
+  *
+  *     Generates error details in the options context.
+  *
+  * PARAMETERS:
+  *     IN/OUT contextP : The options context.
+  *     err             : The error code.
+  *     IN longNameP    : The "long" name of the option we failed on.
+  *                       Optional.  Pass NULL if unwanted.
+  *                       Cannot be used with shortName.
+  *     shortName       : the "short" name of the option we failed on.
+  *                       Optional.  Pass '\0' if unwanted.
+  *                       Cannot be used with longNameP.
+  *     IN valP         : Optional.  Pass NULL if unwanted.
+  */
 static void
-optionsSetErrorDetails(optionsContext_t* contextP,
-                       optionsError_t err,
-                       const TCHAR* longNameP, TCHAR shortName,
-                       const TCHAR* valP)
+setErrorDetails(optionsContext_t* contextP,
+                optionsError_t err,
+                const TCHAR* longNameP, TCHAR shortName,
+                const TCHAR* valP)
 {
     const TCHAR* nameP;
     TCHAR shortNameBuf[3] = _T("-?");
@@ -392,6 +521,14 @@ optionsSetErrorDetails(optionsContext_t* contextP,
 }
 
 
+/** optionsSetErrorMessage
+  *
+  *     Sets a custom error message in the options context.
+  *
+  * PARAMETERS:
+  *     IN/OUT contextP : The options context.
+  *     IN messageP     : The error message.
+  */
 void
 optionsSetErrorMessage(optionsContext_t* contextP, const TCHAR* messageP)
 {
@@ -417,6 +554,15 @@ optionsSetErrorMessage(optionsContext_t* contextP, const TCHAR* messageP)
 }
 
 
+/** optionsGetErrorMessage
+  *
+  * PARAMETERS:
+  *     IN/OUT contextP : The options context.
+  *
+  * RETURNS:
+  *     The current error message waiting in the options context or the
+  *       empty string if there are no errors.
+  */
 const TCHAR*
 optionsGetErrorMessage(const optionsContext_t* contextP)
 {
@@ -425,6 +571,14 @@ optionsGetErrorMessage(const optionsContext_t* contextP)
 }
 
 
+/** optionsGetError
+  *
+  * PARAMETERS:
+  *     IN/OUT contextP : The options context.
+  *
+  * RETURNS:
+  *     The current error code waiting in the options context.
+  */
 optionsError_t
 optionsGetError(const optionsContext_t* contextP)
 {
@@ -433,6 +587,15 @@ optionsGetError(const optionsContext_t* contextP)
 }
 
 
+/** optionsPrintHelp
+  *
+  *     Prints help for available options.
+  *
+  * PARAMETERS:
+  *     IN/OUT fP   : The file stream to print to.
+  *     IN optionsP : The list of option specifications.
+  *     compact     : Pass false to include blank lines between options.
+  */
 void
 optionsPrintHelp(FILE* fp, const option_t* optionsP, unsigned char compact)
 {
@@ -491,40 +654,64 @@ optionsPrintHelp(FILE* fp, const option_t* optionsP, unsigned char compact)
 }
 
 
+/** set
+  *
+  *     Sets the value for a specified option by invoking the option's
+  *     handler callback.
+  *
+  * PARAMETERS:
+  *     IN optionP : The option.
+  *     IN valP    : The option's value.
+  *
+  * RETURNS:
+  *     An error code.
+  */
 static optionsError_t
-set(const option_t* optionP, const TCHAR* valStrP)
+set(const option_t* optionP, const TCHAR* valP)
 {
     optionsError_t err = optionsErrorNone;
 
     assert(optionP != NULL);
 
-    if (optionP->argDescription != NULL && valStrP == NULL)
+    if (optionP->argDescription != NULL && valP == NULL)
     {
         err = optionsErrorInsufficientArgs;
     }
     else
     {
         assert(optionP->handler != NULL);
-        err = optionP->handler(valStrP, optionP->handlerDataP);
+        err = optionP->handler(valP, optionP->handlerDataP);
     }
     return err;
 }
 
 
+/** optionsParse
+  *
+  *     Parses command-line options.
+  *
+  * PARAMETERS:
+  *     IN contextP : The options context.
+  *     IN/OUT argv : The list of command-line arguments, not including the
+  *                     initial program name.  Must be terminated with a
+  *                     NULL sentinel value.
+  *                   Note that the command-line arguments might be
+  *                     mutated in the process.
+  *
+  * RETURNS:
+  *     A pointer to the first unprocessed element in argv.
+  */
 TCHAR**
 optionsParse(optionsContext_t* contextP,
              TCHAR** argv)
 {
     optionsError_t err = optionsErrorNone;
 
-    TCHAR** argNextPP;
+    TCHAR** argNextPP = argv;
     TCHAR* argP;
 
     assert(contextP != NULL);
     assert(argv != NULL);
-
-    /* Assume argv[0] is the program name. */
-    argNextPP = argv + 1;
 
     while (   (argP = *argNextPP) != NULL
            && argP[0] == _T('-'))
@@ -534,7 +721,7 @@ optionsParse(optionsContext_t* contextP,
         if (argP[1] == '\0')
         {
             /* - */
-            break;
+            goto abort;
         }
 
         argNextPP++;
@@ -545,20 +732,20 @@ optionsParse(optionsContext_t* contextP,
             if (argNameP[0] == '\0')
             {
                 /* -- */
-                break;
+                goto abort;
             }
             else
             {
                 /* --longName */
                 const option_t* optionP = NULL;
-                const TCHAR* valStrP = NULL;
+                const TCHAR* valP = NULL;
 
                 {
                     TCHAR* p = _tcschr(argNameP, _T('='));
                     if (p != NULL)
                     {
                         *p = '\0';
-                        valStrP = p + 1;
+                        valP = p + 1;
                     }
                 }
 
@@ -566,25 +753,25 @@ optionsParse(optionsContext_t* contextP,
                 if (optionP == NULL)
                 {
                     err = optionsErrorInvalid;
-                    optionsSetErrorDetails(contextP, err, argP, '\0', NULL);
+                    setErrorDetails(contextP, err, argP, '\0', NULL);
                     goto abort;
                 }
                 else
                 {
                     bool consumeNextArg = false;
-                    if (optionP->argDescription != NULL && valStrP == NULL)
+                    if (optionP->argDescription != NULL && valP == NULL)
                     {
                         consumeNextArg = true;
-                        valStrP = *argNextPP;
+                        valP = *argNextPP;
                     }
 
-                    err = set(optionP, valStrP);
+                    err = set(optionP, valP);
 
                     if (err != optionsErrorNone)
                     {
                         if (err != optionsErrorNoOptionalArg)
                         {
-                            optionsSetErrorDetails(contextP, err, argP, '\0', valStrP);
+                            setErrorDetails(contextP, err, argP, '\0', valP);
                             goto abort;
                         }
                         err = optionsErrorNone;
@@ -595,13 +782,13 @@ optionsParse(optionsContext_t* contextP,
                     }
                 }
 
-                if (optionP->attr & optionsAttrHalt) { break; }
+                if (optionP->attr & optionsAttrHalt) { goto abort; }
             }
         }
         else
         {
             const option_t* optionP;
-            const TCHAR* valStrP;
+            const TCHAR* valP;
             size_t len;
             size_t j;
 
@@ -610,12 +797,12 @@ optionsParse(optionsContext_t* contextP,
                 if (p == NULL)
                 {
                     len = _tcslen(argP);
-                    valStrP = NULL;
+                    valP = NULL;
                 }
                 else
                 {
                     len = p - argP;
-                    valStrP = p + 1;
+                    valP = p + 1;
                 }
             }
 
@@ -625,7 +812,7 @@ optionsParse(optionsContext_t* contextP,
                 if (optionP == NULL)
                 {
                     err = optionsErrorInvalid;
-                    optionsSetErrorDetails(contextP, err, NULL, argP[j], NULL);
+                    setErrorDetails(contextP, err, NULL, argP[j], NULL);
                     goto abort;
                 }
                 else
@@ -633,22 +820,22 @@ optionsParse(optionsContext_t* contextP,
                     if (j + 1 == len)
                     {
                         bool consumeNextArg = false;
-                        if (optionP->argDescription != NULL && valStrP == NULL)
+                        if (optionP->argDescription != NULL && valP == NULL)
                         {
                             consumeNextArg = true;
-                            valStrP = *argNextPP;
+                            valP = *argNextPP;
                         }
 
                         /* Even for options that don't ask for arguments, always
                          * pass an argument that was specified with '='.
                          */
-                        err = set(optionP, valStrP);
+                        err = set(optionP, valP);
 
                         if (err != optionsErrorNone)
                         {
                             if (err != optionsErrorNoOptionalArg)
                             {
-                                optionsSetErrorDetails(contextP, err, NULL, argP[j], valStrP);
+                                setErrorDetails(contextP, err, NULL, argP[j], valP);
                                 goto abort;
                             }
                             err = optionsErrorNone;
@@ -663,7 +850,7 @@ optionsParse(optionsContext_t* contextP,
                         err = set(optionP, NULL);
                         if (err != optionsErrorNone)
                         {
-                            optionsSetErrorDetails(contextP, err, NULL, argP[j], NULL);
+                            setErrorDetails(contextP, err, NULL, argP[j], NULL);
                             goto abort;
                         }
                     }
@@ -675,12 +862,12 @@ optionsParse(optionsContext_t* contextP,
                          *          ^
                          */
                         err = optionsErrorBadPlacement;
-                        optionsSetErrorDetails(contextP, err, NULL, argP[j], NULL);
+                        setErrorDetails(contextP, err, NULL, argP[j], NULL);
                         goto abort;
                     }
                 }
 
-                if (optionP->attr & optionsAttrHalt) { break; }
+                if (optionP->attr & optionsAttrHalt) { goto abort; }
             }
         }
     }
@@ -691,6 +878,14 @@ abort:
 }
 
 
+/** optionsNewContext
+  *
+  *     Creates a new options context.
+  *
+  * RETURNS:
+  *     An allocated options context.  The caller is responsible for
+  *       freeing it with optionsFreeContext when no longer needed.
+  */
 optionsContext_t*
 optionsNewContext(void)
 {
@@ -706,6 +901,13 @@ optionsNewContext(void)
 }
 
 
+/** optionsFreeContext
+  *
+  *     Frees an options context.
+  *
+  * PARAMETERS:
+  *     IN/OUT contextP : The options context to free.
+  */
 void
 optionsFreeContext(optionsContext_t* contextP)
 {
@@ -717,6 +919,14 @@ optionsFreeContext(optionsContext_t* contextP)
 }
 
 
+/** optionsSet
+  *
+  *     Specifies a list of options to use with an options context.
+  *
+  * PARAMETERS:
+  *     IN/OUT contextP : The options context.
+  *     IN options      : The list of option specifications.
+  */
 void
 optionsSet(optionsContext_t* contextP, const option_t* optionsP)
 {
