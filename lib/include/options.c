@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_DEPRECATE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -23,15 +25,19 @@ struct optionsContext_t
 };
 
 
-static optionsError_t
-parseBool(const TCHAR* s, bool* valP)
+optionsError_t
+optionsParseBool(const TCHAR* s, void* valP)
 {
     optionsError_t err = optionsErrorNone;
     bool val = false;
 
-    assert(s != NULL && valP != NULL);
+    assert(valP != NULL);
 
-    if (_tcscmp(s, _T("0")) == 0)
+    if (s == NULL)
+    {
+        val = true;
+    }
+    else if (_tcscmp(s, _T("0")) == 0)
     {
         val = false;
     }
@@ -44,34 +50,34 @@ parseBool(const TCHAR* s, bool* valP)
         err = optionsErrorMismatch;
     }
 
-    *valP = val;
+    *((unsigned char*) valP) = val;
     return err;
 }
 
 
-/** parseInt
+/** optionsParseInt
   *
   *     Parses an integer from the given string.
   *
   * PARAMETERS:
   *     IN s     : A non-NULL string representing a base-10 integer.
-  *     OUT errP :
+  *     OUT valP : On success, set to the interpreted integer.
   *
   * RETURNS:
-  *     The interpreted integer.
-  *
-  * ERRORS:
+  *     optionsErrorNone
   *     optionsErrorMismatch
   *     optionsErrorOverflow
+  *     optionsErrorUnknown
   */
-static optionsError_t
-parseInt(const TCHAR* s, int* valP)
+optionsError_t
+optionsParseInt(const TCHAR* s, void* valP)
 {
     optionsError_t err = optionsErrorNone;
     int val = 0;
     bool matched = false;
 
-    assert(s != NULL && valP != NULL);
+    assert(s != NULL);
+    assert(valP != NULL);
 
     if (s[0] != '\0')
     {
@@ -104,35 +110,35 @@ parseInt(const TCHAR* s, int* valP)
     }
 
     if (!matched) { err = optionsErrorMismatch; }
-    *valP = val;
+    *((int*) valP) = val;
     return err;
 }
 
 
-/** parseUInt
+/** optionsParseUInt
   *
   *     Parses an unsigned integer from the given string.
   *
   * PARAMETERS:
   *     IN s     : A non-NULL string representing an unsigned base-10
   *                  integer.
-  *     OUT errP :
+  *     OUT valP : On success, set to the interpreted integer.
   *
   * RETURNS:
-  *     The interpreted integer.
-  *
-  * ERRORS:
+  *     optionsErrorNone
   *     optionsErrorMismatch
   *     optionsErrorOverflow
+  *     optionsErrorUnknown
   */
-static optionsError_t
-parseUInt(const TCHAR* s, unsigned int* valP)
+optionsError_t
+optionsParseUInt(const TCHAR* s, unsigned int* valP)
 {
-    optionsError_t err = { optionsErrorNone };
+    optionsError_t err = optionsErrorNone;
     int val = 0;
     bool matched = false;
 
-    assert(s != NULL && valP != NULL);
+    assert(s != NULL);
+    assert(valP != NULL);
 
     if (s[0] != '\0' && s[0] != _T('-'))
     {
@@ -165,17 +171,20 @@ parseUInt(const TCHAR* s, unsigned int* valP)
     }
 
     if (!matched) { err = optionsErrorMismatch; }
-    *valP = val;
+    *((unsigned int*) valP) = val;
     return err;
 }
 
 
-static optionsError_t
-parseDouble(const TCHAR* s, double* valP)
+optionsError_t
+optionsParseDouble(const TCHAR* s, void* valP)
 {
     optionsError_t err = optionsErrorNone;
     double val = 0.0;
     bool matched = false;
+
+    assert(s != NULL);
+    assert(valP != NULL);
 
     if (s[0] != '\0')
     {
@@ -202,8 +211,19 @@ parseDouble(const TCHAR* s, double* valP)
     }
 
     if (!matched) { err = optionsErrorMismatch; }
-    *valP = val;
+    *((double*) valP) = val;
     return err;
+}
+
+
+optionsError_t
+optionsParseString(const TCHAR* s, void* valP)
+{
+    assert(s != NULL);
+    assert(valP != NULL);
+
+    *((const TCHAR**) valP) = s;
+    return optionsErrorNone;
 }
 
 
@@ -317,6 +337,12 @@ optionsSetErrorDetails(optionsContext_t* contextP,
     {
         case optionsErrorNone:
             break;
+        case optionsErrorNoOptionalArg:
+        case optionsErrorCancel:
+            /* These aren't really errors. */
+            err = optionsErrorNone;
+            break;
+
         case optionsErrorInvalid:
             s = format(_T("Invalid option: %s"), nameP);
             break;
@@ -324,15 +350,31 @@ optionsSetErrorDetails(optionsContext_t* contextP,
             s = format(_T("Insufficient arguments to option %s"), nameP);
             break;
         case optionsErrorMismatch:
-            assert(valP != NULL);
-            s = format(_T("Invalid argument to option %s: %s"),
-                       nameP, valP);
+            if (valP == NULL)
+            {
+                s = format(_T("Invalid argument to option %s"), nameP);
+            }
+            else
+            {
+                s = format(_T("Invalid argument to option %s: %s"),
+                           nameP, valP);
+            }
             break;
         case optionsErrorOverflow:
-            s = format(_T("Integer overflow: %s"), valP);
+            if (valP == NULL)
+            {
+                s = format(_T("Integer overflow for option %s"), nameP);
+            }
+            else
+            {
+                s = format(_T("Integer overflow for option %s: %s"),
+                           nameP, valP);
+            }
             break;
         case optionsErrorBadPlacement:
             s = format(_T("Value required after option %s"), nameP);
+            break;
+        case optionsErrorCustom:
             break;
         case optionsErrorUnknown:
         default:
@@ -340,19 +382,54 @@ optionsSetErrorDetails(optionsContext_t* contextP,
             break;
     }
 
+    if (err != optionsErrorCustom) /* Leave custom error messages alone. */
     {
-        TCHAR* oldMessageP = contextP->errMessageP;
-        contextP->err = err;
-        contextP->errMessageP = s;
-        free(oldMessageP);
+        optionsSetErrorMessage(contextP, s);
+        free(s);
     }
+
+    contextP->err = err;
+}
+
+
+void
+optionsSetErrorMessage(optionsContext_t* contextP, const TCHAR* messageP)
+{
+    TCHAR* oldMessageP = contextP->errMessageP;
+    TCHAR* s = NULL;
+
+    assert(contextP != NULL);
+
+    if (messageP != NULL)
+    {
+        size_t n = _tcslen(messageP) + 1;
+        /* Cast for compatibility with C++ compilers. */
+        s = (TCHAR*) malloc(n * sizeof *messageP);
+        if (s != NULL)
+        {
+            _tcsncpy(s, messageP, n);
+        }
+    }
+
+    contextP->err = optionsErrorCustom;
+    contextP->errMessageP = s;
+    free(oldMessageP);
 }
 
 
 const TCHAR*
 optionsGetErrorMessage(const optionsContext_t* contextP)
 {
+    assert(contextP != NULL);
     return (contextP->errMessageP == NULL) ? _T("") : contextP->errMessageP;;
+}
+
+
+optionsError_t
+optionsGetError(const optionsContext_t* contextP)
+{
+    assert(contextP != NULL);
+    return contextP->err;
 }
 
 
@@ -369,7 +446,10 @@ optionsPrintHelp(FILE* fp, const option_t* optionsP, unsigned char compact)
     for (optionP = optionsP; isValidOption(optionP); optionP++)
     {
         /* Undocumented option.  Ignore it and move on. */
-        if (optionP->description == NULL) { continue; }
+        if (optionP->description == NULL || optionP->attr & optionsAttrHidden)
+        {
+            continue;
+        }
 
         if (optionP->longName != NULL && optionP->shortName != '\0')
         {
@@ -411,41 +491,6 @@ optionsPrintHelp(FILE* fp, const option_t* optionsP, unsigned char compact)
 }
 
 
-/* refOp is an operator to obtain the address of the given value.  This is
- * necessary because the client-specified handler must be able to take the
- * value as a const void* argument.  For most data types, simply pass the
- * usual address-of operator (unary &).
- *
- * For optionsTypeUnchecked (i.e., strings), we already start with a
- * pointer, so we can pass that directly to a client-specified handler
- * as-is. (Although it makes this code less uniform, it allows client code
- * to be simpler.) To create such a no-op operator, chain the dereference
- * and address-of operators (*&).
- */
-#define MAKE_SETTER(func, val_t, addrOp)                \
-static optionsError_t                                   \
-func(const option_t* optionP, val_t val)                \
-{                                                       \
-    optionsError_t err = optionsErrorNone;              \
-    if (optionP->handler != NULL)                       \
-    {                                                   \
-        err = optionP->handler(optionP, addrOp val);    \
-    }                                                   \
-    else                                                \
-    {                                                   \
-        assert(optionP->varP != NULL);                  \
-        *((val_t*) optionP->varP) = val;                \
-    }                                                   \
-    return err;                                         \
-}
-
-MAKE_SETTER(setUnchecked, const TCHAR*, *&); /* See comments above. */
-MAKE_SETTER(setBool, unsigned char, &);
-MAKE_SETTER(setInt, int, &);
-MAKE_SETTER(setUInt, unsigned int, &);
-MAKE_SETTER(setDouble, double, &);
-
-
 static optionsError_t
 set(const option_t* optionP, const TCHAR* valStrP)
 {
@@ -453,66 +498,15 @@ set(const option_t* optionP, const TCHAR* valStrP)
 
     assert(optionP != NULL);
 
-    if (valStrP == NULL)
+    if (optionP->argDescription != NULL && valStrP == NULL)
     {
         err = optionsErrorInsufficientArgs;
     }
-    else switch (optionP->type)
-    {
-        case optionsTypeUnchecked:
-            err = setUnchecked(optionP, valStrP);
-            break;
-
-        case optionsTypeInt:
-        {
-            int val;
-            err = parseInt(valStrP, &val);
-            if (err == optionsErrorNone) { err = setInt(optionP, val); }
-            break;
-        }
-        case optionsTypeUInt:
-        {
-            unsigned int val;
-            err = parseUInt(valStrP, &val);
-            if (err == optionsErrorNone) { err = setUInt(optionP, val); }
-            break;
-        }
-        case optionsTypeDouble:
-        {
-            double val;
-            err = parseDouble(valStrP, &val);
-            if (err == optionsErrorNone) { err = setDouble(optionP, val); }
-            break;
-        }
-        case optionsTypeBool:
-            /* Boolean types are special since their arguments are
-             * optional.  They must be handled elsewhere.
-             */
-        default:
-            assert(0);
-            break;
-    }
-
-    return err;
-}
-
-
-static optionsError_t
-getAndSetOptional(const option_t* optionP, const TCHAR* valStrP)
-{
-    optionsError_t err = optionsErrorNone;
-    assert(optionP != NULL);
-    if (optionP->type == optionsTypeBool)
-    {
-        bool val = true;
-        if (valStrP != NULL) { err = parseBool(valStrP, &val); }
-        if (err == optionsErrorNone) { err = setBool(optionP, val); }
-    }
     else
     {
-        err = set(optionP, valStrP);
+        assert(optionP->handler != NULL);
+        err = optionP->handler(valStrP, optionP->handlerDataP);
     }
-
     return err;
 }
 
@@ -526,7 +520,8 @@ optionsParse(optionsContext_t* contextP,
     TCHAR** argNextPP;
     TCHAR* argP;
 
-    assert(contextP != NULL && argv != NULL);
+    assert(contextP != NULL);
+    assert(argv != NULL);
 
     /* Assume argv[0] is the program name. */
     argNextPP = argv + 1;
@@ -576,16 +571,28 @@ optionsParse(optionsContext_t* contextP,
                 }
                 else
                 {
-                    bool optionalArg = valStrP == NULL && optionP->type != optionsTypeBool;
-                    if (optionalArg) { valStrP = *argNextPP; }
-                    err = getAndSetOptional(optionP, valStrP);
-                    if (err == optionsErrorNone && optionalArg) { argNextPP++; }
-                }
+                    bool consumeNextArg = false;
+                    if (optionP->argDescription != NULL && valStrP == NULL)
+                    {
+                        consumeNextArg = true;
+                        valStrP = *argNextPP;
+                    }
 
-                if (err != optionsErrorNone)
-                {
-                    optionsSetErrorDetails(contextP, err, argP, '\0', valStrP);
-                    goto abort;
+                    err = set(optionP, valStrP);
+
+                    if (err != optionsErrorNone)
+                    {
+                        if (err != optionsErrorNoOptionalArg)
+                        {
+                            optionsSetErrorDetails(contextP, err, argP, '\0', valStrP);
+                            goto abort;
+                        }
+                        err = optionsErrorNone;
+                    }
+                    else if (consumeNextArg)
+                    {
+                        argNextPP++;
+                    }
                 }
 
                 if (optionP->attr & optionsAttrHalt) { break; }
@@ -621,27 +628,56 @@ optionsParse(optionsContext_t* contextP,
                     optionsSetErrorDetails(contextP, err, NULL, argP[j], NULL);
                     goto abort;
                 }
-                else if (j + 1 == len)
-                {
-                    bool optionalArg = valStrP == NULL && optionP->type != optionsTypeBool;
-                    if (optionalArg) { valStrP = *argNextPP; }
-                    err = getAndSetOptional(optionP, valStrP);
-                    if (err == optionsErrorNone && optionalArg) { argNextPP++; }
-                }
-                else if (optionP->type == optionsTypeBool)
-                {
-                    err = setBool(optionP, 1);
-                }
                 else
                 {
-                    /* Option not allowed here. */
-                    err = optionsErrorBadPlacement;
-                }
+                    if (j + 1 == len)
+                    {
+                        bool consumeNextArg = false;
+                        if (optionP->argDescription != NULL && valStrP == NULL)
+                        {
+                            consumeNextArg = true;
+                            valStrP = *argNextPP;
+                        }
 
-                if (err != optionsErrorNone)
-                {
-                    optionsSetErrorDetails(contextP, err, NULL, argP[j], valStrP);
-                    goto abort;
+                        /* Even for options that don't ask for arguments, always
+                         * pass an argument that was specified with '='.
+                         */
+                        err = set(optionP, valStrP);
+
+                        if (err != optionsErrorNone)
+                        {
+                            if (err != optionsErrorNoOptionalArg)
+                            {
+                                optionsSetErrorDetails(contextP, err, NULL, argP[j], valStrP);
+                                goto abort;
+                            }
+                            err = optionsErrorNone;
+                        }
+                        else if (consumeNextArg)
+                        {
+                            argNextPP++;
+                        }
+                    }
+                    else if (optionP->argDescription == NULL)
+                    {
+                        err = set(optionP, NULL);
+                        if (err != optionsErrorNone)
+                        {
+                            optionsSetErrorDetails(contextP, err, NULL, argP[j], NULL);
+                            goto abort;
+                        }
+                    }
+                    else
+                    {
+                        /* Short options with arguments can't be used in
+                         * condensed lists except in the last position.
+                         * e.g. -abcd arg
+                         *          ^
+                         */
+                        err = optionsErrorBadPlacement;
+                        optionsSetErrorDetails(contextP, err, NULL, argP[j], NULL);
+                        goto abort;
+                    }
                 }
 
                 if (optionP->attr & optionsAttrHalt) { break; }
@@ -673,8 +709,11 @@ optionsNewContext(void)
 void
 optionsFreeContext(optionsContext_t* contextP)
 {
-    free(contextP->errMessageP);
-    free(contextP);
+    if (contextP != NULL)
+    {
+        free(contextP->errMessageP);
+        free(contextP);
+    }
 }
 
 
@@ -683,12 +722,4 @@ optionsSet(optionsContext_t* contextP, const option_t* optionsP)
 {
     assert(contextP != NULL);
     contextP->optionsP = optionsP;
-}
-
-
-optionsError_t
-optionsGetError(const optionsContext_t* contextP)
-{
-    assert(contextP != NULL);
-    return contextP->err;
 }
