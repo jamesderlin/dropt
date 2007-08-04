@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <assert.h>
 
-#include "options.h"
+#include "flopt.h"
 
 #ifndef __cplusplus
 typedef enum { false, true } bool;
@@ -17,15 +17,15 @@ typedef enum { false, true } bool;
 
 
 
-struct optionsContext_t
+struct flopt_context_t
 {
-    const option_t* optionsP;
-    optionsError_t err;
+    const flopt_option_t* optionsP;
+    flopt_error_t err;
     TCHAR* errMessageP;
 };
 
 
-/** optionsParseBool
+/** flopt_parse_bool
   *
   *     Parses a boolean value from the given string.
   *
@@ -35,13 +35,13 @@ struct optionsContext_t
   *                On success, set to the interpreted boolean value.
   *
   * RETURNS:
-  *     optionsErrorNone
-  *     optionsErrorMismatch
+  *     flopt_error_none
+  *     flopt_error_mismatch
   */
-optionsError_t
-optionsParseBool(const TCHAR* s, void* valP)
+flopt_error_t
+flopt_parse_bool(const TCHAR* s, void* valP)
 {
-    optionsError_t err = optionsErrorNone;
+    flopt_error_t err = flopt_error_none;
     bool val = false;
 
     assert(valP != NULL);
@@ -60,7 +60,7 @@ optionsParseBool(const TCHAR* s, void* valP)
     }
     else
     {
-        err = optionsErrorMismatch;
+        err = flopt_error_mismatch;
     }
 
     *((unsigned char*) valP) = val;
@@ -68,7 +68,7 @@ optionsParseBool(const TCHAR* s, void* valP)
 }
 
 
-/** optionsParseOptionalBool
+/** flopt_parse_optional_bool
   *
   *     Parses a boolean value from the given string if possible.
   *
@@ -78,19 +78,19 @@ optionsParseBool(const TCHAR* s, void* valP)
   *                On success, set to the interpreted boolean value.
   *
   * RETURNS:
-  *     optionsErrorNone
-  *     optionsErrorNoOptionalArg
+  *     flopt_error_none
+  *     flopt_error_no_optional_arg
   */
-optionsError_t
-optionsParseOptionalBool(const TCHAR* s, void* valP)
+flopt_error_t
+flopt_parse_optional_bool(const TCHAR* s, void* valP)
 {
-    optionsError_t err = optionsParseBool(s, valP);
-    if (err != optionsErrorNone) { err = optionsErrorNoOptionalArg; }
+    flopt_error_t err = flopt_parse_bool(s, valP);
+    if (err != flopt_error_none) { err = flopt_error_no_optional_arg; }
     return err;
 }
 
 
-/** optionsParseInt
+/** flopt_parse_int
   *
   *     Parses an integer from the given string.
   *
@@ -100,15 +100,15 @@ optionsParseOptionalBool(const TCHAR* s, void* valP)
   *                On success, set to the interpreted integer.
   *
   * RETURNS:
-  *     optionsErrorNone
-  *     optionsErrorMismatch
-  *     optionsErrorOverflow
-  *     optionsErrorUnknown
+  *     flopt_error_none
+  *     flopt_error_mismatch
+  *     flopt_error_overflow
+  *     flopt_error_unknown
   */
-optionsError_t
-optionsParseInt(const TCHAR* s, void* valP)
+flopt_error_t
+flopt_parse_int(const TCHAR* s, void* valP)
 {
-    optionsError_t err = optionsErrorNone;
+    flopt_error_t err = flopt_error_none;
     int val = 0;
     bool matched = false;
 
@@ -131,7 +131,7 @@ optionsParseInt(const TCHAR* s, void* valP)
 
             if (errno == ERANGE || n < INT_MIN || n > INT_MAX)
             {
-                err = optionsErrorOverflow;
+                err = flopt_error_overflow;
                 val = (n < 0) ? INT_MIN : INT_MAX;
             }
             else if (errno == 0)
@@ -140,18 +140,18 @@ optionsParseInt(const TCHAR* s, void* valP)
             }
             else
             {
-                err = optionsErrorUnknown;
+                err = flopt_error_unknown;
             }
         }
     }
 
-    if (!matched) { err = optionsErrorMismatch; }
+    if (!matched) { err = flopt_error_mismatch; }
     *((int*) valP) = val;
     return err;
 }
 
 
-/** optionsParseUInt
+/** flopt_parse_uint
   *
   *     Parses an unsigned integer from the given string.
   *
@@ -162,15 +162,15 @@ optionsParseInt(const TCHAR* s, void* valP)
   *                On success, set to the interpreted integer.
   *
   * RETURNS:
-  *     optionsErrorNone
-  *     optionsErrorMismatch
-  *     optionsErrorOverflow
-  *     optionsErrorUnknown
+  *     flopt_error_none
+  *     flopt_error_mismatch
+  *     flopt_error_overflow
+  *     flopt_error_unknown
   */
-optionsError_t
-optionsParseUInt(const TCHAR* s, unsigned int* valP)
+flopt_error_t
+flopt_parse_uint(const TCHAR* s, unsigned int* valP)
 {
-    optionsError_t err = optionsErrorNone;
+    flopt_error_t err = flopt_error_none;
     int val = 0;
     bool matched = false;
 
@@ -193,7 +193,7 @@ optionsParseUInt(const TCHAR* s, unsigned int* valP)
 
             if (errno == ERANGE || n > UINT_MAX)
             {
-                err = optionsErrorOverflow;
+                err = flopt_error_overflow;
                 val = UINT_MAX;
             }
             else if (errno == 0)
@@ -202,18 +202,18 @@ optionsParseUInt(const TCHAR* s, unsigned int* valP)
             }
             else
             {
-                err = optionsErrorUnknown;
+                err = flopt_error_unknown;
             }
         }
     }
 
-    if (!matched) { err = optionsErrorMismatch; }
+    if (!matched) { err = flopt_error_mismatch; }
     *((unsigned int*) valP) = val;
     return err;
 }
 
 
-/** optionsParseDouble
+/** flopt_parse_double
   *
   *     Parses a double from the given string.
   *
@@ -224,15 +224,15 @@ optionsParseUInt(const TCHAR* s, unsigned int* valP)
   *                On success, set to the interpreted double.
   *
   * RETURNS:
-  *     optionsErrorNone
-  *     optionsErrorMismatch
-  *     optionsErrorOverflow
-  *     optionsErrorUnknown
+  *     flopt_error_none
+  *     flopt_error_mismatch
+  *     flopt_error_overflow
+  *     flopt_error_unknown
   */
-optionsError_t
-optionsParseDouble(const TCHAR* s, void* valP)
+flopt_error_t
+flopt_parse_double(const TCHAR* s, void* valP)
 {
-    optionsError_t err = optionsErrorNone;
+    flopt_error_t err = flopt_error_none;
     double val = 0.0;
     bool matched = false;
 
@@ -254,22 +254,22 @@ optionsParseDouble(const TCHAR* s, void* valP)
 
             if (errno == ERANGE)
             {
-                err = optionsErrorOverflow;
+                err = flopt_error_overflow;
             }
             else if (errno != 0)
             {
-                err = optionsErrorUnknown;
+                err = flopt_error_unknown;
             }
         }
     }
 
-    if (!matched) { err = optionsErrorMismatch; }
+    if (!matched) { err = flopt_error_mismatch; }
     *((double*) valP) = val;
     return err;
 }
 
 
-/** optionsParseString
+/** flopt_parse_string
   *
   *     Obtains a string.
   *
@@ -279,16 +279,16 @@ optionsParseDouble(const TCHAR* s, void* valP)
   *                On success, set to the input string.
   *
   * RETURNS:
-  *     optionsErrorNone
+  *     flopt_error_none
   */
-optionsError_t
-optionsParseString(const TCHAR* s, void* valP)
+flopt_error_t
+flopt_parse_string(const TCHAR* s, void* valP)
 {
     assert(s != NULL);
     assert(valP != NULL);
 
     *((const TCHAR**) valP) = s;
-    return optionsErrorNone;
+    return flopt_error_none;
 }
 
 
@@ -359,7 +359,7 @@ format(const TCHAR* fmtP, ...)
   *       value.
   */
 static bool
-isValidOption(const option_t* optionP)
+isValidOption(const flopt_option_t* optionP)
 {
     return    optionP != NULL
            && !(   optionP->longName == NULL
@@ -380,10 +380,10 @@ isValidOption(const option_t* optionP)
   *     A pointer to the corresponding option specification or NULL if not
   *       found.
   */
-static const option_t*
-findOptionLong(const option_t* optionsP, const TCHAR* longNameP)
+static const flopt_option_t*
+findOptionLong(const flopt_option_t* optionsP, const TCHAR* longNameP)
 {
-    const option_t* optionP;
+    const flopt_option_t* optionP;
     assert(optionsP != NULL);
     assert(longNameP != NULL);
     for (optionP = optionsP; isValidOption(optionP); optionP++)
@@ -411,10 +411,10 @@ findOptionLong(const option_t* optionsP, const TCHAR* longNameP)
   *     A pointer to the corresponding option specification or NULL if not
   *       found.
   */
-static const option_t*
-findOptionShort(const option_t* optionsP, TCHAR shortName)
+static const flopt_option_t*
+findOptionShort(const flopt_option_t* optionsP, TCHAR shortName)
 {
-    const option_t* optionP;
+    const flopt_option_t* optionP;
     assert(optionsP != NULL);
     assert(shortName != '\0');
     for (optionP = optionsP; isValidOption(optionP); optionP++)
@@ -444,8 +444,8 @@ findOptionShort(const option_t* optionsP, TCHAR shortName)
   *     IN valP         : Optional.  Pass NULL if unwanted.
   */
 static void
-setErrorDetails(optionsContext_t* contextP,
-                optionsError_t err,
+setErrorDetails(flopt_context_t* contextP,
+                flopt_error_t err,
                 const TCHAR* longNameP, TCHAR shortName,
                 const TCHAR* valP)
 {
@@ -464,21 +464,21 @@ setErrorDetails(optionsContext_t* contextP,
 
     switch (err)
     {
-        case optionsErrorNone:
+        case flopt_error_none:
             break;
-        case optionsErrorNoOptionalArg:
-        case optionsErrorCancel:
+        case flopt_error_no_optional_arg:
+        case flopt_error_cancel:
             /* These aren't really errors. */
-            err = optionsErrorNone;
+            err = flopt_error_none;
             break;
 
-        case optionsErrorInvalid:
+        case flopt_error_invalid:
             s = format(_T("Invalid option: %s"), nameP);
             break;
-        case optionsErrorInsufficientArgs:
+        case flopt_error_insufficient_args:
             s = format(_T("Insufficient arguments to option %s"), nameP);
             break;
-        case optionsErrorMismatch:
+        case flopt_error_mismatch:
             if (valP == NULL)
             {
                 s = format(_T("Invalid argument to option %s"), nameP);
@@ -489,7 +489,7 @@ setErrorDetails(optionsContext_t* contextP,
                            nameP, valP);
             }
             break;
-        case optionsErrorOverflow:
+        case flopt_error_overflow:
             if (valP == NULL)
             {
                 s = format(_T("Integer overflow for option %s"), nameP);
@@ -500,20 +500,20 @@ setErrorDetails(optionsContext_t* contextP,
                            nameP, valP);
             }
             break;
-        case optionsErrorBadPlacement:
+        case flopt_error_bad_placement:
             s = format(_T("Value required after option %s"), nameP);
             break;
-        case optionsErrorCustom:
+        case flopt_error_custom:
             break;
-        case optionsErrorUnknown:
+        case flopt_error_unknown:
         default:
             s = format(_T("Unknown error handling option %s."), nameP);
             break;
     }
 
-    if (err != optionsErrorCustom) /* Leave custom error messages alone. */
+    if (err != flopt_error_custom) /* Leave custom error messages alone. */
     {
-        optionsSetErrorMessage(contextP, s);
+        flopt_set_error_message(contextP, s);
         free(s);
     }
 
@@ -521,7 +521,7 @@ setErrorDetails(optionsContext_t* contextP,
 }
 
 
-/** optionsSetErrorMessage
+/** flopt_set_error_message
   *
   *     Sets a custom error message in the options context.
   *
@@ -530,7 +530,7 @@ setErrorDetails(optionsContext_t* contextP,
   *     IN messageP     : The error message.
   */
 void
-optionsSetErrorMessage(optionsContext_t* contextP, const TCHAR* messageP)
+flopt_set_error_message(flopt_context_t* contextP, const TCHAR* messageP)
 {
     TCHAR* oldMessageP = contextP->errMessageP;
     TCHAR* s = NULL;
@@ -548,13 +548,13 @@ optionsSetErrorMessage(optionsContext_t* contextP, const TCHAR* messageP)
         }
     }
 
-    contextP->err = optionsErrorCustom;
+    contextP->err = flopt_error_custom;
     contextP->errMessageP = s;
     free(oldMessageP);
 }
 
 
-/** optionsGetErrorMessage
+/** flopt_get_error_message
   *
   * PARAMETERS:
   *     IN/OUT contextP : The options context.
@@ -564,14 +564,14 @@ optionsSetErrorMessage(optionsContext_t* contextP, const TCHAR* messageP)
   *       empty string if there are no errors.
   */
 const TCHAR*
-optionsGetErrorMessage(const optionsContext_t* contextP)
+flopt_get_error_message(const flopt_context_t* contextP)
 {
     assert(contextP != NULL);
     return (contextP->errMessageP == NULL) ? _T("") : contextP->errMessageP;;
 }
 
 
-/** optionsGetError
+/** flopt_get_error
   *
   * PARAMETERS:
   *     IN/OUT contextP : The options context.
@@ -579,15 +579,15 @@ optionsGetErrorMessage(const optionsContext_t* contextP)
   * RETURNS:
   *     The current error code waiting in the options context.
   */
-optionsError_t
-optionsGetError(const optionsContext_t* contextP)
+flopt_error_t
+flopt_get_error(const flopt_context_t* contextP)
 {
     assert(contextP != NULL);
     return contextP->err;
 }
 
 
-/** optionsPrintHelp
+/** flopt_print_help
   *
   *     Prints help for available options.
   *
@@ -597,11 +597,11 @@ optionsGetError(const optionsContext_t* contextP)
   *     compact     : Pass false to include blank lines between options.
   */
 void
-optionsPrintHelp(FILE* fp, const option_t* optionsP, unsigned char compact)
+flopt_print_help(FILE* fp, const flopt_option_t* optionsP, unsigned char compact)
 {
     static const size_t maxWidth = 4;
 
-    const option_t* optionP;
+    const flopt_option_t* optionP;
     size_t n;
 
     assert(optionsP != NULL);
@@ -609,7 +609,7 @@ optionsPrintHelp(FILE* fp, const option_t* optionsP, unsigned char compact)
     for (optionP = optionsP; isValidOption(optionP); optionP++)
     {
         /* Undocumented option.  Ignore it and move on. */
-        if (optionP->description == NULL || optionP->attr & optionsAttrHidden)
+        if (optionP->description == NULL || optionP->attr & flopt_attr_hidden)
         {
             continue;
         }
@@ -666,16 +666,16 @@ optionsPrintHelp(FILE* fp, const option_t* optionsP, unsigned char compact)
   * RETURNS:
   *     An error code.
   */
-static optionsError_t
-set(const option_t* optionP, const TCHAR* valP)
+static flopt_error_t
+set(const flopt_option_t* optionP, const TCHAR* valP)
 {
-    optionsError_t err = optionsErrorNone;
+    flopt_error_t err = flopt_error_none;
 
     assert(optionP != NULL);
 
     if (optionP->argDescription != NULL && valP == NULL)
     {
-        err = optionsErrorInsufficientArgs;
+        err = flopt_error_insufficient_args;
     }
     else
     {
@@ -686,7 +686,7 @@ set(const option_t* optionP, const TCHAR* valP)
 }
 
 
-/** optionsParse
+/** flopt_parse
   *
   *     Parses command-line options.
   *
@@ -702,10 +702,10 @@ set(const option_t* optionP, const TCHAR* valP)
   *     A pointer to the first unprocessed element in argv.
   */
 TCHAR**
-optionsParse(optionsContext_t* contextP,
+flopt_parse(flopt_context_t* contextP,
              TCHAR** argv)
 {
-    optionsError_t err = optionsErrorNone;
+    flopt_error_t err = flopt_error_none;
 
     TCHAR** argNextPP = argv;
     TCHAR* argP;
@@ -716,7 +716,7 @@ optionsParse(optionsContext_t* contextP,
     while (   (argP = *argNextPP) != NULL
            && argP[0] == _T('-'))
     {
-        assert(err == optionsErrorNone);
+        assert(err == flopt_error_none);
 
         if (argP[1] == '\0')
         {
@@ -737,7 +737,7 @@ optionsParse(optionsContext_t* contextP,
             else
             {
                 /* --longName */
-                const option_t* optionP = NULL;
+                const flopt_option_t* optionP = NULL;
                 const TCHAR* valP = NULL;
 
                 {
@@ -752,7 +752,7 @@ optionsParse(optionsContext_t* contextP,
                 optionP = findOptionLong(contextP->optionsP, argNameP);
                 if (optionP == NULL)
                 {
-                    err = optionsErrorInvalid;
+                    err = flopt_error_invalid;
                     setErrorDetails(contextP, err, argP, '\0', NULL);
                     goto abort;
                 }
@@ -767,14 +767,14 @@ optionsParse(optionsContext_t* contextP,
 
                     err = set(optionP, valP);
 
-                    if (err != optionsErrorNone)
+                    if (err != flopt_error_none)
                     {
-                        if (err != optionsErrorNoOptionalArg)
+                        if (err != flopt_error_no_optional_arg)
                         {
                             setErrorDetails(contextP, err, argP, '\0', valP);
                             goto abort;
                         }
-                        err = optionsErrorNone;
+                        err = flopt_error_none;
                     }
                     else if (consumeNextArg)
                     {
@@ -782,12 +782,12 @@ optionsParse(optionsContext_t* contextP,
                     }
                 }
 
-                if (optionP->attr & optionsAttrHalt) { goto abort; }
+                if (optionP->attr & flopt_attr_halt) { goto abort; }
             }
         }
         else
         {
-            const option_t* optionP;
+            const flopt_option_t* optionP;
             const TCHAR* valP;
             size_t len;
             size_t j;
@@ -811,7 +811,7 @@ optionsParse(optionsContext_t* contextP,
                 optionP = findOptionShort(contextP->optionsP, argP[j]);
                 if (optionP == NULL)
                 {
-                    err = optionsErrorInvalid;
+                    err = flopt_error_invalid;
                     setErrorDetails(contextP, err, NULL, argP[j], NULL);
                     goto abort;
                 }
@@ -831,14 +831,14 @@ optionsParse(optionsContext_t* contextP,
                          */
                         err = set(optionP, valP);
 
-                        if (err != optionsErrorNone)
+                        if (err != flopt_error_none)
                         {
-                            if (err != optionsErrorNoOptionalArg)
+                            if (err != flopt_error_no_optional_arg)
                             {
                                 setErrorDetails(contextP, err, NULL, argP[j], valP);
                                 goto abort;
                             }
-                            err = optionsErrorNone;
+                            err = flopt_error_none;
                         }
                         else if (consumeNextArg)
                         {
@@ -848,7 +848,7 @@ optionsParse(optionsContext_t* contextP,
                     else if (optionP->argDescription == NULL)
                     {
                         err = set(optionP, NULL);
-                        if (err != optionsErrorNone)
+                        if (err != flopt_error_none)
                         {
                             setErrorDetails(contextP, err, NULL, argP[j], NULL);
                             goto abort;
@@ -861,13 +861,13 @@ optionsParse(optionsContext_t* contextP,
                          * e.g. -abcd arg
                          *          ^
                          */
-                        err = optionsErrorBadPlacement;
+                        err = flopt_error_bad_placement;
                         setErrorDetails(contextP, err, NULL, argP[j], NULL);
                         goto abort;
                     }
                 }
 
-                if (optionP->attr & optionsAttrHalt) { goto abort; }
+                if (optionP->attr & flopt_attr_halt) { goto abort; }
             }
         }
     }
@@ -878,30 +878,30 @@ abort:
 }
 
 
-/** optionsNewContext
+/** flopt_new_context
   *
   *     Creates a new options context.
   *
   * RETURNS:
   *     An allocated options context.  The caller is responsible for
-  *       freeing it with optionsFreeContext when no longer needed.
+  *       freeing it with flopt_free_context when no longer needed.
   */
-optionsContext_t*
-optionsNewContext(void)
+flopt_context_t*
+flopt_new_context(void)
 {
     /* Cast for compatibility with C++ compilers. */
-    optionsContext_t* contextP = (optionsContext_t*) malloc(sizeof *contextP);
+    flopt_context_t* contextP = (flopt_context_t*) malloc(sizeof *contextP);
     if (contextP != NULL)
     {
         contextP->optionsP = NULL;
-        contextP->err = optionsErrorNone;
+        contextP->err = flopt_error_none;
         contextP->errMessageP = NULL;
     }
     return contextP;
 }
 
 
-/** optionsFreeContext
+/** flopt_free_context
   *
   *     Frees an options context.
   *
@@ -909,7 +909,7 @@ optionsNewContext(void)
   *     IN/OUT contextP : The options context to free.
   */
 void
-optionsFreeContext(optionsContext_t* contextP)
+flopt_free_context(flopt_context_t* contextP)
 {
     if (contextP != NULL)
     {
@@ -919,7 +919,7 @@ optionsFreeContext(optionsContext_t* contextP)
 }
 
 
-/** optionsSet
+/** flopt_set_options
   *
   *     Specifies a list of options to use with an options context.
   *
@@ -928,7 +928,7 @@ optionsFreeContext(optionsContext_t* contextP)
   *     IN options      : The list of option specifications.
   */
 void
-optionsSet(optionsContext_t* contextP, const option_t* optionsP)
+flopt_set_options(flopt_context_t* contextP, const flopt_option_t* optionsP)
 {
     assert(contextP != NULL);
     contextP->optionsP = optionsP;
