@@ -33,24 +33,26 @@ typedef enum
 } flopt_error_t;
 
 
-const unsigned int flopt_attr_halt = (1 << 0);
-const unsigned int flopt_attr_hidden = (1 << 1);
+enum
+{
+    flopt_attr_halt = (1 << 0),
+    flopt_attr_hidden = (1 << 1),
+};
 
 
-typedef struct flopt_option_t flopt_option_t;
+typedef flopt_error_t (*flopt_option_handler_t)(const TCHAR* valP, void* handlerDataP);
 
-typedef flopt_error_t (*handler_t)(const TCHAR* valP, void* handlerDataP);
-
-struct flopt_option_t
+typedef struct flopt_option_t
 {
     const TCHAR* longName;       /* May be NULL. */
     TCHAR shortName;             /* May be '\0'. */
     const TCHAR* description;    /* May be NULL.*/
     const TCHAR* argDescription; /* NULL if no argument. */
-    handler_t handler;
+    flopt_option_handler_t handler;
     void* handlerDataP;
     unsigned int attr;
-};
+} flopt_option_t;
+
 
 typedef struct flopt_context_t flopt_context_t;
 
@@ -62,7 +64,7 @@ void flopt_set_options(flopt_context_t* contextP, const flopt_option_t* optionsP
 
 TCHAR** flopt_parse(flopt_context_t* contextP, TCHAR** argv);
 flopt_error_t flopt_parse_bool(const TCHAR* s, void* valP);
-flopt_error_t flopt_parse_optonal_bool(const TCHAR* s, void* valP);
+flopt_error_t flopt_parse_optional_bool(const TCHAR* s, void* valP);
 flopt_error_t flopt_parse_int(const TCHAR* s, void* valP);
 flopt_error_t flopt_parse_uint(const TCHAR* s, void* valP);
 flopt_error_t flopt_parse_double(const TCHAR* s, void* valP);
