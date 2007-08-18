@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "flopt_string.h"
+#include "dropt_string.h"
 
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 
@@ -40,7 +40,7 @@
 
 
 
-struct flopt_stringstream
+struct dropt_stringstream
 {
     TCHAR* string;  /* The string buffer. */
     size_t maxSize; /* Size of the string buffer, including space for NUL. */
@@ -48,7 +48,7 @@ struct flopt_stringstream
 };
 
 
-/** flopt_strdup
+/** dropt_strdup
   *
   *     Duplicates a string.
   *
@@ -61,7 +61,7 @@ struct flopt_stringstream
   *     Returns NULL on error.
   */
 TCHAR*
-flopt_strdup(const TCHAR* s)
+dropt_strdup(const TCHAR* s)
 {
     TCHAR* copyP;
     size_t n;
@@ -73,7 +73,7 @@ flopt_strdup(const TCHAR* s)
 }
 
 
-/** flopt_stricmp
+/** dropt_stricmp
   *
   *     Compares two strings ignoring case differences.  Not recommended
   *       for non-ASCII strings.
@@ -87,7 +87,7 @@ flopt_strdup(const TCHAR* s)
   *     > 0 if s is lexically greater than t.
   */
 int
-flopt_stricmp(const TCHAR* s, const TCHAR* t)
+dropt_stricmp(const TCHAR* s, const TCHAR* t)
 {
     if (s == t) { return 0; }
 
@@ -112,7 +112,7 @@ flopt_stricmp(const TCHAR* s, const TCHAR* t)
 }
 
 
-/** flopt_vsnprintf
+/** dropt_vsnprintf
   *
   *     vsnprintf wrapper to provide ISO C99-compliant behavior.
   *
@@ -129,7 +129,7 @@ flopt_stricmp(const TCHAR* s, const TCHAR* t)
   *     Returns -1 on error.
   */
 static int
-flopt_vsnprintf(TCHAR* s, size_t n, const TCHAR* fmtP, va_list args)
+dropt_vsnprintf(TCHAR* s, size_t n, const TCHAR* fmtP, va_list args)
 {
 #if __STDC_VERSION__ >= 199901L || __GNUC__
     /* ISO C99-compliant.
@@ -167,13 +167,13 @@ flopt_vsnprintf(TCHAR* s, size_t n, const TCHAR* fmtP, va_list args)
     return ret;
 
 #else
-    #error Unsupported platform.  flopt_vsnprintf unimplemented.
+    #error Unsupported platform.  dropt_vsnprintf unimplemented.
     return -1;
 #endif
 }
 
 
-/** flopt_vaprintf
+/** dropt_vaprintf
   *
   *     Allocates a formatted string with vprintf semantics.
   *
@@ -187,14 +187,14 @@ flopt_vsnprintf(TCHAR* s, size_t n, const TCHAR* fmtP, va_list args)
   *     Returns NULL on error.
   */
 TCHAR*
-flopt_vaprintf(const TCHAR* fmtP, va_list args)
+dropt_vaprintf(const TCHAR* fmtP, va_list args)
 {
     TCHAR* s = NULL;
     int len;
     va_list argsCopy;
     assert(fmtP != NULL);
     va_copy(argsCopy, args);
-    len = flopt_vsnprintf(NULL, 0, fmtP, args);
+    len = dropt_vsnprintf(NULL, 0, fmtP, args);
     if (len >= 0)
     {
         /* Account for NUL. */
@@ -202,7 +202,7 @@ flopt_vaprintf(const TCHAR* fmtP, va_list args)
         s = malloc(n * sizeof *s);
         if (s != NULL)
         {
-            flopt_vsnprintf(s, n, fmtP, argsCopy);
+            dropt_vsnprintf(s, n, fmtP, argsCopy);
         }
     }
     va_end(argsCopy);
@@ -211,34 +211,34 @@ flopt_vaprintf(const TCHAR* fmtP, va_list args)
 }
 
 
-/* See flopt_vaprintf. */
+/* See dropt_vaprintf. */
 TCHAR*
-flopt_aprintf(const TCHAR* fmtP, ...)
+dropt_aprintf(const TCHAR* fmtP, ...)
 {
     TCHAR* s;
 
     va_list args;
     va_start(args, fmtP);
-    s = flopt_vaprintf(fmtP, args);
+    s = dropt_vaprintf(fmtP, args);
     va_end(args);
 
     return s;
 }
 
 
-/** flopt_ssopen
+/** dropt_ssopen
   *
-  *     Constructs a new flopt_stringstream.
+  *     Constructs a new dropt_stringstream.
   *
   * RETURNS:
-  *     An initialized flopt_stringstream.  The caller is responsible for
-  *       calling flopt_ssclose() on it when no longer needed.
+  *     An initialized dropt_stringstream.  The caller is responsible for
+  *       calling dropt_ssclose() on it when no longer needed.
   *     Returns NULL on error.
   */
-flopt_stringstream*
-flopt_ssopen(void)
+dropt_stringstream*
+dropt_ssopen(void)
 {
-    flopt_stringstream* ssP = malloc(sizeof *ssP);
+    dropt_stringstream* ssP = malloc(sizeof *ssP);
     if (ssP != NULL)
     {
         ssP->used = 0;
@@ -254,15 +254,15 @@ flopt_ssopen(void)
 }
 
 
-/** flopt_ssclose
+/** dropt_ssclose
   *
-  *     Destroys a flopt_stringstream.
+  *     Destroys a dropt_stringstream.
   *
   * PARAMETERS:
-  *     IN/OUT ssP : The flopt_stringstream.
+  *     IN/OUT ssP : The dropt_stringstream.
   */
 void
-flopt_ssclose(flopt_stringstream* ssP)
+dropt_ssclose(dropt_stringstream* ssP)
 {
     if (ssP != NULL)
     {
@@ -272,16 +272,16 @@ flopt_ssclose(flopt_stringstream* ssP)
 }
 
 
-/** flopt_ssgetfreespace
+/** dropt_ssgetfreespace
   *
   * RETURNS:
-  *     The amount of free space in the flopt_stringstream's internal
+  *     The amount of free space in the dropt_stringstream's internal
   *       buffer, measured in TCHARs.  Space used for the NUL-terminator is
   *       considered free. (The amount of free space therefore is always
   *       positive.)
   */
 static size_t
-flopt_ssgetfreespace(const flopt_stringstream* ssP)
+dropt_ssgetfreespace(const dropt_stringstream* ssP)
 {
     assert(ssP != NULL);
     assert(ssP->maxSize > 0);
@@ -290,22 +290,22 @@ flopt_ssgetfreespace(const flopt_stringstream* ssP)
 }
 
 
-/** flopt_ssresize
+/** dropt_ssresize
   *
-  *     Resizes a flopt_stringstream's internal buffer.  If the requested
+  *     Resizes a dropt_stringstream's internal buffer.  If the requested
   *     size is less than the amount of buffer already in use, the buffer
   *     will be shrunk to the minimum size necessary.
   *
   * PARAMETERS:
-  *     IN/OUT ssP : The flopt_stringstream.
+  *     IN/OUT ssP : The dropt_stringstream.
   *     n          : The desired buffer size.
   *
   * RETURNS:
-  *     The new size of the flopt_stringstream's buffer in TCHARs,
+  *     The new size of the dropt_stringstream's buffer in TCHARs,
   *       including space for a terminating NUL.
   */
 static size_t
-flopt_ssresize(flopt_stringstream* ssP, size_t n)
+dropt_ssresize(dropt_stringstream* ssP, size_t n)
 {
     assert(ssP != NULL);
     if (!IS_FINALIZED(ssP))
@@ -331,15 +331,15 @@ flopt_ssresize(flopt_stringstream* ssP, size_t n)
 }
 
 
-/** flopt_ssclear
+/** dropt_ssclear
   *
-  *     Clears and re-initializes a flopt_stringstream.
+  *     Clears and re-initializes a dropt_stringstream.
   *
   * PARAMETERS:
-  *     IN/OUT ssP : The flopt_stringstream
+  *     IN/OUT ssP : The dropt_stringstream
   */
 void
-flopt_ssclear(flopt_stringstream* ssP)
+dropt_ssclear(dropt_stringstream* ssP)
 {
     assert(ssP != NULL);
     if (!IS_FINALIZED(ssP))
@@ -352,27 +352,27 @@ flopt_ssclear(flopt_stringstream* ssP)
 }
 
 
-/** flopt_ssfinalize
+/** dropt_ssfinalize
   *
-  *     Finalizes a flopt_stringstream.  Except for flopt_ssclose(), no
-  *     further operations may be performed on the flopt_stringstream.
+  *     Finalizes a dropt_stringstream.  Except for dropt_ssclose(), no
+  *     further operations may be performed on the dropt_stringstream.
   *
   * PARAMETERS:
-  *     IN/OUT ssP : The flopt_stringstream.
+  *     IN/OUT ssP : The dropt_stringstream.
   *
   * RETURNS:
-  *     The flopt_stringstream's string.  Note that the caller assumes
+  *     The dropt_stringstream's string.  Note that the caller assumes
   *       ownership of the returned string.  The string remains valid after
-  *       calling flopt_ssclose() on the stringstream, and the the caller
+  *       calling dropt_ssclose() on the stringstream, and the the caller
   *       is responsible for calling free() on the returned string when no
   *       longer needed.
   */
 TCHAR*
-flopt_ssfinalize(flopt_stringstream* ssP)
+dropt_ssfinalize(dropt_stringstream* ssP)
 {
     TCHAR* s;
     assert(ssP != NULL);
-    flopt_ssresize(ssP, 0);
+    dropt_ssresize(ssP, 0);
     s = ssP->string;
     ssP->string = NULL;
     ssP->maxSize = 0;
@@ -381,49 +381,49 @@ flopt_ssfinalize(flopt_stringstream* ssP)
 }
 
 
-/** flopt_ssgetstring
+/** dropt_ssgetstring
   *
   * PARAMETERS:
-  *     IN ssP : The flopt_stringstream.
+  *     IN ssP : The dropt_stringstream.
   *
   * RETURNS:
-  *     The flopt_stringstream's string.  The returned string is valid only
-  *       for the lifetime of the flopt_stringstream.
+  *     The dropt_stringstream's string.  The returned string is valid only
+  *       for the lifetime of the dropt_stringstream.
   */
 const TCHAR*
-flopt_ssgetstring(const flopt_stringstream* ssP)
+dropt_ssgetstring(const dropt_stringstream* ssP)
 {
     assert(ssP != NULL);
     return ssP->string;
 }
 
 
-/** flopt_vssprintf
+/** dropt_vssprintf
   *
   *     Prints a formatted string with vprintf semantics to a
-  *     flopt_stringstream.
+  *     dropt_stringstream.
   *
   * PARAMETERS:
-  *     IN/OUT ssP : The flopt_stringstream.
+  *     IN/OUT ssP : The dropt_stringstream.
   *     IN fmtP    : printf-style format specifier.  Must not be NULL.
   *     IN args    : Arguments to insert into the formatted string.
   *
   * RETURNS:
-  *     The number of characters written to the flopt_stringstream.
+  *     The number of characters written to the dropt_stringstream.
   *     Returns a negative value on error.
   */
 int
-flopt_vssprintf(flopt_stringstream* ssP, const TCHAR* fmtP, va_list args)
+dropt_vssprintf(dropt_stringstream* ssP, const TCHAR* fmtP, va_list args)
 {
     int n;
     va_list argsCopy;
     assert(ssP != NULL);
     assert(fmtP != NULL);
     va_copy(argsCopy, args);
-    n = flopt_vsnprintf(NULL, 0, fmtP, args);
+    n = dropt_vsnprintf(NULL, 0, fmtP, args);
     if (n > 0 && !IS_FINALIZED(ssP))
     {
-        size_t available = flopt_ssgetfreespace(ssP);
+        size_t available = dropt_ssgetfreespace(ssP);
         if ((unsigned int) n + 1 > available)
         {
 #ifdef NDEBUG
@@ -431,8 +431,8 @@ flopt_vssprintf(flopt_stringstream* ssP, const TCHAR* fmtP, va_list args)
 #else
             size_t newSize = ssP->maxSize + n;
 #endif
-            flopt_ssresize(ssP, newSize);
-            available = flopt_ssgetfreespace(ssP);
+            dropt_ssresize(ssP, newSize);
+            available = dropt_ssgetfreespace(ssP);
         }
         assert(available > 0); /* Space always is reserved for NUL. */
 
@@ -440,7 +440,7 @@ flopt_vssprintf(flopt_stringstream* ssP, const TCHAR* fmtP, va_list args)
          * that would be output with a sufficiently large buffer, excluding
          * NUL.
          */
-        n = flopt_vsnprintf(ssP->string + ssP->used, available, fmtP, argsCopy);
+        n = dropt_vsnprintf(ssP->string + ssP->used, available, fmtP, argsCopy);
 
 #if 0
         /* Determine how many characters actually were written. */
@@ -459,15 +459,15 @@ flopt_vssprintf(flopt_stringstream* ssP, const TCHAR* fmtP, va_list args)
 }
 
 
-/* See flopt_vssprintf. */
+/* See dropt_vssprintf. */
 int
-flopt_ssprintf(flopt_stringstream* ssP, const TCHAR* fmtP, ...)
+dropt_ssprintf(dropt_stringstream* ssP, const TCHAR* fmtP, ...)
 {
     int n;
 
     va_list args;
     va_start(args, fmtP);
-    n = flopt_vssprintf(ssP, fmtP, args);
+    n = dropt_vssprintf(ssP, fmtP, args);
     va_end(args);
 
     return n;
