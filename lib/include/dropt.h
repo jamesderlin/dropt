@@ -1,8 +1,6 @@
 /** dropt.h
   *
-  *     A downright rudimentary lame command-line option parser.
-  *
-  * Last modified: 2007-08-18
+  *     A deliberately rudimentary lame command-line option parser.
   *
   * Copyright (C) 2006-2007 James D. Lin
   *
@@ -95,11 +93,11 @@ void dropt_set_case_sensitive(dropt_context_t* contextP, dropt_bool_t caseSensit
 
 
 TCHAR** dropt_parse(dropt_context_t* contextP, TCHAR** argv);
-dropt_error_t dropt_parse_bool(const TCHAR* s, void* valP);
-dropt_error_t dropt_parse_int(const TCHAR* s, void* valP);
-dropt_error_t dropt_parse_uint(const TCHAR* s, void* valP);
-dropt_error_t dropt_parse_double(const TCHAR* s, void* valP);
-dropt_error_t dropt_parse_string(const TCHAR* s, void* valP);
+dropt_error_t dropt_handle_bool(const TCHAR* s, void* valP);
+dropt_error_t dropt_handle_int(const TCHAR* s, void* valP);
+dropt_error_t dropt_handle_uint(const TCHAR* s, void* valP);
+dropt_error_t dropt_handle_double(const TCHAR* s, void* valP);
+dropt_error_t dropt_handle_string(const TCHAR* s, void* valP);
 
 dropt_error_t dropt_get_error(const dropt_context_t* contextP);
 void dropt_get_error_details(const dropt_context_t* contextP,
@@ -109,8 +107,10 @@ void dropt_get_error_details(const dropt_context_t* contextP,
 void dropt_set_error_message(dropt_context_t* contextP, const TCHAR* messageP);
 const TCHAR* dropt_get_error_message(const dropt_context_t* contextP);
 
+#ifndef DROPT_NO_HELP
 TCHAR* dropt_get_help(const dropt_option_t* optionsP, dropt_bool_t compact);
 void dropt_print_help(FILE* fp, const dropt_option_t* optionsP, dropt_bool_t compact);
+#endif
 
 
 #ifdef __cplusplus

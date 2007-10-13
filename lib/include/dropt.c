@@ -1,8 +1,6 @@
 /** dropt.c
   *
-  *     A downright rudimentary command-line option parser.
-  *
-  * Last modified: 2007-08-18
+  *     A deliberately rudimentary command-line option parser.
   *
   * Copyright (C) 2006-2007 James D. Lin
   *
@@ -40,7 +38,8 @@ struct dropt_context_t
     const dropt_option_t* optionsP;
     bool caseSensitive;
 
-    struct {
+    struct
+    {
         dropt_error_t err;
         TCHAR* optionNameP;
         TCHAR* optionValueP;
@@ -56,13 +55,14 @@ typedef struct
 } parseState_t;
 
 
-/** dropt_parse_bool
+/** dropt_handle_bool
   *
-  *     Parses a boolean value from the given string.
+  *     Parses a boolean value from the given string if possible.
   *
   * PARAMETERS:
   *     IN valP          : A string representing a boolean value (0 or 1).
-  *                        May be NULL.
+  *                        If NULL, the boolean value is assumed to be
+  *                          true.
   *     OUT handlerDataP : A pointer to a dropt_bool_t.
   *                        On success, set to the interpreted boolean
   *                          value.
@@ -73,7 +73,7 @@ typedef struct
   *     dropt_error_mismatch
   */
 dropt_error_t
-dropt_parse_bool(const TCHAR* valP, void* handlerDataP)
+dropt_handle_bool(const TCHAR* valP, void* handlerDataP)
 {
     dropt_error_t err = dropt_error_none;
     bool val = false;
@@ -102,13 +102,13 @@ dropt_parse_bool(const TCHAR* valP, void* handlerDataP)
 }
 
 
-/** dropt_parse_int
+/** dropt_handle_int
   *
   *     Parses an integer from the given string.
   *
   * PARAMETERS:
   *     IN valP          : A string representing a base-10 integer.
-  *                        May be NULL.
+  *                        If NULL, returns dropt_error_unsufficient_args.
   *     OUT handlerDataP : A pointer to an int.
   *                        On success, set to the interpreted integer.
   *                        On error, left untouched.
@@ -121,11 +121,10 @@ dropt_parse_bool(const TCHAR* valP, void* handlerDataP)
   *     dropt_error_unknown
   */
 dropt_error_t
-dropt_parse_int(const TCHAR* valP, void* handlerDataP)
+dropt_handle_int(const TCHAR* valP, void* handlerDataP)
 {
     dropt_error_t err = dropt_error_none;
     int val = 0;
-    bool matched = false;
 
     assert(handlerDataP != NULL);
 
@@ -145,8 +144,6 @@ dropt_parse_int(const TCHAR* valP, void* handlerDataP)
          */
         if (*endP == '\0' && endP > valP)
         {
-            matched = true;
-
             if (errno == ERANGE || n < INT_MIN || n > INT_MAX)
             {
                 err = dropt_error_overflow;
@@ -161,22 +158,25 @@ dropt_parse_int(const TCHAR* valP, void* handlerDataP)
                 err = dropt_error_unknown;
             }
         }
+        else
+        {
+            err = dropt_error_mismatch;
+        }
     }
 
-    if (!matched) { err = dropt_error_mismatch; }
     if (err == dropt_error_none) { *((int*) handlerDataP) = val; }
     return err;
 }
 
 
-/** dropt_parse_uint
+/** dropt_handle_uint
   *
   *     Parses an unsigned integer from the given string.
   *
   * PARAMETERS:
   *     IN valP          : A string representing an unsigned base-10
   *                          integer.
-  *                        May be NULL.
+  *                        If NULL, returns dropt_error_unsufficient_args.
   *     OUT handlerDataP : A pointer to an unsigned int.
   *                        On success, set to the interpreted integer.
   *                        On error, left untouched.
@@ -189,11 +189,10 @@ dropt_parse_int(const TCHAR* valP, void* handlerDataP)
   *     dropt_error_unknown
   */
 dropt_error_t
-dropt_parse_uint(const TCHAR* valP, void* handlerDataP)
+dropt_handle_uint(const TCHAR* valP, void* handlerDataP)
 {
     dropt_error_t err = dropt_error_none;
     int val = 0;
-    bool matched = false;
 
     assert(handlerDataP != NULL);
 
@@ -213,8 +212,6 @@ dropt_parse_uint(const TCHAR* valP, void* handlerDataP)
          */
         if (*endP == '\0' && endP > valP)
         {
-            matched = true;
-
             if (errno == ERANGE || n > UINT_MAX)
             {
                 err = dropt_error_overflow;
@@ -229,22 +226,25 @@ dropt_parse_uint(const TCHAR* valP, void* handlerDataP)
                 err = dropt_error_unknown;
             }
         }
+        else
+        {
+            err = dropt_error_mismatch;
+        }
     }
 
-    if (!matched) { err = dropt_error_mismatch; }
     if (err == dropt_error_none) { *((unsigned int*) handlerDataP) = val; }
     return err;
 }
 
 
-/** dropt_parse_double
+/** dropt_handle_double
   *
   *     Parses a double from the given string.
   *
   * PARAMETERS:
   *     IN valP          : A string representing a base-10 floating-point
   *                          number.
-  *                        May be NULL.
+  *                        If NULL, returns dropt_error_unsufficient_args.
   *     OUT handlerDataP : A pointer to a double.
   *                        On success, set to the interpreted double.
   *                        On error, left untouched.
@@ -257,11 +257,10 @@ dropt_parse_uint(const TCHAR* valP, void* handlerDataP)
   *     dropt_error_unknown
   */
 dropt_error_t
-dropt_parse_double(const TCHAR* valP, void* handlerDataP)
+dropt_handle_double(const TCHAR* valP, void* handlerDataP)
 {
     dropt_error_t err = dropt_error_none;
     double val = 0.0;
-    bool matched = false;
 
     assert(handlerDataP != NULL);
 
@@ -280,8 +279,6 @@ dropt_parse_double(const TCHAR* valP, void* handlerDataP)
          */
         if (*endP == '\0' && endP > valP)
         {
-            matched = true;
-
             if (errno == ERANGE)
             {
                 err = dropt_error_overflow;
@@ -291,15 +288,18 @@ dropt_parse_double(const TCHAR* valP, void* handlerDataP)
                 err = dropt_error_unknown;
             }
         }
+        else
+        {
+            err = dropt_error_mismatch;
+        }
     }
 
-    if (!matched) { err = dropt_error_mismatch; }
     if (err == dropt_error_none) { *((double*) handlerDataP) = val; }
     return err;
 }
 
 
-/** dropt_parse_string
+/** dropt_handle_string
   *
   *     Obtains a string.
   *
@@ -315,7 +315,7 @@ dropt_parse_double(const TCHAR* valP, void* handlerDataP)
   *     dropt_error_insufficient_args
   */
 dropt_error_t
-dropt_parse_string(const TCHAR* valP, void* handlerDataP)
+dropt_handle_string(const TCHAR* valP, void* handlerDataP)
 {
     dropt_error_t err = dropt_error_none;
 
@@ -548,10 +548,9 @@ dropt_get_error(const dropt_context_t* contextP)
   * PARAMETERS:
   *     IN contextP       : The options context.
   *     OUT optionNamePP  : On output, the name of the option we failed on.
-  *                           May be set to NULL.
   *                         Pass NULL if unwanted.
   *     OUT optionValuePP : On output, the value of the option we failed on.
-  *                           May be set to NULL.
+  *                         Pass NULL if unwanted.
   */
 void
 dropt_get_error_details(const dropt_context_t* contextP,
@@ -611,6 +610,8 @@ dropt_get_error_message(const dropt_context_t* contextP)
            : contextP->errorDetails.messageP;
 }
 
+
+#ifndef DROPT_NO_HELP
 
 /** dropt_get_help
   *
@@ -716,6 +717,8 @@ dropt_print_help(FILE* fp, const dropt_option_t* optionsP, dropt_bool_t compact)
     }
 }
 
+#endif /* DROPT_NO_HELP */
+
 
 /** set
   *
@@ -770,6 +773,9 @@ parseArg(parseState_t* psP)
         && psP->valP == NULL
         && *(psP->argNextPP) != NULL)
     {
+        /* The option expects an argument, but none was specified with '='.
+         * Try using the next item from the command-line.
+         */
         consumeNextArg = true;
         psP->valP = *(psP->argNextPP);
     }
@@ -784,16 +790,15 @@ parseArg(parseState_t* psP)
         && consumeNextArg
         && psP->valP != NULL)
     {
-        /* Try again. */
+        /* The option's handler didn't like the argument we fed it.  If the
+         * argument was optional, try again.
+         */
         consumeNextArg = false;
         psP->valP = NULL;
         err = set(psP->optionP, NULL);
     }
 
-    if (err == dropt_error_none && consumeNextArg)
-    {
-        psP->argNextPP++;
-    }
+    if (err == dropt_error_none && consumeNextArg) { psP->argNextPP++; }
     return err;
 }
 
@@ -918,7 +923,7 @@ dropt_parse(dropt_context_t* contextP,
                     if (j + 1 == len)
                     {
                         /* The last short option in a condensed list gets
-                         * use an argument.
+                         * to use an argument.
                          */
                         err = parseArg(&ps);
                         if (err != dropt_error_none)
