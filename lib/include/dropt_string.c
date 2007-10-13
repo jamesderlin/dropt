@@ -1,8 +1,4 @@
-/* Compatibility junk for things that don't yet support ISO C99. */
 #if defined _WIN32
-    /* For _tcsncpy. */
-    #define _CRT_SECURE_NO_DEPRECATE 1
-
     #include <tchar.h>
 #endif
 
@@ -40,12 +36,14 @@
 
 
 
+#ifndef DROPT_NO_STRING_BUFFERS
 struct dropt_stringstream
 {
     TCHAR* string;  /* The string buffer. */
     size_t maxSize; /* Size of the string buffer, including space for NUL. */
     size_t used;    /* Number of bytes used in the string buffer, excluding NUL. */
 };
+#endif
 
 
 /** dropt_strdup
@@ -66,9 +64,9 @@ dropt_strdup(const TCHAR* s)
     TCHAR* copyP;
     size_t n;
     assert(s != NULL);
-    n = tcslen(s) + 1 /* NUL */;
-    copyP = malloc(n * sizeof *copyP);
-    if (copyP != NULL) { tcsncpy(copyP, s, n); }
+    n = (tcslen(s) + 1 /* NUL */) * sizeof *copyP;
+    copyP = malloc(n);
+    if (copyP != NULL) { memcpy(copyP, s, n); }
     return copyP;
 }
 
@@ -112,6 +110,7 @@ dropt_stricmp(const TCHAR* s, const TCHAR* t)
 }
 
 
+#ifndef DROPT_NO_STRING_BUFFERS
 /** dropt_vsnprintf
   *
   *     vsnprintf wrapper to provide ISO C99-compliant behavior.
@@ -141,7 +140,7 @@ dropt_vsnprintf(TCHAR* s, size_t n, const TCHAR* fmtP, va_list args)
 
 #elif defined _WIN32
     /* _vsntprintf and _vsnprintf_s on Windows don't have C99 semantics;
-     * they returns -1 if truncation occurs.
+     * they return -1 if truncation occurs.
      */
     va_list argsCopy;
     int ret;
@@ -387,8 +386,9 @@ dropt_ssfinalize(dropt_stringstream* ssP)
   *     IN ssP : The dropt_stringstream.
   *
   * RETURNS:
-  *     The dropt_stringstream's string.  The returned string is valid only
-  *       for the lifetime of the dropt_stringstream.
+  *     The dropt_stringstream's string.  The returned string will no
+  *       longer be valid if further operations are performed on the
+  *       dropt_stringstream or if the dropt_stringstream is closed.
   */
 const TCHAR*
 dropt_ssgetstring(const dropt_stringstream* ssP)
@@ -472,3 +472,4 @@ dropt_ssprintf(dropt_stringstream* ssP, const TCHAR* fmtP, ...)
 
     return n;
 }
+#endif /* DROPT_NO_STRING_BUFFERS */

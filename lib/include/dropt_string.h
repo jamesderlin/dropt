@@ -26,10 +26,11 @@
 #endif
 
 
-typedef struct dropt_stringstream dropt_stringstream;
-
 TCHAR* dropt_strdup(const TCHAR* s);
 int dropt_stricmp(const TCHAR* s, const TCHAR* t);
+
+#ifndef DROPT_NO_STRING_BUFFERS
+typedef struct dropt_stringstream dropt_stringstream;
 
 TCHAR* dropt_vaprintf(const TCHAR* fmtP, va_list args);
 TCHAR* dropt_aprintf(const TCHAR* fmtP, ...);
@@ -43,5 +44,6 @@ const TCHAR* dropt_ssgetstring(const dropt_stringstream* ssP);
 
 int dropt_vssprintf(dropt_stringstream* ssP, const TCHAR* fmtP, va_list args);
 int dropt_ssprintf(dropt_stringstream* ssP, const TCHAR* fmtP, ...);
+#endif /* DROPT_NO_STRING_BUFFERS */
 
 #endif /* DROPT_STRING_H */

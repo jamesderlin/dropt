@@ -91,7 +91,6 @@ void dropt_free_context(dropt_context_t* contextP);
 void dropt_set_options(dropt_context_t* contextP, const dropt_option_t* optionsP);
 void dropt_set_case_sensitive(dropt_context_t* contextP, dropt_bool_t caseSensitive);
 
-
 TCHAR** dropt_parse(dropt_context_t* contextP, TCHAR** argv);
 dropt_error_t dropt_handle_bool(const TCHAR* s, void* valP);
 dropt_error_t dropt_handle_int(const TCHAR* s, void* valP);
@@ -105,13 +104,13 @@ void dropt_get_error_details(const dropt_context_t* contextP,
                              TCHAR** valPP);
 
 void dropt_set_error_message(dropt_context_t* contextP, const TCHAR* messageP);
-const TCHAR* dropt_get_error_message(const dropt_context_t* contextP);
 
-#ifndef DROPT_NO_HELP
+#ifndef DROPT_NO_STRING_BUFFERS
+const TCHAR* dropt_get_error_message(dropt_context_t* contextP);
+
 TCHAR* dropt_get_help(const dropt_option_t* optionsP, dropt_bool_t compact);
 void dropt_print_help(FILE* fp, const dropt_option_t* optionsP, dropt_bool_t compact);
 #endif
-
 
 #ifdef __cplusplus
 } /* extern "C" */

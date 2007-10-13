@@ -432,61 +432,11 @@ static void
 dropt_set_error_details(dropt_context_t* contextP, dropt_error_t err,
                         const TCHAR* optionNameP, const TCHAR* optionValueP)
 {
-    TCHAR* s = NULL;
-
     assert(contextP != NULL);
     assert(optionNameP != NULL);
 
-    switch (err)
-    {
-        /* These aren't really errors. */
-        case dropt_error_none:
-            break;
-        case dropt_error_cancel:
-            err = dropt_error_none;
-            break;
-
-        case dropt_error_invalid:
-            s = dropt_aprintf(T("Invalid option: %s"), optionNameP);
-            break;
-        case dropt_error_insufficient_args:
-            s = dropt_aprintf(T("Value required after option %s"), optionNameP);
-            break;
-        case dropt_error_mismatch:
-            if (optionValueP == NULL)
-            {
-                s = dropt_aprintf(T("Invalid value for option %s"), optionNameP);
-            }
-            else
-            {
-                s = dropt_aprintf(T("Invalid value for option %s: %s"),
-                                  optionNameP, optionValueP);
-            }
-            break;
-        case dropt_error_overflow:
-            if (optionValueP == NULL)
-            {
-                s = dropt_aprintf(T("Integer overflow for option %s"), optionNameP);
-            }
-            else
-            {
-                s = dropt_aprintf(T("Integer overflow for option %s: %s"),
-                                  optionNameP, optionValueP);
-            }
-            break;
-        case dropt_error_custom:
-            break;
-        case dropt_error_unknown:
-        default:
-            s = dropt_aprintf(T("Unknown error handling option %s."), optionNameP);
-            break;
-    }
-
-    if (err != dropt_error_custom) /* Leave custom error messages alone. */
-    {
-        dropt_set_error_message(contextP, s);
-        free(s);
-    }
+    /* This isn't really an error. */
+    if (err == dropt_error_cancel) { err = dropt_error_none; }
 
     contextP->errorDetails.err = err;
 
@@ -497,6 +447,13 @@ dropt_set_error_details(dropt_context_t* contextP, dropt_error_t err,
     contextP->errorDetails.optionValueP = optionValueP != NULL
                                           ? dropt_strdup(optionValueP)
                                           : NULL;
+
+    if (err != dropt_error_custom)
+    {
+        /* The message will be generated lazily on retrieval. */
+        free(contextP->errorDetails.messageP);
+        contextP->errorDetails.messageP = NULL;
+    }
 }
 
 
@@ -579,19 +536,16 @@ dropt_get_error_details(const dropt_context_t* contextP,
 void
 dropt_set_error_message(dropt_context_t* contextP, const TCHAR* messageP)
 {
-    TCHAR* oldMessageP = contextP->errorDetails.messageP;
-    TCHAR* s = NULL;
-
     assert(contextP != NULL);
 
-    if (messageP != NULL) { s = dropt_strdup(messageP); }
+    free(contextP->errorDetails.messageP);
 
     contextP->errorDetails.err = dropt_error_custom;
-    contextP->errorDetails.messageP = s;
-    free(oldMessageP);
+    contextP->errorDetails.messageP = (messageP != NULL) ? dropt_strdup(messageP) : NULL;
 }
 
 
+#ifndef DROPT_NO_STRING_BUFFERS
 /** dropt_get_error_message
   *
   * PARAMETERS:
@@ -602,16 +556,77 @@ dropt_set_error_message(dropt_context_t* contextP, const TCHAR* messageP)
   *       empty string if there are no errors.
   */
 const TCHAR*
-dropt_get_error_message(const dropt_context_t* contextP)
+dropt_get_error_message(dropt_context_t* contextP)
 {
+    TCHAR* s = NULL;
+
     assert(contextP != NULL);
+
+    if (contextP->errorDetails.messageP == NULL)
+    {
+        switch (contextP->errorDetails.err)
+        {
+            /* These aren't really errors. */
+            case dropt_error_none:
+                break;
+            case dropt_error_cancel:
+                assert(false);
+                break;
+
+            case dropt_error_invalid:
+                s = dropt_aprintf(T("Invalid option: %s"), contextP->errorDetails.optionNameP);
+                break;
+            case dropt_error_insufficient_args:
+                s = dropt_aprintf(T("Value required after option %s"),
+                                  contextP->errorDetails.optionNameP);
+                break;
+            case dropt_error_mismatch:
+                if (contextP->errorDetails.optionValueP == NULL)
+                {
+                    s = dropt_aprintf(T("Invalid value for option %s"),
+                                      contextP->errorDetails.optionNameP);
+                }
+                else
+                {
+                    s = dropt_aprintf(T("Invalid value for option %s: %s"),
+                                      contextP->errorDetails.optionNameP,
+                                      contextP->errorDetails.optionValueP);
+                }
+                break;
+            case dropt_error_overflow:
+                if (contextP->errorDetails.optionValueP == NULL)
+                {
+                    s = dropt_aprintf(T("Integer overflow for option %s"),
+                                      contextP->errorDetails.optionNameP);
+                }
+                else
+                {
+                    s = dropt_aprintf(T("Integer overflow for option %s: %s"),
+                                      contextP->errorDetails.optionNameP,
+                                      contextP->errorDetails.optionValueP);
+                }
+                break;
+            case dropt_error_custom:
+                break;
+            case dropt_error_unknown:
+            default:
+                s = dropt_aprintf(T("Unknown error handling option %s."),
+                                  contextP->errorDetails.optionNameP);
+                break;
+        }
+
+        if (contextP->errorDetails.err != dropt_error_custom) /* Leave custom error messages alone. */
+        {
+            free(contextP->errorDetails.messageP);
+            contextP->errorDetails.messageP = s;
+        }
+    }
+
     return (contextP->errorDetails.messageP == NULL)
            ? T("")
            : contextP->errorDetails.messageP;
 }
 
-
-#ifndef DROPT_NO_HELP
 
 /** dropt_get_help
   *
@@ -716,8 +731,7 @@ dropt_print_help(FILE* fp, const dropt_option_t* optionsP, dropt_bool_t compact)
         free(helpTextP);
     }
 }
-
-#endif /* DROPT_NO_HELP */
+#endif /* DROPT_NO_STRING_BUFFERS */
 
 
 /** set
