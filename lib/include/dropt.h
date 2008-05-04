@@ -61,7 +61,7 @@ enum
 {
     dropt_attr_halt = (1 << 0),
     dropt_attr_hidden = (1 << 1),
-    dropt_attr_optional = (1 << 2),
+    dropt_attr_optional_val = (1 << 2),
 };
 
 

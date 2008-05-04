@@ -128,11 +128,11 @@ dropt_handle_int(const TCHAR* valP, void* handlerDataP)
 
     assert(handlerDataP != NULL);
 
-    if (valP == NULL)
+    if (valP == NULL || valP[0] == T('\0'))
     {
         err = dropt_error_insufficient_args;
     }
-    else if (valP[0] != '\0')
+    else
     {
         TCHAR* endP;
         long n;
@@ -142,7 +142,7 @@ dropt_handle_int(const TCHAR* valP, void* handlerDataP)
         /* Check that we matched at least one digit.
          * (strtol will return 0 if fed a string with no digits.)
          */
-        if (*endP == '\0' && endP > valP)
+        if (*endP == T('\0') && endP > valP)
         {
             if (errno == ERANGE || n < INT_MIN || n > INT_MAX)
             {
@@ -196,11 +196,15 @@ dropt_handle_uint(const TCHAR* valP, void* handlerDataP)
 
     assert(handlerDataP != NULL);
 
-    if (valP == NULL)
+    if (valP == NULL || valP[0] == T('\0'))
     {
         err = dropt_error_insufficient_args;
     }
-    else if (valP[0] != '\0' && valP[0] != T('-'))
+    else if (valP[0] == T('-'))
+    {
+        err = dropt_error_mismatch;
+    }
+    else
     {
         TCHAR* endP;
         unsigned long n;
@@ -210,7 +214,7 @@ dropt_handle_uint(const TCHAR* valP, void* handlerDataP)
         /* Check that we matched at least one digit.
          * (strtol will return 0 if fed a string with no digits.)
          */
-        if (*endP == '\0' && endP > valP)
+        if (*endP == T('\0') && endP > valP)
         {
             if (errno == ERANGE || n > UINT_MAX)
             {
@@ -264,11 +268,11 @@ dropt_handle_double(const TCHAR* valP, void* handlerDataP)
 
     assert(handlerDataP != NULL);
 
-    if (valP == NULL)
+    if (valP == NULL || valP[0] == T('\0'))
     {
         err = dropt_error_insufficient_args;
     }
-    else if (valP[0] != '\0')
+    else
     {
         TCHAR* endP;
         errno = 0;
@@ -277,7 +281,7 @@ dropt_handle_double(const TCHAR* valP, void* handlerDataP)
         /* Check that we matched at least one digit.
          * (strtod will return 0 if fed a string with no digits.)
          */
-        if (*endP == '\0' && endP > valP)
+        if (*endP == T('\0') && endP > valP)
         {
             if (errno == ERANGE)
             {
@@ -345,13 +349,13 @@ isValidOption(const dropt_option_t* optionP)
 {
     return    optionP != NULL
            && !(   optionP->longName == NULL
-                && optionP->shortName == '\0');
+                && optionP->shortName == T('\0'));
 }
 
 
 /** findOptionLong
   *
-  *     Finds a the option specification for a "long" option (i.e., an
+  *     Finds the option specification for a "long" option (i.e., an
   *     option of the form "--option").
   *
   * PARAMETERS:
@@ -386,7 +390,7 @@ findOptionLong(const dropt_option_t* optionsP, const TCHAR* longNameP, bool case
 
 /** findOptionShort
   *
-  *     Finds a the option specification for a "short" option (i.e., an
+  *     Finds the option specification for a "short" option (i.e., an
   *     option of the form "-o").
   *
   * PARAMETERS:
@@ -404,7 +408,7 @@ findOptionShort(const dropt_option_t* optionsP, TCHAR shortName, bool caseSensit
 {
     const dropt_option_t* optionP;
     assert(optionsP != NULL);
-    assert(shortName != '\0');
+    assert(shortName != T('\0'));
     for (optionP = optionsP; isValidOption(optionP); optionP++)
     {
         if (   shortName == optionP->shortName
@@ -474,7 +478,7 @@ setShortOptionErrorDetails(dropt_context_t* contextP, dropt_error_t err,
 {
     TCHAR shortNameBuf[3] = T("-?");
 
-    assert(shortName != '\0');
+    assert(shortName != T('\0'));
 
     shortNameBuf[1] = shortName;
 
@@ -661,7 +665,7 @@ dropt_get_help(const dropt_option_t* optionsP, dropt_bool_t compact)
                 continue;
             }
 
-            if (optionP->longName != NULL && optionP->shortName != '\0')
+            if (optionP->longName != NULL && optionP->shortName != T('\0'))
             {
                 /* Both shortName and longName */
                 n = dropt_ssprintf(ssP, T("  -%c, --%s"), optionP->shortName, optionP->longName);
@@ -671,7 +675,7 @@ dropt_get_help(const dropt_option_t* optionsP, dropt_bool_t compact)
                 /* longName only */
                 n = dropt_ssprintf(ssP, T("  --%s"), optionP->longName);
             }
-            else if (optionP->shortName != '\0')
+            else if (optionP->shortName != T('\0'))
             {
                 /* shortName only */
                 n = dropt_ssprintf(ssP, T("  -%c"), optionP->shortName);
@@ -687,7 +691,7 @@ dropt_get_help(const dropt_option_t* optionsP, dropt_bool_t compact)
             if (optionP->argDescription != NULL)
             {
                 int m = dropt_ssprintf(ssP,
-                                       (optionP->attr & dropt_attr_optional)
+                                       (optionP->attr & dropt_attr_optional_val)
                                        ? T("[=%s]")
                                        : T("=%s"),
                                        optionP->argDescription);
@@ -800,7 +804,7 @@ parseArg(parseState_t* psP)
     err = set(psP->optionP, psP->valP);
 
     if (   err != dropt_error_none
-        && (psP->optionP->attr & dropt_attr_optional)
+        && (psP->optionP->attr & dropt_attr_optional_val)
         && consumeNextArg
         && psP->valP != NULL)
     {
@@ -854,7 +858,7 @@ dropt_parse(dropt_context_t* contextP,
     {
         assert(err == dropt_error_none);
 
-        if (argP[1] == '\0')
+        if (argP[1] == T('\0'))
         {
             /* - */
             goto abort;
@@ -865,7 +869,7 @@ dropt_parse(dropt_context_t* contextP,
         if (argP[1] == T('-'))
         {
             TCHAR* argNameP = argP + 2;
-            if (argNameP[0] == '\0')
+            if (argNameP[0] == T('\0'))
             {
                 /* -- */
                 goto abort;
@@ -877,7 +881,7 @@ dropt_parse(dropt_context_t* contextP,
                     TCHAR* p = tcschr(argNameP, T('='));
                     if (p != NULL)
                     {
-                        *p = '\0';
+                        *p = T('\0');
                         ps.valP = p + 1;
                     }
                 }
@@ -947,7 +951,7 @@ dropt_parse(dropt_context_t* contextP,
                         }
                     }
                     else if (   ps.optionP->argDescription == NULL
-                             || (ps.optionP->attr & dropt_attr_optional))
+                             || (ps.optionP->attr & dropt_attr_optional_val))
                     {
                         err = set(ps.optionP, NULL);
                         if (err != dropt_error_none)
