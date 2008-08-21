@@ -412,7 +412,7 @@ findOptionShort(const dropt_option_t* optionsP, TCHAR shortName, bool caseSensit
     for (optionP = optionsP; isValidOption(optionP); optionP++)
     {
         if (   shortName == optionP->shortName
-            || (!caseSensitive && tclower(shortName) == tclower(optionP->shortName)))
+            || (!caseSensitive && totlower(shortName) == totlower(optionP->shortName)))
         {
             return optionP;
         }
@@ -731,7 +731,7 @@ dropt_print_help(FILE* fp, const dropt_option_t* optionsP, dropt_bool_t compact)
     TCHAR* helpTextP = dropt_get_help(optionsP, compact);
     if (helpTextP != NULL)
     {
-        fputs(helpTextP, fp);
+        fputts(helpTextP, fp);
         free(helpTextP);
     }
 }

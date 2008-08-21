@@ -1,6 +1,6 @@
 /** dropt.h
   *
-  *     A deliberately rudimentary lame command-line option parser.
+  *     A deliberately rudimentary command-line option parser.
   *
   * Copyright (C) 2006-2007 James D. Lin
   *
@@ -31,11 +31,13 @@ extern "C" {
 #endif
 
 
+#ifndef _TCHAR_DEFINED
 #ifdef _UNICODE
     typedef wchar_t TCHAR;
 #else
     typedef char TCHAR;
-#endif
+#endif /*  _UNICODE */
+#endif /* _TCHAR_DEFINED */
 
 
 typedef enum

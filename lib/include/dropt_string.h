@@ -12,7 +12,8 @@
     #define tcstol wcstol
     #define tcstoul wcstoul
     #define tcstod wcstod
-    #define tclower wclower
+    #define totlower towlower
+    #define fputts fputws
 #else
     #define T(s) s
     #define tcslen strlen
@@ -22,7 +23,8 @@
     #define tcstol strtol
     #define tcstoul strtoul
     #define tcstod strtod
-    #define tclower tolower
+    #define totlower tolower
+    #define fputts fputs
 #endif
 
 

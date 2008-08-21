@@ -95,14 +95,14 @@ dropt_stricmp(const TCHAR* s, const TCHAR* t)
         {
             return 0;
         }
-        else if (*s == *t || tclower(*s) == tclower(*t))
+        else if (*s == *t || totlower(*s) == totlower(*t))
         {
             s++;
             t++;
         }
         else
         {
-            return (tclower(*s) < tclower(*t))
+            return (totlower(*s) < totlower(*t))
                    ? -1
                    : +1;
         }
