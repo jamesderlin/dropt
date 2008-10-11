@@ -1,51 +1,48 @@
 #ifndef DROPT_STRING_H
 #define DROPT_STRING_H
 
+#include <stdarg.h>
 #include "dropt.h"
 
-#ifdef _UNICODE
-    #define T(s) (L ## s)
-    #define tcslen wcslen
-    #define tcsncpy wcscpy
-    #define tcscmp wcscmp
-    #define tcschr wcschr
-    #define tcstol wcstol
-    #define tcstoul wcstoul
-    #define tcstod wcstod
-    #define totlower towlower
-    #define fputts fputws
+#if defined _UNICODE || defined UNICODE
+    #define dropt_strlen wcslen
+    #define dropt_strcmp wcscmp
+    #define dropt_strchr wcschr
+    #define dropt_strtol wcstol
+    #define dropt_strtoul wcstoul
+    #define dropt_strtod wcstod
+    #define dropt_tolower towlower
+    #define dropt_fputs fputws
 #else
-    #define T(s) s
-    #define tcslen strlen
-    #define tcsncpy strncpy
-    #define tcscmp strcmp
-    #define tcschr strchr
-    #define tcstol strtol
-    #define tcstoul strtoul
-    #define tcstod strtod
-    #define totlower tolower
-    #define fputts fputs
+    #define dropt_strlen strlen
+    #define dropt_strcmp strcmp
+    #define dropt_strchr strchr
+    #define dropt_strtol strtol
+    #define dropt_strtoul strtoul
+    #define dropt_strtod strtod
+    #define dropt_tolower tolower
+    #define dropt_fputs fputs
 #endif
 
 
-TCHAR* dropt_strdup(const TCHAR* s);
-int dropt_stricmp(const TCHAR* s, const TCHAR* t);
+dropt_char_t* dropt_strdup(const dropt_char_t* s);
+int dropt_stricmp(const dropt_char_t* s, const dropt_char_t* t);
 
 #ifndef DROPT_NO_STRING_BUFFERS
 typedef struct dropt_stringstream dropt_stringstream;
 
-TCHAR* dropt_vaprintf(const TCHAR* fmtP, va_list args);
-TCHAR* dropt_aprintf(const TCHAR* fmtP, ...);
+dropt_char_t* dropt_vaprintf(const dropt_char_t* fmtP, va_list args);
+dropt_char_t* dropt_aprintf(const dropt_char_t* fmtP, ...);
 
 dropt_stringstream* dropt_ssopen(void);
 void dropt_ssclose(dropt_stringstream* ssP);
 
 void dropt_ssclear(dropt_stringstream* ssP);
-TCHAR* dropt_ssfinalize(dropt_stringstream* ssP);
-const TCHAR* dropt_ssgetstring(const dropt_stringstream* ssP);
+dropt_char_t* dropt_ssfinalize(dropt_stringstream* ssP);
+const dropt_char_t* dropt_ssgetstring(const dropt_stringstream* ssP);
 
-int dropt_vssprintf(dropt_stringstream* ssP, const TCHAR* fmtP, va_list args);
-int dropt_ssprintf(dropt_stringstream* ssP, const TCHAR* fmtP, ...);
+int dropt_vssprintf(dropt_stringstream* ssP, const dropt_char_t* fmtP, va_list args);
+int dropt_ssprintf(dropt_stringstream* ssP, const dropt_char_t* fmtP, ...);
 #endif /* DROPT_NO_STRING_BUFFERS */
 
 #endif /* DROPT_STRING_H */

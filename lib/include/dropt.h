@@ -2,7 +2,7 @@
   *
   *     A deliberately rudimentary command-line option parser.
   *
-  * Copyright (C) 2006-2007 James D. Lin
+  * Copyright (C) 2006-2008 James D. Lin
   *
   * This software is provided 'as-is', without any express or implied
   * warranty.  In no event will the authors be held liable for any damages
@@ -25,19 +25,18 @@
 #define DROPT_H
 
 #include <stdio.h>
+#include <wchar.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
-#ifndef _TCHAR_DEFINED
-#ifdef _UNICODE
-    typedef wchar_t TCHAR;
+#if defined _UNICODE || defined UNICODE
+    typedef wchar_t dropt_char_t;
 #else
-    typedef char TCHAR;
-#endif /*  _UNICODE */
-#endif /* _TCHAR_DEFINED */
+    typedef char dropt_char_t;
+#endif
 
 
 typedef enum
@@ -60,14 +59,14 @@ enum
 };
 
 
-typedef dropt_error_t (*dropt_option_handler_t)(const TCHAR* valP, void* handlerDataP);
+typedef dropt_error_t (*dropt_option_handler_t)(const dropt_char_t* valP, void* handlerDataP);
 
 typedef struct dropt_option_t
 {
-    const TCHAR* longName;       /* May be NULL. */
-    TCHAR shortName;             /* May be '\0'. */
-    const TCHAR* description;    /* May be NULL.*/
-    const TCHAR* argDescription; /* NULL if no argument. */
+    const dropt_char_t* longName;       /* May be NULL. */
+    dropt_char_t shortName;             /* May be '\0'. */
+    const dropt_char_t* description;    /* May be NULL.*/
+    const dropt_char_t* argDescription; /* NULL if no argument. */
     dropt_option_handler_t handler;
     void* handlerDataP;
     unsigned int attr;
@@ -86,24 +85,24 @@ void dropt_free_context(dropt_context_t* contextP);
 void dropt_set_options(dropt_context_t* contextP, const dropt_option_t* optionsP);
 void dropt_set_case_sensitive(dropt_context_t* contextP, dropt_bool_t caseSensitive);
 
-TCHAR** dropt_parse(dropt_context_t* contextP, TCHAR** argv);
-dropt_error_t dropt_handle_bool(const TCHAR* s, void* valP);
-dropt_error_t dropt_handle_int(const TCHAR* s, void* valP);
-dropt_error_t dropt_handle_uint(const TCHAR* s, void* valP);
-dropt_error_t dropt_handle_double(const TCHAR* s, void* valP);
-dropt_error_t dropt_handle_string(const TCHAR* s, void* valP);
+dropt_char_t** dropt_parse(dropt_context_t* contextP, dropt_char_t** argv);
+dropt_error_t dropt_handle_bool(const dropt_char_t* s, void* valP);
+dropt_error_t dropt_handle_int(const dropt_char_t* s, void* valP);
+dropt_error_t dropt_handle_uint(const dropt_char_t* s, void* valP);
+dropt_error_t dropt_handle_double(const dropt_char_t* s, void* valP);
+dropt_error_t dropt_handle_string(const dropt_char_t* s, void* valP);
 
 dropt_error_t dropt_get_error(const dropt_context_t* contextP);
 void dropt_get_error_details(const dropt_context_t* contextP,
-                             TCHAR** optionNamePP,
-                             TCHAR** valPP);
+                             dropt_char_t** optionNamePP,
+                             dropt_char_t** valPP);
 
-void dropt_set_error_message(dropt_context_t* contextP, const TCHAR* messageP);
+void dropt_set_error_message(dropt_context_t* contextP, const dropt_char_t* messageP);
 
 #ifndef DROPT_NO_STRING_BUFFERS
-const TCHAR* dropt_get_error_message(dropt_context_t* contextP);
+const dropt_char_t* dropt_get_error_message(dropt_context_t* contextP);
 
-TCHAR* dropt_get_help(const dropt_option_t* optionsP, dropt_bool_t compact);
+dropt_char_t* dropt_get_help(const dropt_option_t* optionsP, dropt_bool_t compact);
 void dropt_print_help(FILE* fp, const dropt_option_t* optionsP, dropt_bool_t compact);
 #endif
 

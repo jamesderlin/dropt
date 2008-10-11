@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <stdarg.h>
+#include <wctype.h>
 #include <stdio.h>
 #include <assert.h>
 
@@ -39,9 +39,9 @@
 #ifndef DROPT_NO_STRING_BUFFERS
 struct dropt_stringstream
 {
-    TCHAR* string;  /* The string buffer. */
-    size_t maxSize; /* Size of the string buffer, including space for NUL. */
-    size_t used;    /* Number of bytes used in the string buffer, excluding NUL. */
+    dropt_char_t* string; /* The string buffer. */
+    size_t maxSize;       /* Size of the string buffer, including space for NUL. */
+    size_t used;          /* Number of bytes used in the string buffer, excluding NUL. */
 };
 #endif
 
@@ -58,13 +58,13 @@ struct dropt_stringstream
   *       free() on it when no longer needed.
   *     Returns NULL on error.
   */
-TCHAR*
-dropt_strdup(const TCHAR* s)
+dropt_char_t*
+dropt_strdup(const dropt_char_t* s)
 {
-    TCHAR* copyP;
+    dropt_char_t* copyP;
     size_t n;
     assert(s != NULL);
-    n = (tcslen(s) + 1 /* NUL */) * sizeof *copyP;
+    n = (dropt_strlen(s) + 1 /* NUL */) * sizeof *copyP;
     copyP = malloc(n);
     if (copyP != NULL) { memcpy(copyP, s, n); }
     return copyP;
@@ -85,7 +85,7 @@ dropt_strdup(const TCHAR* s)
   *     > 0 if s is lexically greater than t.
   */
 int
-dropt_stricmp(const TCHAR* s, const TCHAR* t)
+dropt_stricmp(const dropt_char_t* s, const dropt_char_t* t)
 {
     if (s == t) { return 0; }
 
@@ -95,14 +95,14 @@ dropt_stricmp(const TCHAR* s, const TCHAR* t)
         {
             return 0;
         }
-        else if (*s == *t || totlower(*s) == totlower(*t))
+        else if (*s == *t || dropt_tolower(*s) == dropt_tolower(*t))
         {
             s++;
             t++;
         }
         else
         {
-            return (totlower(*s) < totlower(*t))
+            return (dropt_tolower(*s) < dropt_tolower(*t))
                    ? -1
                    : +1;
         }
@@ -128,7 +128,7 @@ dropt_stricmp(const TCHAR* s, const TCHAR* t)
   *     Returns -1 on error.
   */
 static int
-dropt_vsnprintf(TCHAR* s, size_t n, const TCHAR* fmtP, va_list args)
+dropt_vsnprintf(dropt_char_t* s, size_t n, const dropt_char_t* fmtP, va_list args)
 {
 #if __STDC_VERSION__ >= 199901L || __GNUC__
     /* ISO C99-compliant.
@@ -185,10 +185,10 @@ dropt_vsnprintf(TCHAR* s, size_t n, const TCHAR* fmtP, va_list args)
   *       on it when no longer needed.
   *     Returns NULL on error.
   */
-TCHAR*
-dropt_vaprintf(const TCHAR* fmtP, va_list args)
+dropt_char_t*
+dropt_vaprintf(const dropt_char_t* fmtP, va_list args)
 {
-    TCHAR* s = NULL;
+    dropt_char_t* s = NULL;
     int len;
     va_list argsCopy;
     assert(fmtP != NULL);
@@ -196,7 +196,6 @@ dropt_vaprintf(const TCHAR* fmtP, va_list args)
     len = dropt_vsnprintf(NULL, 0, fmtP, args);
     if (len >= 0)
     {
-        /* Account for NUL. */
         size_t n = len + 1 /* NUL */;
         s = malloc(n * sizeof *s);
         if (s != NULL)
@@ -211,10 +210,10 @@ dropt_vaprintf(const TCHAR* fmtP, va_list args)
 
 
 /* See dropt_vaprintf. */
-TCHAR*
-dropt_aprintf(const TCHAR* fmtP, ...)
+dropt_char_t*
+dropt_aprintf(const dropt_char_t* fmtP, ...)
 {
-    TCHAR* s;
+    dropt_char_t* s;
 
     va_list args;
     va_start(args, fmtP);
@@ -275,9 +274,9 @@ dropt_ssclose(dropt_stringstream* ssP)
   *
   * RETURNS:
   *     The amount of free space in the dropt_stringstream's internal
-  *       buffer, measured in TCHARs.  Space used for the NUL-terminator is
-  *       considered free. (The amount of free space therefore is always
-  *       positive.)
+  *       buffer, measured in dropt_char_t-s.  Space used for the
+  *       NUL-terminator is considered free. (The amount of free space
+  *       therefore is always positive.)
   */
 static size_t
 dropt_ssgetfreespace(const dropt_stringstream* ssP)
@@ -300,7 +299,7 @@ dropt_ssgetfreespace(const dropt_stringstream* ssP)
   *     n          : The desired buffer size.
   *
   * RETURNS:
-  *     The new size of the dropt_stringstream's buffer in TCHARs,
+  *     The new size of the dropt_stringstream's buffer in dropt_char_t-s,
   *       including space for a terminating NUL.
   */
 static size_t
@@ -311,7 +310,7 @@ dropt_ssresize(dropt_stringstream* ssP, size_t n)
     {
         if (n > ssP->maxSize)
         {
-            TCHAR* p = realloc(ssP->string, n * sizeof *ssP->string);
+            dropt_char_t* p = realloc(ssP->string, n * sizeof *ssP->string);
             if (p != NULL)
             {
                 ssP->string = p;
@@ -366,10 +365,10 @@ dropt_ssclear(dropt_stringstream* ssP)
   *       is responsible for calling free() on the returned string when no
   *       longer needed.
   */
-TCHAR*
+dropt_char_t*
 dropt_ssfinalize(dropt_stringstream* ssP)
 {
-    TCHAR* s;
+    dropt_char_t* s;
     assert(ssP != NULL);
     dropt_ssresize(ssP, 0);
     s = ssP->string;
@@ -390,7 +389,7 @@ dropt_ssfinalize(dropt_stringstream* ssP)
   *       longer be valid if further operations are performed on the
   *       dropt_stringstream or if the dropt_stringstream is closed.
   */
-const TCHAR*
+const dropt_char_t*
 dropt_ssgetstring(const dropt_stringstream* ssP)
 {
     assert(ssP != NULL);
@@ -413,7 +412,7 @@ dropt_ssgetstring(const dropt_stringstream* ssP)
   *     Returns a negative value on error.
   */
 int
-dropt_vssprintf(dropt_stringstream* ssP, const TCHAR* fmtP, va_list args)
+dropt_vssprintf(dropt_stringstream* ssP, const dropt_char_t* fmtP, va_list args)
 {
     int n;
     va_list argsCopy;
@@ -461,7 +460,7 @@ dropt_vssprintf(dropt_stringstream* ssP, const TCHAR* fmtP, va_list args)
 
 /* See dropt_vssprintf. */
 int
-dropt_ssprintf(dropt_stringstream* ssP, const TCHAR* fmtP, ...)
+dropt_ssprintf(dropt_stringstream* ssP, const dropt_char_t* fmtP, ...)
 {
     int n;
 

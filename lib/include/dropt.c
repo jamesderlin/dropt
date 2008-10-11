@@ -2,7 +2,7 @@
   *
   *     A deliberately rudimentary command-line option parser.
   *
-  * Copyright (C) 2006-2007 James D. Lin
+  * Copyright (C) 2006-2008 James D. Lin
   *
   * This software is provided 'as-is', without any express or implied
   * warranty.  In no event will the authors be held liable for any damages
@@ -22,14 +22,21 @@
   */
 
 #include <stdlib.h>
-#include <ctype.h>
 #include <string.h>
+#include <ctype.h>
+#include <wctype.h>
 #include <limits.h>
 #include <errno.h>
 #include <assert.h>
 
 #include "dropt.h"
 #include "dropt_string.h"
+
+#if defined _UNICODE || defined UNICODE
+    #define T(s) (L ## s)
+#else
+    #define T(s) s
+#endif
 
 typedef enum { false, true } bool;
 
@@ -41,17 +48,17 @@ struct dropt_context_t
     struct
     {
         dropt_error_t err;
-        TCHAR* optionNameP;
-        TCHAR* optionValueP;
-        TCHAR* messageP;
+        dropt_char_t* optionNameP;
+        dropt_char_t* optionValueP;
+        dropt_char_t* messageP;
     } errorDetails;
 };
 
 typedef struct
 {
     const dropt_option_t* optionP;
-    const TCHAR* valP;
-    TCHAR** argNextPP;
+    const dropt_char_t* valP;
+    dropt_char_t** argNextPP;
 } parseState_t;
 
 
@@ -73,7 +80,7 @@ typedef struct
   *     dropt_error_mismatch
   */
 dropt_error_t
-dropt_handle_bool(const TCHAR* valP, void* handlerDataP)
+dropt_handle_bool(const dropt_char_t* valP, void* handlerDataP)
 {
     dropt_error_t err = dropt_error_none;
     bool val = false;
@@ -84,11 +91,11 @@ dropt_handle_bool(const TCHAR* valP, void* handlerDataP)
     {
         val = true;
     }
-    else if (tcscmp(valP, T("0")) == 0)
+    else if (dropt_strcmp(valP, T("0")) == 0)
     {
         val = false;
     }
-    else if (tcscmp(valP, T("1")) == 0)
+    else if (dropt_strcmp(valP, T("1")) == 0)
     {
         val = true;
     }
@@ -121,7 +128,7 @@ dropt_handle_bool(const TCHAR* valP, void* handlerDataP)
   *     dropt_error_unknown
   */
 dropt_error_t
-dropt_handle_int(const TCHAR* valP, void* handlerDataP)
+dropt_handle_int(const dropt_char_t* valP, void* handlerDataP)
 {
     dropt_error_t err = dropt_error_none;
     int val = 0;
@@ -134,10 +141,10 @@ dropt_handle_int(const TCHAR* valP, void* handlerDataP)
     }
     else
     {
-        TCHAR* endP;
+        dropt_char_t* endP;
         long n;
         errno = 0;
-        n = tcstol(valP, &endP, 10);
+        n = dropt_strtol(valP, &endP, 10);
 
         /* Check that we matched at least one digit.
          * (strtol will return 0 if fed a string with no digits.)
@@ -189,7 +196,7 @@ dropt_handle_int(const TCHAR* valP, void* handlerDataP)
   *     dropt_error_unknown
   */
 dropt_error_t
-dropt_handle_uint(const TCHAR* valP, void* handlerDataP)
+dropt_handle_uint(const dropt_char_t* valP, void* handlerDataP)
 {
     dropt_error_t err = dropt_error_none;
     int val = 0;
@@ -206,10 +213,10 @@ dropt_handle_uint(const TCHAR* valP, void* handlerDataP)
     }
     else
     {
-        TCHAR* endP;
+        dropt_char_t* endP;
         unsigned long n;
         errno = 0;
-        n = tcstoul(valP, &endP, 10);
+        n = dropt_strtoul(valP, &endP, 10);
 
         /* Check that we matched at least one digit.
          * (strtol will return 0 if fed a string with no digits.)
@@ -261,7 +268,7 @@ dropt_handle_uint(const TCHAR* valP, void* handlerDataP)
   *     dropt_error_unknown
   */
 dropt_error_t
-dropt_handle_double(const TCHAR* valP, void* handlerDataP)
+dropt_handle_double(const dropt_char_t* valP, void* handlerDataP)
 {
     dropt_error_t err = dropt_error_none;
     double val = 0.0;
@@ -274,9 +281,9 @@ dropt_handle_double(const TCHAR* valP, void* handlerDataP)
     }
     else
     {
-        TCHAR* endP;
+        dropt_char_t* endP;
         errno = 0;
-        val = tcstod(valP, &endP);
+        val = dropt_strtod(valP, &endP);
 
         /* Check that we matched at least one digit.
          * (strtod will return 0 if fed a string with no digits.)
@@ -319,7 +326,7 @@ dropt_handle_double(const TCHAR* valP, void* handlerDataP)
   *     dropt_error_insufficient_args
   */
 dropt_error_t
-dropt_handle_string(const TCHAR* valP, void* handlerDataP)
+dropt_handle_string(const dropt_char_t* valP, void* handlerDataP)
 {
     dropt_error_t err = dropt_error_none;
 
@@ -330,7 +337,7 @@ dropt_handle_string(const TCHAR* valP, void* handlerDataP)
         err = dropt_error_insufficient_args;
     }
 
-    if (err == dropt_error_none) { *((const TCHAR**) handlerDataP) = valP; }
+    if (err == dropt_error_none) { *((const dropt_char_t**) handlerDataP) = valP; }
     return err;
 }
 
@@ -369,10 +376,10 @@ isValidOption(const dropt_option_t* optionP)
   *       found.
   */
 static const dropt_option_t*
-findOptionLong(const dropt_option_t* optionsP, const TCHAR* longNameP, bool caseSensitive)
+findOptionLong(const dropt_option_t* optionsP, const dropt_char_t* longNameP, bool caseSensitive)
 {
     const dropt_option_t* optionP;
-    int (*cmp)(const TCHAR*, const TCHAR*) = caseSensitive ? tcscmp : dropt_stricmp;
+    int (*cmp)(const dropt_char_t*, const dropt_char_t*) = caseSensitive ? dropt_strcmp : dropt_stricmp;
 
     assert(optionsP != NULL);
     assert(longNameP != NULL);
@@ -404,7 +411,7 @@ findOptionLong(const dropt_option_t* optionsP, const TCHAR* longNameP, bool case
   *       found.
   */
 static const dropt_option_t*
-findOptionShort(const dropt_option_t* optionsP, TCHAR shortName, bool caseSensitive)
+findOptionShort(const dropt_option_t* optionsP, dropt_char_t shortName, bool caseSensitive)
 {
     const dropt_option_t* optionP;
     assert(optionsP != NULL);
@@ -412,7 +419,7 @@ findOptionShort(const dropt_option_t* optionsP, TCHAR shortName, bool caseSensit
     for (optionP = optionsP; isValidOption(optionP); optionP++)
     {
         if (   shortName == optionP->shortName
-            || (!caseSensitive && totlower(shortName) == totlower(optionP->shortName)))
+            || (!caseSensitive && dropt_tolower(shortName) == dropt_tolower(optionP->shortName)))
         {
             return optionP;
         }
@@ -434,7 +441,7 @@ findOptionShort(const dropt_option_t* optionsP, TCHAR shortName, bool caseSensit
   */
 static void
 dropt_set_error_details(dropt_context_t* contextP, dropt_error_t err,
-                        const TCHAR* optionNameP, const TCHAR* optionValueP)
+                        const dropt_char_t* optionNameP, const dropt_char_t* optionValueP)
 {
     assert(contextP != NULL);
     assert(optionNameP != NULL);
@@ -471,9 +478,9 @@ dropt_set_error_details(dropt_context_t* contextP, dropt_error_t err,
   */
 static void
 setShortOptionErrorDetails(dropt_context_t* contextP, dropt_error_t err,
-                           TCHAR shortName, const TCHAR* optionValueP)
+                           dropt_char_t shortName, const dropt_char_t* optionValueP)
 {
-    TCHAR shortNameBuf[3] = T("-?");
+    dropt_char_t shortNameBuf[3] = T("-?");
 
     assert(shortName != T('\0'));
 
@@ -512,7 +519,7 @@ dropt_get_error(const dropt_context_t* contextP)
   */
 void
 dropt_get_error_details(const dropt_context_t* contextP,
-                        TCHAR** optionNamePP, TCHAR** optionValuePP)
+                        dropt_char_t** optionNamePP, dropt_char_t** optionValuePP)
 {
     if (optionNamePP != NULL)
     {
@@ -535,7 +542,7 @@ dropt_get_error_details(const dropt_context_t* contextP,
   *     IN messageP     : The error message.
   */
 void
-dropt_set_error_message(dropt_context_t* contextP, const TCHAR* messageP)
+dropt_set_error_message(dropt_context_t* contextP, const dropt_char_t* messageP)
 {
     assert(contextP != NULL);
 
@@ -556,10 +563,10 @@ dropt_set_error_message(dropt_context_t* contextP, const TCHAR* messageP)
   *     The current error message waiting in the options context or the
   *       empty string if there are no errors.
   */
-const TCHAR*
+const dropt_char_t*
 dropt_get_error_message(dropt_context_t* contextP)
 {
-    TCHAR* s = NULL;
+    dropt_char_t* s = NULL;
 
     assert(contextP != NULL);
 
@@ -636,10 +643,10 @@ dropt_get_error_message(dropt_context_t* contextP)
   *     An allocated help string for the available options.  The caller is
   *       responsible for calling free() on it when no longer needed.
   */
-TCHAR*
+dropt_char_t*
 dropt_get_help(const dropt_option_t* optionsP, dropt_bool_t compact)
 {
-    TCHAR* helpTextP = NULL;
+    dropt_char_t* helpTextP = NULL;
     dropt_stringstream* ssP = dropt_ssopen();
 
     assert(optionsP != NULL);
@@ -722,10 +729,10 @@ dropt_get_help(const dropt_option_t* optionsP, dropt_bool_t compact)
 void
 dropt_print_help(FILE* fp, const dropt_option_t* optionsP, dropt_bool_t compact)
 {
-    TCHAR* helpTextP = dropt_get_help(optionsP, compact);
+    dropt_char_t* helpTextP = dropt_get_help(optionsP, compact);
     if (helpTextP != NULL)
     {
-        fputts(helpTextP, fp);
+        dropt_fputs(helpTextP, fp);
         free(helpTextP);
     }
 }
@@ -745,7 +752,7 @@ dropt_print_help(FILE* fp, const dropt_option_t* optionsP, dropt_bool_t compact)
   *     An error code.
   */
 static dropt_error_t
-set(const dropt_option_t* optionP, const TCHAR* valP)
+set(const dropt_option_t* optionP, const dropt_char_t* valP)
 {
     dropt_error_t err = dropt_error_none;
 
@@ -831,13 +838,13 @@ parseArg(parseState_t* psP)
   *     A pointer to the first unprocessed element in argv.
   *     Never returns NULL.
   */
-TCHAR**
+dropt_char_t**
 dropt_parse(dropt_context_t* contextP,
-             TCHAR** argv)
+             dropt_char_t** argv)
 {
     dropt_error_t err = dropt_error_none;
 
-    TCHAR* argP;
+    dropt_char_t* argP;
     parseState_t ps;
 
     assert(contextP != NULL);
@@ -862,7 +869,7 @@ dropt_parse(dropt_context_t* contextP,
 
         if (argP[1] == T('-'))
         {
-            TCHAR* argNameP = argP + 2;
+            dropt_char_t* argNameP = argP + 2;
             if (argNameP[0] == T('\0'))
             {
                 /* -- */
@@ -872,7 +879,7 @@ dropt_parse(dropt_context_t* contextP,
             {
                 /* --longName */
                 {
-                    TCHAR* p = tcschr(argNameP, T('='));
+                    dropt_char_t* p = dropt_strchr(argNameP, T('='));
                     if (p != NULL)
                     {
                         *p = T('\0');
@@ -907,10 +914,10 @@ dropt_parse(dropt_context_t* contextP,
             size_t j;
 
             {
-                const TCHAR* p = tcschr(argP, T('='));
+                const dropt_char_t* p = dropt_strchr(argP, T('='));
                 if (p == NULL)
                 {
-                    len = tcslen(argP);
+                    len = dropt_strlen(argP);
                     ps.valP = NULL;
                 }
                 else
