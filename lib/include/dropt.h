@@ -87,12 +87,6 @@ dropt_error_t dropt_set_options(dropt_context_t* context, const dropt_option_t* 
 void dropt_set_case_sensitive(dropt_context_t* context, dropt_bool_t caseSensitive);
 
 dropt_char_t** dropt_parse(dropt_context_t* context, dropt_char_t** argv);
-dropt_error_t dropt_handle_bool(const dropt_char_t* valString, void* handlerData);
-dropt_error_t dropt_handle_verbose_bool(const dropt_char_t* valString, void* handlerData);
-dropt_error_t dropt_handle_int(const dropt_char_t* valString, void* handlerData);
-dropt_error_t dropt_handle_uint(const dropt_char_t* valString, void* handlerData);
-dropt_error_t dropt_handle_double(const dropt_char_t* valString, void* handlerData);
-dropt_error_t dropt_handle_string(const dropt_char_t* valString, void* handlerData);
 
 dropt_error_t dropt_get_error(const dropt_context_t* context);
 void dropt_get_error_details(const dropt_context_t* context,
@@ -107,6 +101,13 @@ const dropt_char_t* dropt_get_error_message(dropt_context_t* context);
 dropt_char_t* dropt_get_help(const dropt_option_t* options, dropt_bool_t compact);
 void dropt_print_help(FILE* f, const dropt_option_t* options, dropt_bool_t compact);
 #endif
+
+dropt_error_t dropt_handle_bool(const dropt_char_t* valString, void* handlerData);
+dropt_error_t dropt_handle_verbose_bool(const dropt_char_t* valString, void* handlerData);
+dropt_error_t dropt_handle_int(const dropt_char_t* valString, void* handlerData);
+dropt_error_t dropt_handle_uint(const dropt_char_t* valString, void* handlerData);
+dropt_error_t dropt_handle_double(const dropt_char_t* valString, void* handlerData);
+dropt_error_t dropt_handle_string(const dropt_char_t* valString, void* handlerData);
 
 #ifdef __cplusplus
 } /* extern "C" */
