@@ -15,10 +15,10 @@
 
 #define IS_FINALIZED(ss) ((ss)->string == NULL)
 
-#ifdef NDEBUG
-    #define DEFAULT_STRINGSTREAM_BUFFER_SIZE 256
-#else
+#ifdef DROPT_DEBUG_STRING_BUFFERS
     #define DEFAULT_STRINGSTREAM_BUFFER_SIZE 1
+#else
+    #define DEFAULT_STRINGSTREAM_BUFFER_SIZE 256
 #endif
 
 /* Compatibility junk for things that don't yet support ISO C99. */
@@ -118,7 +118,8 @@ dropt_stricmp(const dropt_char_t* s, const dropt_char_t* t)
   * PARAMETERS:
   *     OUT s     : The destination buffer.  May be NULL if n is 0.
   *                 If non-NULL, always NUL-terminated.
-  *     n         : The size of the destination buffer.
+  *     n         : The size of the destination buffer, measured in
+  *                   dropt_char_t-s.
   *     IN format : printf-style format specifier.  Must not be NULL.
   *     IN args   : Arguments to insert into the formatted string.
   *
@@ -425,10 +426,10 @@ dropt_vssprintf(dropt_stringstream* ss, const dropt_char_t* format, va_list args
         size_t available = dropt_ssgetfreespace(ss);
         if ((unsigned int) n + 1 > available)
         {
-#ifdef NDEBUG
-            size_t newSize = MAX(ss->maxSize * 2, ss->maxSize + n);
-#else
+#ifdef DROPT_DEBUG_STRING_BUFFERS
             size_t newSize = ss->maxSize + n;
+#else
+            size_t newSize = MAX(ss->maxSize * 2, ss->maxSize + n);
 #endif
             dropt_ssresize(ss, newSize);
             available = dropt_ssgetfreespace(ss);
@@ -441,17 +442,13 @@ dropt_vssprintf(dropt_stringstream* ss, const dropt_char_t* format, va_list args
          */
         n = dropt_vsnprintf(ss->string + ss->used, available, format, argsCopy);
 
-#if 0
-        /* Determine how many characters actually were written. */
-        if ((unsigned int) n >= available) { n = available - 1; }
-#else
         /* We couldn't allocate enough space. */
         if ((unsigned int) n >= available)
         {
             ss->string[ss->used] = '\0';
             n = -1;
         }
-#endif
+
         if (n > 0) { ss->used += n; }
     }
     return n;

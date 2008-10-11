@@ -4,6 +4,10 @@
 #include <stdarg.h>
 #include "dropt.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if defined _UNICODE || defined UNICODE
     #define dropt_strlen wcslen
     #define dropt_strcmp wcscmp
@@ -44,5 +48,9 @@ const dropt_char_t* dropt_ssgetstring(const dropt_stringstream* ss);
 int dropt_vssprintf(dropt_stringstream* ss, const dropt_char_t* format, va_list args);
 int dropt_ssprintf(dropt_stringstream* ss, const dropt_char_t* format, ...);
 #endif /* DROPT_NO_STRING_BUFFERS */
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* DROPT_STRING_H */

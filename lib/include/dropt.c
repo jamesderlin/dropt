@@ -113,6 +113,48 @@ dropt_handle_bool(const dropt_char_t* valString, void* handlerData)
 }
 
 
+/** dropt_handle_verbose_bool
+  *
+  *     Like dropt_handle_bool but accepts "true" and "false" string
+  *     values.
+  *
+  * PARAMETERS:
+  *     IN valString    : A string representing a boolean value.
+  *                       If NULL, the boolean value is assumed to be
+  *                         true.
+  *     OUT handlerData : A pointer to a dropt_bool_t.
+  *                       On success, set to the interpreted boolean
+  *                         value.
+  *                       On error, left untouched.
+  *
+  * RETURNS:
+  *     dropt_error_none
+  *     dropt_error_mismatch
+  */
+dropt_error_t
+dropt_handle_verbose_bool(const dropt_char_t* valString, void* handlerData)
+{
+    dropt_error_t err = dropt_handle_bool(valString, handlerData);
+    if (err != dropt_error_none)
+    {
+        bool val = false;
+        if (dropt_stricmp(valString, T("false")) == 0)
+        {
+            val = false;
+            err = dropt_error_none;
+        }
+        else if (dropt_stricmp(valString, T("true")) == 0)
+        {
+            val = true;
+            err = dropt_error_none;
+        }
+
+        if (err == dropt_error_none) { *((dropt_bool_t*) handlerData) = val; }
+    }
+    return err;
+}
+
+
 /** dropt_handle_int
   *
   *     Parses an integer from the given string.
@@ -921,6 +963,11 @@ dropt_parse(dropt_context_t* context,
         if (arg[1] == T('\0'))
         {
             /* - */
+
+            /* This intentionally leaves "-" unprocessed for the caller to
+             * deal with.  This allows construction of programs that treat
+             * "-" to mean "stdin". (See the documentation.)
+             */
             goto exit;
         }
 
@@ -932,6 +979,23 @@ dropt_parse(dropt_context_t* context,
             if (longName[0] == T('\0'))
             {
                 /* -- */
+
+                /* This is used to mark the end of the option processing
+                 * to prevent some arguments with leading '-' characters
+                 * from being treated as options. (See the documentation.)
+                 *
+                 * Don't pass this back to the caller.
+                 */
+                goto exit;
+            }
+            else if (longName[0] == T('='))
+            {
+                /* Deal with the pathological case of a user supplying
+                 * "--=".  It's preferable to do this before we mutate the
+                 * string.
+                 */
+                err = dropt_error_invalid;
+                dropt_set_error_details(context, err, arg, NULL);
                 goto exit;
             }
             else
@@ -973,6 +1037,16 @@ dropt_parse(dropt_context_t* context,
             size_t len;
             size_t j;
 
+            if (arg[1] == T('='))
+            {
+                /* Deal with the pathological case of a user supplying
+                 * "-=".
+                 */
+                err = dropt_error_invalid;
+                dropt_set_error_details(context, err, arg, NULL);
+                goto exit;
+            }
+            else
             {
                 const dropt_char_t* p = dropt_strchr(arg, T('='));
                 if (p == NULL)
@@ -1152,6 +1226,8 @@ exit:
   *
   *     Specifies whether options should be case-sensitive. (Options are
   *     case-sensitive by default.)
+  *
+  *     Not recommended for non-ASCII strings.
   *
   * PARAMETERS:
   *     IN/OUT context : The options context.

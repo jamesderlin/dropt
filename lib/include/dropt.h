@@ -88,6 +88,7 @@ void dropt_set_case_sensitive(dropt_context_t* context, dropt_bool_t caseSensiti
 
 dropt_char_t** dropt_parse(dropt_context_t* context, dropt_char_t** argv);
 dropt_error_t dropt_handle_bool(const dropt_char_t* valString, void* handlerData);
+dropt_error_t dropt_handle_verbose_bool(const dropt_char_t* valString, void* handlerData);
 dropt_error_t dropt_handle_int(const dropt_char_t* valString, void* handlerData);
 dropt_error_t dropt_handle_uint(const dropt_char_t* valString, void* handlerData);
 dropt_error_t dropt_handle_double(const dropt_char_t* valString, void* handlerData);
