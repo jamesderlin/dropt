@@ -46,6 +46,31 @@ struct dropt_stringstream
 #endif
 
 
+/** dropt_safe_malloc
+  *
+  *     Wrapper around malloc to check for integer overflow.
+  *
+  * PARAMETERS:
+  *     numElements : The number of elements to allocate.
+  *     elementSize : The size of each of element, in bytes.
+  *
+  * RETURNS:
+  *     A pointer to the allocated memory, or NULL on failure.
+  */
+static void*
+dropt_safe_malloc(size_t numElements, size_t elementSize)
+{
+    size_t numBytes = numElements * elementSize;
+    if (numBytes / elementSize != numElements)
+    {
+        /* Overflow. */
+        return NULL;
+    }
+
+    return malloc(numBytes);
+}
+
+
 /** dropt_strdup
   *
   *     Duplicates a string.
@@ -147,19 +172,20 @@ dropt_vsnprintf(dropt_char_t* s, size_t n, const dropt_char_t* format, va_list a
     int ret;
 
     assert(format != NULL);
-    va_copy(argsCopy, args);
 
-    ret = _vsctprintf(format, args);
+    va_copy(argsCopy, args);
+    ret = _vsctprintf(format, argsCopy);
+    va_end(argsCopy);
 
     if (n != 0)
     {
         assert(s != NULL);
 
     #if _MSC_VER >= 1400
-        (void) _vsntprintf_s(s, n, _TRUNCATE, format, argsCopy);
+        (void) _vsntprintf_s(s, n, _TRUNCATE, format, args);
     #else
         /* This version doesn't necessarily NUL-terminate.  Sigh. */
-        (void) _vsnprintf(s, n, format, argsCopy);
+        (void) _vsnprintf(s, n, format, args);
         s[n - 1] = '\0';
     #endif
     }
@@ -193,18 +219,20 @@ dropt_vaprintf(const dropt_char_t* format, va_list args)
     int len;
     va_list argsCopy;
     assert(format != NULL);
+
     va_copy(argsCopy, args);
-    len = dropt_vsnprintf(NULL, 0, format, args);
+    len = dropt_vsnprintf(NULL, 0, format, argsCopy);
+    va_end(argsCopy);
+
     if (len >= 0)
     {
         size_t n = len + 1 /* NUL */;
-        s = malloc(n * sizeof *s);
+        s = dropt_safe_malloc(n, sizeof *s);
         if (s != NULL)
         {
-            dropt_vsnprintf(s, n, format, argsCopy);
+            dropt_vsnprintf(s, n, format, args);
         }
     }
-    va_end(argsCopy);
 
     return s;
 }
@@ -242,7 +270,7 @@ dropt_ssopen(void)
     {
         ss->used = 0;
         ss->maxSize = DEFAULT_STRINGSTREAM_BUFFER_SIZE;
-        ss->string = malloc(ss->maxSize * sizeof *ss->string);
+        ss->string = dropt_safe_malloc(ss->maxSize, sizeof *ss->string);
         if (ss->string == NULL)
         {
             free(ss);
@@ -419,8 +447,11 @@ dropt_vssprintf(dropt_stringstream* ss, const dropt_char_t* format, va_list args
     va_list argsCopy;
     assert(ss != NULL);
     assert(format != NULL);
+
     va_copy(argsCopy, args);
-    n = dropt_vsnprintf(NULL, 0, format, args);
+    n = dropt_vsnprintf(NULL, 0, format, argsCopy);
+    va_end(argsCopy);
+
     if (n > 0 && !IS_FINALIZED(ss))
     {
         size_t available = dropt_ssgetfreespace(ss);
@@ -440,7 +471,7 @@ dropt_vssprintf(dropt_stringstream* ss, const dropt_char_t* format, va_list args
          * that would be output with a sufficiently large buffer, excluding
          * NUL.
          */
-        n = dropt_vsnprintf(ss->string + ss->used, available, format, argsCopy);
+        n = dropt_vsnprintf(ss->string + ss->used, available, format, args);
 
         /* We couldn't allocate enough space. */
         if ((unsigned int) n >= available)
