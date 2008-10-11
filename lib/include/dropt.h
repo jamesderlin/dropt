@@ -43,13 +43,6 @@ extern "C" {
 typedef enum
 {
     dropt_error_none,
-
-    /* An option handler can return dropt_error_cancel to cancel processing
-     * without the action being treated as an error (i.e. no error
-     * diagnostics).
-     */
-    dropt_error_cancel,
-
     dropt_error_invalid,
     dropt_error_insufficient_args,
     dropt_error_mismatch,

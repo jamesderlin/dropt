@@ -439,9 +439,6 @@ dropt_set_error_details(dropt_context_t* contextP, dropt_error_t err,
     assert(contextP != NULL);
     assert(optionNameP != NULL);
 
-    /* This isn't really an error. */
-    if (err == dropt_error_cancel) { err = dropt_error_none; }
-
     contextP->errorDetails.err = err;
 
     free(contextP->errorDetails.optionNameP);
@@ -572,9 +569,6 @@ dropt_get_error_message(dropt_context_t* contextP)
         {
             /* These aren't really errors. */
             case dropt_error_none:
-                break;
-            case dropt_error_cancel:
-                assert(false);
                 break;
 
             case dropt_error_invalid:
