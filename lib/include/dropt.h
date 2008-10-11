@@ -42,6 +42,7 @@ extern "C" {
 typedef enum
 {
     dropt_error_none,
+    dropt_error_bad_configuration,
     dropt_error_invalid,
     dropt_error_insufficient_args,
     dropt_error_mismatch,
@@ -66,7 +67,7 @@ typedef struct dropt_option_t
     const dropt_char_t* longName;       /* May be NULL. */
     dropt_char_t shortName;             /* May be '\0'. */
     const dropt_char_t* description;    /* May be NULL. */
-    const dropt_char_t* argDescription; /* NULL if no argument. */
+    const dropt_char_t* argDescription; /* Set to NULL if no argument. */
     dropt_option_handler_t handler;
     void* handlerData;
     unsigned int attr;
@@ -82,7 +83,7 @@ typedef struct dropt_context_t dropt_context_t;
 dropt_context_t* dropt_new_context(void);
 void dropt_free_context(dropt_context_t* context);
 
-void dropt_set_options(dropt_context_t* context, const dropt_option_t* options);
+dropt_error_t dropt_set_options(dropt_context_t* context, const dropt_option_t* options);
 void dropt_set_case_sensitive(dropt_context_t* context, dropt_bool_t caseSensitive);
 
 dropt_char_t** dropt_parse(dropt_context_t* context, dropt_char_t** argv);

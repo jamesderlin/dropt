@@ -85,10 +85,14 @@ dropt_handle_bool(const dropt_char_t* valString, void* handlerData)
     dropt_error_t err = dropt_error_none;
     bool val = false;
 
-    assert(handlerData != NULL);
-
-    if (valString == NULL)
+    if (handlerData == NULL)
     {
+        assert(!"No handler data specified.");
+        err = dropt_error_bad_configuration;
+    }
+    else if (valString == NULL)
+    {
+        /* No explicit argument implies that the option is being turned on. */
         val = true;
     }
     else if (dropt_strcmp(valString, T("0")) == 0)
@@ -133,9 +137,12 @@ dropt_handle_int(const dropt_char_t* valString, void* handlerData)
     dropt_error_t err = dropt_error_none;
     int val = 0;
 
-    assert(handlerData != NULL);
-
-    if (valString == NULL || valString[0] == T('\0'))
+    if (handlerData == NULL)
+    {
+        assert(!"No handler data specified.");
+        err = dropt_error_bad_configuration;
+    }
+    else if (valString == NULL || valString[0] == T('\0'))
     {
         err = dropt_error_insufficient_args;
     }
@@ -147,7 +154,7 @@ dropt_handle_int(const dropt_char_t* valString, void* handlerData)
         n = dropt_strtol(valString, &end, 10);
 
         /* Check that we matched at least one digit.
-         * (strtol will return 0 if fed a string with no digits.)
+         * (strotl/strtoul will return 0 if fed a string with no digits.)
          */
         if (*end == T('\0') && end > valString)
         {
@@ -201,9 +208,12 @@ dropt_handle_uint(const dropt_char_t* valString, void* handlerData)
     dropt_error_t err = dropt_error_none;
     int val = 0;
 
-    assert(handlerData != NULL);
-
-    if (valString == NULL || valString[0] == T('\0'))
+    if (handlerData == NULL)
+    {
+        assert(!"No handler data specified.");
+        err = dropt_error_bad_configuration;
+    }
+    else if (valString == NULL || valString[0] == T('\0'))
     {
         err = dropt_error_insufficient_args;
     }
@@ -219,7 +229,7 @@ dropt_handle_uint(const dropt_char_t* valString, void* handlerData)
         n = dropt_strtoul(valString, &end, 10);
 
         /* Check that we matched at least one digit.
-         * (strtol will return 0 if fed a string with no digits.)
+         * (strotl/strtoul will return 0 if fed a string with no digits.)
          */
         if (*end == T('\0') && end > valString)
         {
@@ -273,9 +283,12 @@ dropt_handle_double(const dropt_char_t* valString, void* handlerData)
     dropt_error_t err = dropt_error_none;
     double val = 0.0;
 
-    assert(handlerData != NULL);
-
-    if (valString == NULL || valString[0] == T('\0'))
+    if (handlerData == NULL)
+    {
+        assert(!"No handler data specified.");
+        err = dropt_error_bad_configuration;
+    }
+    else if (valString == NULL || valString[0] == T('\0'))
     {
         err = dropt_error_insufficient_args;
     }
@@ -330,9 +343,12 @@ dropt_handle_string(const dropt_char_t* valString, void* handlerData)
 {
     dropt_error_t err = dropt_error_none;
 
-    assert(handlerData != NULL);
-
-    if (valString == NULL)
+    if (handlerData == NULL)
+    {
+        assert(!"No handler data specified.");
+        err = dropt_error_bad_configuration;
+    }
+    else if (valString == NULL)
     {
         err = dropt_error_insufficient_args;
     }
@@ -381,7 +397,12 @@ findOptionLong(const dropt_option_t* options, const dropt_char_t* longName, bool
     const dropt_option_t* option;
     int (*cmp)(const dropt_char_t*, const dropt_char_t*) = caseSensitive ? dropt_strcmp : dropt_stricmp;
 
-    assert(options != NULL);
+    if (options == NULL)
+    {
+        assert(!"No options specified.");
+        return NULL;
+    }
+
     assert(longName != NULL);
     for (option = options; isValidOption(option); option++)
     {
@@ -414,7 +435,13 @@ static const dropt_option_t*
 findOptionShort(const dropt_option_t* options, dropt_char_t shortName, bool caseSensitive)
 {
     const dropt_option_t* option;
-    assert(options != NULL);
+
+    if (options == NULL)
+    {
+        assert(!"No options specified.");
+        return NULL;
+    }
+
     assert(shortName != T('\0'));
     for (option = options; isValidOption(option); option++)
     {
@@ -443,8 +470,17 @@ static void
 dropt_set_error_details(dropt_context_t* context, dropt_error_t err,
                         const dropt_char_t* optionName, const dropt_char_t* optionValue)
 {
-    assert(context != NULL);
-    assert(optionName != NULL);
+    if (context == NULL)
+    {
+        assert(!"No dropt context specified.");
+        return;
+    }
+
+    if (optionName == NULL)
+    {
+        assert(!"No option specified.");
+        return;
+    }
 
     context->errorDetails.err = err;
 
@@ -501,7 +537,11 @@ setShortOptionErrorDetails(dropt_context_t* context, dropt_error_t err,
 dropt_error_t
 dropt_get_error(const dropt_context_t* context)
 {
-    assert(context != NULL);
+    if (context == NULL)
+    {
+        assert(!"No dropt context specified.");
+        return dropt_error_bad_configuration;
+    }
     return context->errorDetails.err;
 }
 
@@ -521,15 +561,8 @@ void
 dropt_get_error_details(const dropt_context_t* context,
                         dropt_char_t** optionName, dropt_char_t** optionValue)
 {
-    if (optionName != NULL)
-    {
-        *optionName = context->errorDetails.optionName;
-    }
-
-    if (optionValue != NULL)
-    {
-        *optionValue = context->errorDetails.optionValue;
-    }
+    if (optionName != NULL) { *optionName = context->errorDetails.optionName; }
+    if (optionValue != NULL) { *optionValue = context->errorDetails.optionValue; }
 }
 
 
@@ -539,12 +572,16 @@ dropt_get_error_details(const dropt_context_t* context,
   *
   * PARAMETERS:
   *     IN/OUT context : The options context.
-  *     IN message     : The error message.
+  *     IN message     : The error message.  May be NULL.
   */
 void
 dropt_set_error_message(dropt_context_t* context, const dropt_char_t* message)
 {
-    assert(context != NULL);
+    if (context == NULL)
+    {
+        assert(!"No dropt context specified.");
+        return;
+    }
 
     free(context->errorDetails.message);
 
@@ -568,13 +605,21 @@ dropt_get_error_message(dropt_context_t* context)
 {
     dropt_char_t* s = NULL;
 
-    assert(context != NULL);
+    if (context == NULL)
+    {
+        assert(!"No dropt context specified.");
+        return T("");
+    }
 
     if (context->errorDetails.message == NULL)
     {
         switch (context->errorDetails.err)
         {
             case dropt_error_none:
+                break;
+
+            case dropt_error_bad_configuration:
+                s = dropt_strdup(T("Invalid option configuration."));
                 break;
 
             case dropt_error_invalid:
@@ -641,6 +686,7 @@ dropt_get_error_message(dropt_context_t* context)
   * RETURNS:
   *     An allocated help string for the available options.  The caller is
   *       responsible for calling free() on it when no longer needed.
+  *     Returns NULL on error.
   */
 dropt_char_t*
 dropt_get_help(const dropt_option_t* options, dropt_bool_t compact)
@@ -648,9 +694,11 @@ dropt_get_help(const dropt_option_t* options, dropt_bool_t compact)
     dropt_char_t* helpText = NULL;
     dropt_stringstream* ss = dropt_ssopen();
 
-    assert(options != NULL);
-
-    if (ss != NULL)
+    if (options == NULL)
+    {
+        assert(!"No option list specified.");
+    }
+    else if (ss != NULL)
     {
         static const int maxWidth = 4;
         const dropt_option_t* option;
@@ -764,6 +812,7 @@ set(const dropt_option_t* option, const dropt_char_t* valString)
     else
     {
         assert(!"No option handler specified.");
+        err = dropt_error_bad_configuration;
     }
     return err;
 }
@@ -827,31 +876,42 @@ parseArg(parseState_t* ps)
   *
   * PARAMETERS:
   *     IN context  : The options context.
+  *                   Must not be NULL.
   *     IN/OUT argv : The list of command-line arguments, not including the
   *                     initial program name.  Must be terminated with a
   *                     NULL sentinel value.
   *                   Note that the command-line arguments might be
   *                     mutated in the process.
+  *                   Must not be NULL.
   *
   * RETURNS:
   *     A pointer to the first unprocessed element in argv.
-  *     Never returns NULL.
   */
 dropt_char_t**
 dropt_parse(dropt_context_t* context,
-             dropt_char_t** argv)
+            dropt_char_t** argv)
 {
     dropt_error_t err = dropt_error_none;
 
     dropt_char_t* arg;
     parseState_t ps;
 
-    assert(context != NULL);
-    assert(argv != NULL);
-
     ps.option = NULL;
     ps.valString = NULL;
     ps.argNext = argv;
+
+    if (context == NULL)
+    {
+        assert(!"No dropt context specified.");
+        goto exit;
+    }
+
+    if (argv == NULL)
+    {
+        assert(!"Invalid argument list.");
+        goto exit;
+    }
+
 
     while (   (arg = *ps.argNext) != NULL
            && arg[0] == T('-'))
@@ -909,6 +969,7 @@ dropt_parse(dropt_context_t* context,
         }
         else
         {
+            /* Short name. */
             size_t len;
             size_t j;
 
@@ -1040,12 +1101,50 @@ dropt_free_context(dropt_context_t* context)
   * PARAMETERS:
   *     IN/OUT context : The options context.
   *     IN options     : The list of option specifications.
+  *
+  * RETURNS:
+  *     dropt_error_none
+  *     dropt_error_bad_configuration
   */
-void
+dropt_error_t
 dropt_set_options(dropt_context_t* context, const dropt_option_t* options)
 {
-    assert(context != NULL);
+    dropt_error_t err = dropt_error_none;
+
+    if (context == NULL)
+    {
+        assert(!"No dropt context specified.");
+        err = dropt_error_bad_configuration;
+        goto exit;
+    }
+
     context->options = options;
+
+    /* Sanity-check the options. */
+    if (options == NULL)
+    {
+        assert(!"No option list specified.");
+        err = dropt_error_bad_configuration;
+    }
+    else
+    {
+        const dropt_option_t* option;
+        for (option = options; isValidOption(option); option++)
+        {
+            if (   option->shortName == T('=')
+                || (   option->longName != NULL
+                    && dropt_strcmp(option->longName, T("=")) == 0))
+            {
+                assert(!"Invalid option list. "
+                        "'=' may not be used for an option shortname or longname.");
+                err = dropt_error_bad_configuration;
+                goto exit;
+            }
+        }
+    }
+
+exit:
+    return err;
 }
 
 
@@ -1062,6 +1161,11 @@ dropt_set_options(dropt_context_t* context, const dropt_option_t* options)
 void
 dropt_set_case_sensitive(dropt_context_t* context, dropt_bool_t caseSensitive)
 {
-    assert(context != NULL);
+    if (context == NULL)
+    {
+        assert(!"No dropt context specified.");
+        return;
+    }
+
     context->caseSensitive = (caseSensitive != 0);
 }
