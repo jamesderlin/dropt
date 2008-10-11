@@ -59,16 +59,16 @@ enum
 };
 
 
-typedef dropt_error_t (*dropt_option_handler_t)(const dropt_char_t* valP, void* handlerDataP);
+typedef dropt_error_t (*dropt_option_handler_t)(const dropt_char_t* valString, void* handlerData);
 
 typedef struct dropt_option_t
 {
     const dropt_char_t* longName;       /* May be NULL. */
     dropt_char_t shortName;             /* May be '\0'. */
-    const dropt_char_t* description;    /* May be NULL.*/
+    const dropt_char_t* description;    /* May be NULL. */
     const dropt_char_t* argDescription; /* NULL if no argument. */
     dropt_option_handler_t handler;
-    void* handlerDataP;
+    void* handlerData;
     unsigned int attr;
 } dropt_option_t;
 
@@ -80,30 +80,30 @@ typedef struct dropt_context_t dropt_context_t;
 
 
 dropt_context_t* dropt_new_context(void);
-void dropt_free_context(dropt_context_t* contextP);
+void dropt_free_context(dropt_context_t* context);
 
-void dropt_set_options(dropt_context_t* contextP, const dropt_option_t* optionsP);
-void dropt_set_case_sensitive(dropt_context_t* contextP, dropt_bool_t caseSensitive);
+void dropt_set_options(dropt_context_t* context, const dropt_option_t* options);
+void dropt_set_case_sensitive(dropt_context_t* context, dropt_bool_t caseSensitive);
 
-dropt_char_t** dropt_parse(dropt_context_t* contextP, dropt_char_t** argv);
-dropt_error_t dropt_handle_bool(const dropt_char_t* s, void* valP);
-dropt_error_t dropt_handle_int(const dropt_char_t* s, void* valP);
-dropt_error_t dropt_handle_uint(const dropt_char_t* s, void* valP);
-dropt_error_t dropt_handle_double(const dropt_char_t* s, void* valP);
-dropt_error_t dropt_handle_string(const dropt_char_t* s, void* valP);
+dropt_char_t** dropt_parse(dropt_context_t* context, dropt_char_t** argv);
+dropt_error_t dropt_handle_bool(const dropt_char_t* valString, void* handlerData);
+dropt_error_t dropt_handle_int(const dropt_char_t* valString, void* handlerData);
+dropt_error_t dropt_handle_uint(const dropt_char_t* valString, void* handlerData);
+dropt_error_t dropt_handle_double(const dropt_char_t* valString, void* handlerData);
+dropt_error_t dropt_handle_string(const dropt_char_t* valString, void* handlerData);
 
-dropt_error_t dropt_get_error(const dropt_context_t* contextP);
-void dropt_get_error_details(const dropt_context_t* contextP,
-                             dropt_char_t** optionNamePP,
-                             dropt_char_t** valPP);
+dropt_error_t dropt_get_error(const dropt_context_t* context);
+void dropt_get_error_details(const dropt_context_t* context,
+                             dropt_char_t** optionName,
+                             dropt_char_t** optionValue);
 
-void dropt_set_error_message(dropt_context_t* contextP, const dropt_char_t* messageP);
+void dropt_set_error_message(dropt_context_t* context, const dropt_char_t* message);
 
 #ifndef DROPT_NO_STRING_BUFFERS
-const dropt_char_t* dropt_get_error_message(dropt_context_t* contextP);
+const dropt_char_t* dropt_get_error_message(dropt_context_t* context);
 
-dropt_char_t* dropt_get_help(const dropt_option_t* optionsP, dropt_bool_t compact);
-void dropt_print_help(FILE* fp, const dropt_option_t* optionsP, dropt_bool_t compact);
+dropt_char_t* dropt_get_help(const dropt_option_t* options, dropt_bool_t compact);
+void dropt_print_help(FILE* f, const dropt_option_t* options, dropt_bool_t compact);
 #endif
 
 #ifdef __cplusplus

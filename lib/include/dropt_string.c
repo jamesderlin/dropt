@@ -13,7 +13,7 @@
 
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 
-#define IS_FINALIZED(ssP) ((ssP)->string == NULL)
+#define IS_FINALIZED(ss) ((ss)->string == NULL)
 
 #ifdef NDEBUG
     #define DEFAULT_STRINGSTREAM_BUFFER_SIZE 256
@@ -61,13 +61,13 @@ struct dropt_stringstream
 dropt_char_t*
 dropt_strdup(const dropt_char_t* s)
 {
-    dropt_char_t* copyP;
+    dropt_char_t* copy;
     size_t n;
     assert(s != NULL);
-    n = (dropt_strlen(s) + 1 /* NUL */) * sizeof *copyP;
-    copyP = malloc(n);
-    if (copyP != NULL) { memcpy(copyP, s, n); }
-    return copyP;
+    n = (dropt_strlen(s) + 1 /* NUL */) * sizeof *copy;
+    copy = malloc(n);
+    if (copy != NULL) { memcpy(copy, s, n); }
+    return copy;
 }
 
 
@@ -116,11 +116,11 @@ dropt_stricmp(const dropt_char_t* s, const dropt_char_t* t)
   *     vsnprintf wrapper to provide ISO C99-compliant behavior.
   *
   * PARAMETERS:
-  *     OUT s   : The destination buffer.  May be NULL if n is 0.
-  *               If non-NULL, always NUL-terminated.
-  *     n       : The size of the destination buffer.
-  *     IN fmtP : printf-style format specifier.  Must not be NULL.
-  *     IN args : Arguments to insert into the formatted string.
+  *     OUT s     : The destination buffer.  May be NULL if n is 0.
+  *                 If non-NULL, always NUL-terminated.
+  *     n         : The size of the destination buffer.
+  *     IN format : printf-style format specifier.  Must not be NULL.
+  *     IN args   : Arguments to insert into the formatted string.
   *
   * RETURNS:
   *     The number of characters that would be to the destination buffer if
@@ -128,7 +128,7 @@ dropt_stricmp(const dropt_char_t* s, const dropt_char_t* t)
   *     Returns -1 on error.
   */
 static int
-dropt_vsnprintf(dropt_char_t* s, size_t n, const dropt_char_t* fmtP, va_list args)
+dropt_vsnprintf(dropt_char_t* s, size_t n, const dropt_char_t* format, va_list args)
 {
 #if __STDC_VERSION__ >= 199901L || __GNUC__
     /* ISO C99-compliant.
@@ -136,7 +136,7 @@ dropt_vsnprintf(dropt_char_t* s, size_t n, const dropt_char_t* fmtP, va_list arg
      * As far as I can tell, gcc's implementation of vsnprintf has always
      * matched the behavior required by the C99 standard.
      */
-    return vsnprintf(s, n, fmtP, args);
+    return vsnprintf(s, n, format, args);
 
 #elif defined _WIN32
     /* _vsntprintf and _vsnprintf_s on Windows don't have C99 semantics;
@@ -145,20 +145,20 @@ dropt_vsnprintf(dropt_char_t* s, size_t n, const dropt_char_t* fmtP, va_list arg
     va_list argsCopy;
     int ret;
 
-    assert(fmtP != NULL);
+    assert(format != NULL);
     va_copy(argsCopy, args);
 
-    ret = _vsctprintf(fmtP, args);
+    ret = _vsctprintf(format, args);
 
     if (n != 0)
     {
         assert(s != NULL);
 
     #if _MSC_VER >= 1400
-        (void) _vsntprintf_s(s, n, _TRUNCATE, fmtP, argsCopy);
+        (void) _vsntprintf_s(s, n, _TRUNCATE, format, argsCopy);
     #else
         /* This version doesn't necessarily NUL-terminate.  Sigh. */
-        (void) _vsnprintf(s, n, fmtP, argsCopy);
+        (void) _vsnprintf(s, n, format, argsCopy);
         s[n - 1] = '\0';
     #endif
     }
@@ -177,8 +177,8 @@ dropt_vsnprintf(dropt_char_t* s, size_t n, const dropt_char_t* fmtP, va_list arg
   *     Allocates a formatted string with vprintf semantics.
   *
   * PARAMETERS:
-  *     IN fmtP : printf-style format specifier.  Must not be NULL.
-  *     IN args : Arguments to insert into the formatted string.
+  *     IN format : printf-style format specifier.  Must not be NULL.
+  *     IN args   : Arguments to insert into the formatted string.
   *
   * RETURNS:
   *     The formatted string.  The caller is responsible for calling free()
@@ -186,21 +186,21 @@ dropt_vsnprintf(dropt_char_t* s, size_t n, const dropt_char_t* fmtP, va_list arg
   *     Returns NULL on error.
   */
 dropt_char_t*
-dropt_vaprintf(const dropt_char_t* fmtP, va_list args)
+dropt_vaprintf(const dropt_char_t* format, va_list args)
 {
     dropt_char_t* s = NULL;
     int len;
     va_list argsCopy;
-    assert(fmtP != NULL);
+    assert(format != NULL);
     va_copy(argsCopy, args);
-    len = dropt_vsnprintf(NULL, 0, fmtP, args);
+    len = dropt_vsnprintf(NULL, 0, format, args);
     if (len >= 0)
     {
         size_t n = len + 1 /* NUL */;
         s = malloc(n * sizeof *s);
         if (s != NULL)
         {
-            dropt_vsnprintf(s, n, fmtP, argsCopy);
+            dropt_vsnprintf(s, n, format, argsCopy);
         }
     }
     va_end(argsCopy);
@@ -211,13 +211,13 @@ dropt_vaprintf(const dropt_char_t* fmtP, va_list args)
 
 /* See dropt_vaprintf. */
 dropt_char_t*
-dropt_aprintf(const dropt_char_t* fmtP, ...)
+dropt_aprintf(const dropt_char_t* format, ...)
 {
     dropt_char_t* s;
 
     va_list args;
-    va_start(args, fmtP);
-    s = dropt_vaprintf(fmtP, args);
+    va_start(args, format);
+    s = dropt_vaprintf(format, args);
     va_end(args);
 
     return s;
@@ -236,19 +236,19 @@ dropt_aprintf(const dropt_char_t* fmtP, ...)
 dropt_stringstream*
 dropt_ssopen(void)
 {
-    dropt_stringstream* ssP = malloc(sizeof *ssP);
-    if (ssP != NULL)
+    dropt_stringstream* ss = malloc(sizeof *ss);
+    if (ss != NULL)
     {
-        ssP->used = 0;
-        ssP->maxSize = DEFAULT_STRINGSTREAM_BUFFER_SIZE;
-        ssP->string = malloc(ssP->maxSize * sizeof *ssP->string);
-        if (ssP->string == NULL)
+        ss->used = 0;
+        ss->maxSize = DEFAULT_STRINGSTREAM_BUFFER_SIZE;
+        ss->string = malloc(ss->maxSize * sizeof *ss->string);
+        if (ss->string == NULL)
         {
-            free(ssP);
-            ssP = NULL;
+            free(ss);
+            ss = NULL;
         }
     }
-    return ssP;
+    return ss;
 }
 
 
@@ -257,15 +257,15 @@ dropt_ssopen(void)
   *     Destroys a dropt_stringstream.
   *
   * PARAMETERS:
-  *     IN/OUT ssP : The dropt_stringstream.
+  *     IN/OUT ss : The dropt_stringstream.
   */
 void
-dropt_ssclose(dropt_stringstream* ssP)
+dropt_ssclose(dropt_stringstream* ss)
 {
-    if (ssP != NULL)
+    if (ss != NULL)
     {
-        free(ssP->string);
-        free(ssP);
+        free(ss->string);
+        free(ss);
     }
 }
 
@@ -279,12 +279,12 @@ dropt_ssclose(dropt_stringstream* ssP)
   *       therefore is always positive.)
   */
 static size_t
-dropt_ssgetfreespace(const dropt_stringstream* ssP)
+dropt_ssgetfreespace(const dropt_stringstream* ss)
 {
-    assert(ssP != NULL);
-    assert(ssP->maxSize > 0);
-    assert(ssP->maxSize > ssP->used);
-    return ssP->maxSize - ssP->used;
+    assert(ss != NULL);
+    assert(ss->maxSize > 0);
+    assert(ss->maxSize > ss->used);
+    return ss->maxSize - ss->used;
 }
 
 
@@ -295,37 +295,37 @@ dropt_ssgetfreespace(const dropt_stringstream* ssP)
   *     will be shrunk to the minimum size necessary.
   *
   * PARAMETERS:
-  *     IN/OUT ssP : The dropt_stringstream.
-  *     n          : The desired buffer size.
+  *     IN/OUT ss : The dropt_stringstream.
+  *     n         : The desired buffer size.
   *
   * RETURNS:
   *     The new size of the dropt_stringstream's buffer in dropt_char_t-s,
   *       including space for a terminating NUL.
   */
 static size_t
-dropt_ssresize(dropt_stringstream* ssP, size_t n)
+dropt_ssresize(dropt_stringstream* ss, size_t n)
 {
-    assert(ssP != NULL);
-    if (!IS_FINALIZED(ssP))
+    assert(ss != NULL);
+    if (!IS_FINALIZED(ss))
     {
-        if (n > ssP->maxSize)
+        if (n > ss->maxSize)
         {
-            dropt_char_t* p = realloc(ssP->string, n * sizeof *ssP->string);
+            dropt_char_t* p = realloc(ss->string, n * sizeof *ss->string);
             if (p != NULL)
             {
-                ssP->string = p;
-                ssP->maxSize = n;
+                ss->string = p;
+                ss->maxSize = n;
             }
         }
         else
         {
-            n = MAX(n, ssP->used + 1 /* NUL */);
-            realloc(ssP->string, n * sizeof *ssP->string);
-            ssP->maxSize = n;
+            n = MAX(n, ss->used + 1 /* NUL */);
+            realloc(ss->string, n * sizeof *ss->string);
+            ss->maxSize = n;
         }
-        assert(ssP->maxSize > 0);
+        assert(ss->maxSize > 0);
     }
-    return ssP->maxSize;
+    return ss->maxSize;
 }
 
 
@@ -334,18 +334,18 @@ dropt_ssresize(dropt_stringstream* ssP, size_t n)
   *     Clears and re-initializes a dropt_stringstream.
   *
   * PARAMETERS:
-  *     IN/OUT ssP : The dropt_stringstream
+  *     IN/OUT ss : The dropt_stringstream
   */
 void
-dropt_ssclear(dropt_stringstream* ssP)
+dropt_ssclear(dropt_stringstream* ss)
 {
-    assert(ssP != NULL);
-    if (!IS_FINALIZED(ssP))
+    assert(ss != NULL);
+    if (!IS_FINALIZED(ss))
     {
-        ssP->string[0] = '\0';
-        ssP->used = 0;
-        ssP->maxSize = DEFAULT_STRINGSTREAM_BUFFER_SIZE;
-        realloc(ssP->string, ssP->maxSize * sizeof *ssP->string);
+        ss->string[0] = '\0';
+        ss->used = 0;
+        ss->maxSize = DEFAULT_STRINGSTREAM_BUFFER_SIZE;
+        realloc(ss->string, ss->maxSize * sizeof *ss->string);
     }
 }
 
@@ -356,7 +356,7 @@ dropt_ssclear(dropt_stringstream* ssP)
   *     further operations may be performed on the dropt_stringstream.
   *
   * PARAMETERS:
-  *     IN/OUT ssP : The dropt_stringstream.
+  *     IN/OUT ss : The dropt_stringstream.
   *
   * RETURNS:
   *     The dropt_stringstream's string.  Note that the caller assumes
@@ -366,15 +366,15 @@ dropt_ssclear(dropt_stringstream* ssP)
   *       longer needed.
   */
 dropt_char_t*
-dropt_ssfinalize(dropt_stringstream* ssP)
+dropt_ssfinalize(dropt_stringstream* ss)
 {
     dropt_char_t* s;
-    assert(ssP != NULL);
-    dropt_ssresize(ssP, 0);
-    s = ssP->string;
-    ssP->string = NULL;
-    ssP->maxSize = 0;
-    ssP->used = 0;
+    assert(ss != NULL);
+    dropt_ssresize(ss, 0);
+    s = ss->string;
+    ss->string = NULL;
+    ss->maxSize = 0;
+    ss->used = 0;
     return s;
 }
 
@@ -382,7 +382,7 @@ dropt_ssfinalize(dropt_stringstream* ssP)
 /** dropt_ssgetstring
   *
   * PARAMETERS:
-  *     IN ssP : The dropt_stringstream.
+  *     IN ss : The dropt_stringstream.
   *
   * RETURNS:
   *     The dropt_stringstream's string.  The returned string will no
@@ -390,10 +390,10 @@ dropt_ssfinalize(dropt_stringstream* ssP)
   *       dropt_stringstream or if the dropt_stringstream is closed.
   */
 const dropt_char_t*
-dropt_ssgetstring(const dropt_stringstream* ssP)
+dropt_ssgetstring(const dropt_stringstream* ss)
 {
-    assert(ssP != NULL);
-    return ssP->string;
+    assert(ss != NULL);
+    return ss->string;
 }
 
 
@@ -403,35 +403,35 @@ dropt_ssgetstring(const dropt_stringstream* ssP)
   *     dropt_stringstream.
   *
   * PARAMETERS:
-  *     IN/OUT ssP : The dropt_stringstream.
-  *     IN fmtP    : printf-style format specifier.  Must not be NULL.
-  *     IN args    : Arguments to insert into the formatted string.
+  *     IN/OUT ss : The dropt_stringstream.
+  *     IN format : printf-style format specifier.  Must not be NULL.
+  *     IN args   : Arguments to insert into the formatted string.
   *
   * RETURNS:
   *     The number of characters written to the dropt_stringstream.
   *     Returns a negative value on error.
   */
 int
-dropt_vssprintf(dropt_stringstream* ssP, const dropt_char_t* fmtP, va_list args)
+dropt_vssprintf(dropt_stringstream* ss, const dropt_char_t* format, va_list args)
 {
     int n;
     va_list argsCopy;
-    assert(ssP != NULL);
-    assert(fmtP != NULL);
+    assert(ss != NULL);
+    assert(format != NULL);
     va_copy(argsCopy, args);
-    n = dropt_vsnprintf(NULL, 0, fmtP, args);
-    if (n > 0 && !IS_FINALIZED(ssP))
+    n = dropt_vsnprintf(NULL, 0, format, args);
+    if (n > 0 && !IS_FINALIZED(ss))
     {
-        size_t available = dropt_ssgetfreespace(ssP);
+        size_t available = dropt_ssgetfreespace(ss);
         if ((unsigned int) n + 1 > available)
         {
 #ifdef NDEBUG
-            size_t newSize = MAX(ssP->maxSize * 2, ssP->maxSize + n);
+            size_t newSize = MAX(ss->maxSize * 2, ss->maxSize + n);
 #else
-            size_t newSize = ssP->maxSize + n;
+            size_t newSize = ss->maxSize + n;
 #endif
-            dropt_ssresize(ssP, newSize);
-            available = dropt_ssgetfreespace(ssP);
+            dropt_ssresize(ss, newSize);
+            available = dropt_ssgetfreespace(ss);
         }
         assert(available > 0); /* Space always is reserved for NUL. */
 
@@ -439,7 +439,7 @@ dropt_vssprintf(dropt_stringstream* ssP, const dropt_char_t* fmtP, va_list args)
          * that would be output with a sufficiently large buffer, excluding
          * NUL.
          */
-        n = dropt_vsnprintf(ssP->string + ssP->used, available, fmtP, argsCopy);
+        n = dropt_vsnprintf(ss->string + ss->used, available, format, argsCopy);
 
 #if 0
         /* Determine how many characters actually were written. */
@@ -448,11 +448,11 @@ dropt_vssprintf(dropt_stringstream* ssP, const dropt_char_t* fmtP, va_list args)
         /* We couldn't allocate enough space. */
         if ((unsigned int) n >= available)
         {
-            ssP->string[ssP->used] = '\0';
+            ss->string[ss->used] = '\0';
             n = -1;
         }
 #endif
-        if (n > 0) { ssP->used += n; }
+        if (n > 0) { ss->used += n; }
     }
     return n;
 }
@@ -460,13 +460,13 @@ dropt_vssprintf(dropt_stringstream* ssP, const dropt_char_t* fmtP, va_list args)
 
 /* See dropt_vssprintf. */
 int
-dropt_ssprintf(dropt_stringstream* ssP, const dropt_char_t* fmtP, ...)
+dropt_ssprintf(dropt_stringstream* ss, const dropt_char_t* format, ...)
 {
     int n;
 
     va_list args;
-    va_start(args, fmtP);
-    n = dropt_vssprintf(ssP, fmtP, args);
+    va_start(args, format);
+    n = dropt_vssprintf(ss, format, args);
     va_end(args);
 
     return n;
