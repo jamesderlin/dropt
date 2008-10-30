@@ -323,7 +323,9 @@ dropt_handle_double(const dropt_char_t* valString, void* handlerData)
         {
             if (errno == ERANGE)
             {
-                err = dropt_error_overflow;
+                err = (val == 0)
+                      ? dropt_error_underflow
+                      : dropt_error_overflow;
             }
             else if (errno != 0)
             {

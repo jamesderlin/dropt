@@ -41,14 +41,20 @@ extern "C" {
 
 typedef enum
 {
+    /* Errors in the range [0x00, 0x7F] are reserved for dropt. */
     dropt_error_none,
+    dropt_error_unknown,
     dropt_error_bad_configuration,
     dropt_error_invalid,
     dropt_error_insufficient_args,
     dropt_error_mismatch,
     dropt_error_overflow,
-    dropt_error_custom,
-    dropt_error_unknown,
+    dropt_error_underflow,
+    dropt_error_insufficient_memory,
+    dropt_error_custom = 0x7F,
+
+    /* Errors in the range [0x80, 0xFFFF] are free for clients to use. */
+    dropt_error_last = 0xFFFF
 } dropt_error_t;
 
 

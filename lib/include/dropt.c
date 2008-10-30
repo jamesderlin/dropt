@@ -36,6 +36,8 @@
     #define T(s) s
 #endif
 
+#define IS_CUSTOM_ERROR(e) ((e) >= dropt_error_custom && (e) <= dropt_error_last)
+
 typedef enum { false, true } bool;
 
 struct dropt_context_t
@@ -80,12 +82,13 @@ isValidOption(const dropt_option_t* option)
 
 /** findOptionLong
   *
-  *     Finds the option specification for a "long" option (i.e., an
-  *     option of the form "--option").
+  *     Finds the option specification for a "long" option (i.e., an option
+  *     of the form "--option").
   *
   * PARAMETERS:
   *     IN options    : The list of option specifications.
-  *     IN longName   : The "long" option to search for.
+  *     IN longName   : The "long" option to search for (excluding leading
+  *                       dashes).
   *     caseSensitive : Pass true to use case-sensitive comparisons, false
   *                       otherwise.
   *
@@ -194,7 +197,7 @@ dropt_set_error_details(dropt_context_t* context, dropt_error_t err,
                                         ? dropt_strdup(optionValue)
                                         : NULL;
 
-    if (err != dropt_error_custom)
+    if (!IS_CUSTOM_ERROR(err))
     {
         /* The message will be generated lazily on retrieval. */
         free(context->errorDetails.message);
@@ -315,6 +318,7 @@ dropt_get_error_message(dropt_context_t* context)
 
     if (context->errorDetails.message == NULL)
     {
+        bool hasValue = context->errorDetails.optionValue != NULL;
         switch (context->errorDetails.err)
         {
             case dropt_error_none:
@@ -332,45 +336,43 @@ dropt_get_error_message(dropt_context_t* context)
                                   context->errorDetails.optionName);
                 break;
             case dropt_error_mismatch:
-                if (context->errorDetails.optionValue == NULL)
-                {
-                    s = dropt_aprintf(T("Invalid value for option %s"),
-                                      context->errorDetails.optionName);
-                }
-                else
-                {
-                    s = dropt_aprintf(T("Invalid value for option %s: %s"),
-                                      context->errorDetails.optionName,
-                                      context->errorDetails.optionValue);
-                }
+                s = dropt_aprintf(T("Invalid value for option %s%s%s"),
+                                  context->errorDetails.optionName,
+                                  hasValue ? T(": ") : T(""),
+                                  hasValue ? context->errorDetails.optionValue : T(""));
                 break;
             case dropt_error_overflow:
-                if (context->errorDetails.optionValue == NULL)
-                {
-                    s = dropt_aprintf(T("Integer overflow for option %s"),
-                                      context->errorDetails.optionName);
-                }
-                else
-                {
-                    s = dropt_aprintf(T("Integer overflow for option %s: %s"),
-                                      context->errorDetails.optionName,
-                                      context->errorDetails.optionValue);
-                }
+                s = dropt_aprintf(T("Value too large for option %s%s%s"),
+                                  context->errorDetails.optionName,
+                                  hasValue ? T(": ") : T(""),
+                                  hasValue ? context->errorDetails.optionValue : T(""));
                 break;
-            case dropt_error_custom:
+            case dropt_error_underflow:
+                s = dropt_aprintf(T("Value too small for option %s%s%s"),
+                                  context->errorDetails.optionName,
+                                  hasValue ? T(": ") : T(""),
+                                  hasValue ? context->errorDetails.optionValue : T(""));
+                break;
+            case dropt_error_insufficient_memory:
+                s = dropt_strdup(T("Insufficient memory."));
                 break;
             case dropt_error_unknown:
             default:
-                s = dropt_aprintf(T("Unknown error handling option %s."),
-                                  context->errorDetails.optionName);
+                if (IS_CUSTOM_ERROR(context->errorDetails.err))
+                {
+                    /* Do nothing.  The client is responsible for producing
+                     * an appropriate error message.
+                     */
+                }
+                else
+                {
+                    s = dropt_aprintf(T("Unknown error handling option %s."),
+                                      context->errorDetails.optionName);
+                }
                 break;
         }
 
-        if (context->errorDetails.err != dropt_error_custom) /* Leave custom error messages alone. */
-        {
-            free(context->errorDetails.message);
-            context->errorDetails.message = s;
-        }
+        context->errorDetails.message = s;
     }
 
     return (context->errorDetails.message == NULL)
