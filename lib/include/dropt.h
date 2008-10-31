@@ -66,7 +66,14 @@ enum
 };
 
 
-typedef dropt_error_t (*dropt_option_handler_t)(const dropt_char_t* valString, void* handlerData);
+typedef unsigned char dropt_bool_t;
+
+/* Opaque. */
+typedef struct dropt_context_t dropt_context_t;
+
+typedef dropt_error_t (*dropt_option_handler_t)(dropt_context_t* context,
+                                                const dropt_char_t* valString,
+                                                void* handlerData);
 
 typedef struct dropt_option_t
 {
@@ -78,12 +85,6 @@ typedef struct dropt_option_t
     void* handlerData;
     unsigned int attr;
 } dropt_option_t;
-
-
-typedef unsigned char dropt_bool_t;
-
-/* Opaque. */
-typedef struct dropt_context_t dropt_context_t;
 
 
 dropt_context_t* dropt_new_context(void);
@@ -108,12 +109,12 @@ dropt_char_t* dropt_get_help(const dropt_option_t* options, dropt_bool_t compact
 void dropt_print_help(FILE* f, const dropt_option_t* options, dropt_bool_t compact);
 #endif
 
-dropt_error_t dropt_handle_bool(const dropt_char_t* valString, void* handlerData);
-dropt_error_t dropt_handle_verbose_bool(const dropt_char_t* valString, void* handlerData);
-dropt_error_t dropt_handle_int(const dropt_char_t* valString, void* handlerData);
-dropt_error_t dropt_handle_uint(const dropt_char_t* valString, void* handlerData);
-dropt_error_t dropt_handle_double(const dropt_char_t* valString, void* handlerData);
-dropt_error_t dropt_handle_string(const dropt_char_t* valString, void* handlerData);
+dropt_error_t dropt_handle_bool(dropt_context_t* context, const dropt_char_t* valString, void* handlerData);
+dropt_error_t dropt_handle_verbose_bool(dropt_context_t* context, const dropt_char_t* valString, void* handlerData);
+dropt_error_t dropt_handle_int(dropt_context_t* context, const dropt_char_t* valString, void* handlerData);
+dropt_error_t dropt_handle_uint(dropt_context_t* context, const dropt_char_t* valString, void* handlerData);
+dropt_error_t dropt_handle_double(dropt_context_t* context, const dropt_char_t* valString, void* handlerData);
+dropt_error_t dropt_handle_string(dropt_context_t* context, const dropt_char_t* valString, void* handlerData);
 
 #ifdef __cplusplus
 } /* extern "C" */

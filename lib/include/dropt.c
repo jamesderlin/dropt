@@ -258,8 +258,10 @@ dropt_get_error(const dropt_context_t* context)
   * PARAMETERS:
   *     IN context      : The options context.
   *     OUT optionName  : On output, the name of the option we failed on.
+  *                         Do not free this string.
   *                       Pass NULL if unwanted.
   *     OUT optionValue : On output, the value of the option we failed on.
+  *                         Do not free this string.
   *                       Pass NULL if unwanted.
   */
 void
@@ -496,14 +498,15 @@ dropt_print_help(FILE* f, const dropt_option_t* options, dropt_bool_t compact)
   *     handler callback.
   *
   * PARAMETERS:
-  *     IN option    : The option.
-  *     IN valString : The option's value.  May be NULL.
+  *     IN/OUT context : The options context.
+  *     IN option      : The option.
+  *     IN valString   : The option's value.  May be NULL.
   *
   * RETURNS:
   *     An error code.
   */
 static dropt_error_t
-set(const dropt_option_t* option, const dropt_char_t* valString)
+set(dropt_context_t* context, const dropt_option_t* option, const dropt_char_t* valString)
 {
     dropt_error_t err = dropt_error_none;
 
@@ -511,7 +514,7 @@ set(const dropt_option_t* option, const dropt_char_t* valString)
 
     if (option->handler != NULL)
     {
-        err = option->handler(valString, option->handlerData);
+        err = option->handler(context, valString, option->handlerData);
     }
     else
     {
@@ -528,13 +531,14 @@ set(const dropt_option_t* option, const dropt_char_t* valString)
   *     optional arguments.
   *
   * PARAMETERS:
-  *     IN/OUT ps : The current parse state.
+  *     IN/OUT context : The options context.
+  *     IN/OUT ps      : The current parse state.
   *
   * RETURNS:
   *     An error code.
   */
 static dropt_error_t
-parseArg(parseState_t* ps)
+parseArg(dropt_context_t* context, parseState_t* ps)
 {
     dropt_error_t err = dropt_error_none;
 
@@ -554,7 +558,7 @@ parseArg(parseState_t* ps)
     /* Even for options that don't ask for arguments, always parse and
      * consume an argument that was specified with '='.
      */
-    err = set(ps->option, ps->valString);
+    err = set(context, ps->option, ps->valString);
 
     if (   err != dropt_error_none
         && (ps->option->attr & dropt_attr_optional_val)
@@ -562,11 +566,11 @@ parseArg(parseState_t* ps)
         && ps->valString != NULL)
     {
         /* The option's handler didn't like the argument we fed it.  If the
-         * argument was optional, try again.
+         * argument was optional, try again without it.
          */
         consumeNextArg = false;
         ps->valString = NULL;
-        err = set(ps->option, NULL);
+        err = set(context, ps->option, NULL);
     }
 
     if (err == dropt_error_none && consumeNextArg) { ps->argNext++; }
@@ -682,7 +686,7 @@ dropt_parse(dropt_context_t* context,
                 }
                 else
                 {
-                    err = parseArg(&ps);
+                    err = parseArg(context, &ps);
                     if (err != dropt_error_none)
                     {
                         dropt_set_error_details(context, err, arg, ps.valString);
@@ -740,7 +744,7 @@ dropt_parse(dropt_context_t* context,
                         /* The last short option in a condensed list gets
                          * to use an argument.
                          */
-                        err = parseArg(&ps);
+                        err = parseArg(context, &ps);
                         if (err != dropt_error_none)
                         {
                             setShortOptionErrorDetails(context, err, arg[j], ps.valString);
@@ -750,7 +754,7 @@ dropt_parse(dropt_context_t* context,
                     else if (   ps.option->argDescription == NULL
                              || (ps.option->attr & dropt_attr_optional_val))
                     {
-                        err = set(ps.option, NULL);
+                        err = set(context, ps.option, NULL);
                         if (err != dropt_error_none)
                         {
                             setShortOptionErrorDetails(context, err, arg[j], NULL);

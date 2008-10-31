@@ -43,6 +43,7 @@ typedef enum { false, true } bool;
   *     Parses a boolean value from the given string if possible.
   *
   * PARAMETERS:
+  *     IN/OUT context  : The options context.
   *     IN valString    : A string representing a boolean value (0 or 1).
   *                       If NULL, the boolean value is assumed to be
   *                         true.
@@ -56,7 +57,7 @@ typedef enum { false, true } bool;
   *     dropt_error_mismatch
   */
 dropt_error_t
-dropt_handle_bool(const dropt_char_t* valString, void* handlerData)
+dropt_handle_bool(dropt_context_t* context, const dropt_char_t* valString, void* handlerData)
 {
     dropt_error_t err = dropt_error_none;
     bool val = false;
@@ -95,6 +96,7 @@ dropt_handle_bool(const dropt_char_t* valString, void* handlerData)
   *     values.
   *
   * PARAMETERS:
+  *     IN/OUT context  : The options context.
   *     IN valString    : A string representing a boolean value.
   *                       If NULL, the boolean value is assumed to be
   *                         true.
@@ -108,9 +110,9 @@ dropt_handle_bool(const dropt_char_t* valString, void* handlerData)
   *     dropt_error_mismatch
   */
 dropt_error_t
-dropt_handle_verbose_bool(const dropt_char_t* valString, void* handlerData)
+dropt_handle_verbose_bool(dropt_context_t* context, const dropt_char_t* valString, void* handlerData)
 {
-    dropt_error_t err = dropt_handle_bool(valString, handlerData);
+    dropt_error_t err = dropt_handle_bool(context, valString, handlerData);
     if (err != dropt_error_none)
     {
         bool val = false;
@@ -136,6 +138,7 @@ dropt_handle_verbose_bool(const dropt_char_t* valString, void* handlerData)
   *     Parses an integer from the given string.
   *
   * PARAMETERS:
+  *     IN/OUT context  : The options context.
   *     IN valString    : A string representing a base-10 integer.
   *                       If NULL, returns dropt_error_unsufficient_args.
   *     OUT handlerData : A pointer to an int.
@@ -150,7 +153,7 @@ dropt_handle_verbose_bool(const dropt_char_t* valString, void* handlerData)
   *     dropt_error_unknown
   */
 dropt_error_t
-dropt_handle_int(const dropt_char_t* valString, void* handlerData)
+dropt_handle_int(dropt_context_t* context, const dropt_char_t* valString, void* handlerData)
 {
     dropt_error_t err = dropt_error_none;
     int val = 0;
@@ -206,6 +209,7 @@ dropt_handle_int(const dropt_char_t* valString, void* handlerData)
   *     Parses an unsigned integer from the given string.
   *
   * PARAMETERS:
+  *     IN/OUT context  : The options context.
   *     IN valString    : A string representing an unsigned base-10
   *                         integer.
   *                       If NULL, returns dropt_error_unsufficient_args.
@@ -221,7 +225,7 @@ dropt_handle_int(const dropt_char_t* valString, void* handlerData)
   *     dropt_error_unknown
   */
 dropt_error_t
-dropt_handle_uint(const dropt_char_t* valString, void* handlerData)
+dropt_handle_uint(dropt_context_t* context, const dropt_char_t* valString, void* handlerData)
 {
     dropt_error_t err = dropt_error_none;
     int val = 0;
@@ -281,6 +285,7 @@ dropt_handle_uint(const dropt_char_t* valString, void* handlerData)
   *     Parses a double from the given string.
   *
   * PARAMETERS:
+  *     IN/OUT context  : The options context.
   *     IN valString    : A string representing a base-10 floating-point
   *                         number.
   *                       If NULL, returns dropt_error_unsufficient_args.
@@ -296,7 +301,7 @@ dropt_handle_uint(const dropt_char_t* valString, void* handlerData)
   *     dropt_error_unknown
   */
 dropt_error_t
-dropt_handle_double(const dropt_char_t* valString, void* handlerData)
+dropt_handle_double(dropt_context_t* context, const dropt_char_t* valString, void* handlerData)
 {
     dropt_error_t err = dropt_error_none;
     double val = 0.0;
@@ -348,10 +353,12 @@ dropt_handle_double(const dropt_char_t* valString, void* handlerData)
   *     Obtains a string.
   *
   * PARAMETERS:
+  *     IN/OUT context  : The options context.
   *     IN valString    : A string.
   *                       May be NULL.
   *     OUT handlerData : A pointer to pointer-to-char.
-  *                       On success, set to the input string.
+  *                       On success, set to the input string.  Do not free
+  *                         it.
   *                       On error, left untouched.
   *
   * RETURNS:
@@ -359,7 +366,7 @@ dropt_handle_double(const dropt_char_t* valString, void* handlerData)
   *     dropt_error_insufficient_args
   */
 dropt_error_t
-dropt_handle_string(const dropt_char_t* valString, void* handlerData)
+dropt_handle_string(dropt_context_t* context, const dropt_char_t* valString, void* handlerData)
 {
     dropt_error_t err = dropt_error_none;
 
