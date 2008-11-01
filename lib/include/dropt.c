@@ -49,7 +49,7 @@ struct dropt_context_t
     {
         dropt_error_t err;
         dropt_char_t* optionName;
-        dropt_char_t* optionValue;
+        dropt_char_t* valueString;
         dropt_char_t* message;
     } errorDetails;
 };
@@ -57,7 +57,7 @@ struct dropt_context_t
 typedef struct
 {
     const dropt_option_t* option;
-    const dropt_char_t* valString;
+    const dropt_char_t* valueString;
     dropt_char_t** argNext;
 } parseState_t;
 
@@ -168,12 +168,12 @@ findOptionShort(const dropt_option_t* options, dropt_char_t shortName, bool case
   *     IN/OUT context : The options context.
   *     err            : The error code.
   *     IN optionName  : The name of the option we failed on.
-  *     IN optionValue : The value of the option we failed on.
+  *     IN valueString : The value of the option we failed on.
   *                      Pass NULL if unwanted.
   */
 static void
 dropt_set_error_details(dropt_context_t* context, dropt_error_t err,
-                        const dropt_char_t* optionName, const dropt_char_t* optionValue)
+                        const dropt_char_t* optionName, const dropt_char_t* valueString)
 {
     if (context == NULL)
     {
@@ -190,11 +190,11 @@ dropt_set_error_details(dropt_context_t* context, dropt_error_t err,
     context->errorDetails.err = err;
 
     free(context->errorDetails.optionName);
-    free(context->errorDetails.optionValue);
+    free(context->errorDetails.valueString);
 
     context->errorDetails.optionName = dropt_strdup(optionName);
-    context->errorDetails.optionValue = optionValue != NULL
-                                        ? dropt_strdup(optionValue)
+    context->errorDetails.valueString = valueString != NULL
+                                        ? dropt_strdup(valueString)
                                         : NULL;
 
     if (!IS_CUSTOM_ERROR(err))
@@ -214,12 +214,12 @@ dropt_set_error_details(dropt_context_t* context, dropt_error_t err,
   *     IN/OUT context : The options context.
   *     err            : The error code.
   *     shortName      : the "short" name of the option we failed on.
-  *     IN optionValue : The value of the option we failed on.
+  *     IN valueString : The value of the option we failed on.
   *                      Pass NULL if unwanted.
   */
 static void
 setShortOptionErrorDetails(dropt_context_t* context, dropt_error_t err,
-                           dropt_char_t shortName, const dropt_char_t* optionValue)
+                           dropt_char_t shortName, const dropt_char_t* valueString)
 {
     dropt_char_t shortNameBuf[3] = T("-?");
 
@@ -227,7 +227,7 @@ setShortOptionErrorDetails(dropt_context_t* context, dropt_error_t err,
 
     shortNameBuf[1] = shortName;
 
-    dropt_set_error_details(context, err, shortNameBuf, optionValue);
+    dropt_set_error_details(context, err, shortNameBuf, valueString);
 }
 
 
@@ -260,16 +260,16 @@ dropt_get_error(const dropt_context_t* context)
   *     OUT optionName  : On output, the name of the option we failed on.
   *                         Do not free this string.
   *                       Pass NULL if unwanted.
-  *     OUT optionValue : On output, the value of the option we failed on.
+  *     OUT valueString : On output, the value of the option we failed on.
   *                         Do not free this string.
   *                       Pass NULL if unwanted.
   */
 void
 dropt_get_error_details(const dropt_context_t* context,
-                        dropt_char_t** optionName, dropt_char_t** optionValue)
+                        dropt_char_t** optionName, dropt_char_t** valueString)
 {
     if (optionName != NULL) { *optionName = context->errorDetails.optionName; }
-    if (optionValue != NULL) { *optionValue = context->errorDetails.optionValue; }
+    if (valueString != NULL) { *valueString = context->errorDetails.valueString; }
 }
 
 
@@ -320,7 +320,7 @@ dropt_get_error_message(dropt_context_t* context)
 
     if (context->errorDetails.message == NULL)
     {
-        bool hasValue = context->errorDetails.optionValue != NULL;
+        bool hasValue = context->errorDetails.valueString != NULL;
         switch (context->errorDetails.err)
         {
             case dropt_error_none:
@@ -341,19 +341,19 @@ dropt_get_error_message(dropt_context_t* context)
                 s = dropt_aprintf(T("Invalid value for option %s%s%s"),
                                   context->errorDetails.optionName,
                                   hasValue ? T(": ") : T(""),
-                                  hasValue ? context->errorDetails.optionValue : T(""));
+                                  hasValue ? context->errorDetails.valueString : T(""));
                 break;
             case dropt_error_overflow:
                 s = dropt_aprintf(T("Value too large for option %s%s%s"),
                                   context->errorDetails.optionName,
                                   hasValue ? T(": ") : T(""),
-                                  hasValue ? context->errorDetails.optionValue : T(""));
+                                  hasValue ? context->errorDetails.valueString : T(""));
                 break;
             case dropt_error_underflow:
                 s = dropt_aprintf(T("Value too small for option %s%s%s"),
                                   context->errorDetails.optionName,
                                   hasValue ? T(": ") : T(""),
-                                  hasValue ? context->errorDetails.optionValue : T(""));
+                                  hasValue ? context->errorDetails.valueString : T(""));
                 break;
             case dropt_error_insufficient_memory:
                 s = dropt_strdup(T("Insufficient memory."));
@@ -500,13 +500,13 @@ dropt_print_help(FILE* f, const dropt_option_t* options, dropt_bool_t compact)
   * PARAMETERS:
   *     IN/OUT context : The options context.
   *     IN option      : The option.
-  *     IN valString   : The option's value.  May be NULL.
+  *     IN valueString : The option's value.  May be NULL.
   *
   * RETURNS:
   *     An error code.
   */
 static dropt_error_t
-set(dropt_context_t* context, const dropt_option_t* option, const dropt_char_t* valString)
+set(dropt_context_t* context, const dropt_option_t* option, const dropt_char_t* valueString)
 {
     dropt_error_t err = dropt_error_none;
 
@@ -514,7 +514,7 @@ set(dropt_context_t* context, const dropt_option_t* option, const dropt_char_t* 
 
     if (option->handler != NULL)
     {
-        err = option->handler(context, valString, option->handlerData);
+        err = option->handler(context, valueString, option->handlerData);
     }
     else
     {
@@ -545,31 +545,31 @@ parseArg(dropt_context_t* context, parseState_t* ps)
     bool consumeNextArg = false;
 
     if (   ps->option->argDescription != NULL
-        && ps->valString == NULL
+        && ps->valueString == NULL
         && *(ps->argNext) != NULL)
     {
         /* The option expects an argument, but none was specified with '='.
          * Try using the next item from the command-line.
          */
         consumeNextArg = true;
-        ps->valString = *(ps->argNext);
+        ps->valueString = *(ps->argNext);
     }
 
     /* Even for options that don't ask for arguments, always parse and
      * consume an argument that was specified with '='.
      */
-    err = set(context, ps->option, ps->valString);
+    err = set(context, ps->option, ps->valueString);
 
     if (   err != dropt_error_none
         && (ps->option->attr & dropt_attr_optional_val)
         && consumeNextArg
-        && ps->valString != NULL)
+        && ps->valueString != NULL)
     {
         /* The option's handler didn't like the argument we fed it.  If the
          * argument was optional, try again without it.
          */
         consumeNextArg = false;
-        ps->valString = NULL;
+        ps->valueString = NULL;
         err = set(context, ps->option, NULL);
     }
 
@@ -605,7 +605,7 @@ dropt_parse(dropt_context_t* context,
     parseState_t ps;
 
     ps.option = NULL;
-    ps.valString = NULL;
+    ps.valueString = NULL;
     ps.argNext = argv;
 
     if (context == NULL)
@@ -671,7 +671,7 @@ dropt_parse(dropt_context_t* context,
                 if (p != NULL)
                 {
                     *p = T('\0');
-                    ps.valString = p + 1;
+                    ps.valueString = p + 1;
                 }
 
                 ps.option = findOptionLong(context->options, longName,
@@ -686,7 +686,7 @@ dropt_parse(dropt_context_t* context,
                     err = parseArg(context, &ps);
                     if (err != dropt_error_none)
                     {
-                        dropt_set_error_details(context, err, arg, ps.valString);
+                        dropt_set_error_details(context, err, arg, ps.valueString);
                     }
                 }
 
@@ -721,12 +721,12 @@ dropt_parse(dropt_context_t* context,
                 if (p == NULL)
                 {
                     len = dropt_strlen(arg);
-                    ps.valString = NULL;
+                    ps.valueString = NULL;
                 }
                 else
                 {
                     len = p - arg;
-                    ps.valString = p + 1;
+                    ps.valueString = p + 1;
                 }
             }
 
@@ -750,7 +750,7 @@ dropt_parse(dropt_context_t* context,
                         err = parseArg(context, &ps);
                         if (err != dropt_error_none)
                         {
-                            setShortOptionErrorDetails(context, err, arg[j], ps.valString);
+                            setShortOptionErrorDetails(context, err, arg[j], ps.valueString);
                             goto exit;
                         }
                     }
@@ -783,7 +783,7 @@ dropt_parse(dropt_context_t* context,
         }
 
         ps.option = NULL;
-        ps.valString = NULL;
+        ps.valueString = NULL;
     }
 
 exit:
@@ -810,7 +810,7 @@ dropt_new_context(void)
         context->caseSensitive = true;
         context->errorDetails.err = dropt_error_none;
         context->errorDetails.optionName = NULL;
-        context->errorDetails.optionValue = NULL;
+        context->errorDetails.valueString = NULL;
         context->errorDetails.message = NULL;
     }
     return context;
@@ -830,7 +830,7 @@ dropt_free_context(dropt_context_t* context)
     if (context != NULL)
     {
         free(context->errorDetails.optionName);
-        free(context->errorDetails.optionValue);
+        free(context->errorDetails.valueString);
         free(context->errorDetails.message);
         free(context);
     }
