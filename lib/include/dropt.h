@@ -72,7 +72,6 @@ typedef unsigned char dropt_bool_t;
 typedef struct dropt_context_t dropt_context_t;
 
 typedef dropt_error_t (*dropt_option_handler_t)(dropt_context_t* context,
-                                                const dropt_char_t* optionName,
                                                 const dropt_char_t* valueString,
                                                 void* handlerData);
 
@@ -101,8 +100,9 @@ void dropt_get_error_details(const dropt_context_t* context,
                              dropt_char_t** optionName,
                              dropt_char_t** valueString);
 
-#ifndef DROPT_NO_STRING_BUFFERS
 void dropt_set_error_message(dropt_context_t* context, const dropt_char_t* message);
+
+#ifndef DROPT_NO_STRING_BUFFERS
 const dropt_char_t* dropt_get_error_message(dropt_context_t* context);
 
 dropt_char_t* dropt_get_help(const dropt_option_t* options, dropt_bool_t compact);
@@ -110,8 +110,7 @@ void dropt_print_help(FILE* f, const dropt_option_t* options, dropt_bool_t compa
 #endif
 
 #define DROPT_HANDLER_DECL(func) \
-    dropt_error_t func(dropt_context_t* context, const dropt_char_t* optionName, \
-                       const dropt_char_t* valueString, void* handlerData)
+    dropt_error_t func(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
 DROPT_HANDLER_DECL(dropt_handle_bool);
 DROPT_HANDLER_DECL(dropt_handle_verbose_bool);
 DROPT_HANDLER_DECL(dropt_handle_int);

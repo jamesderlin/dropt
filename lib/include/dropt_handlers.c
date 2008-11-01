@@ -44,8 +44,6 @@ typedef enum { false, true } bool;
   *
   * PARAMETERS:
   *     IN/OUT context  : The options context.
-  *     IN optionName   : The name of the option being handled (e.g. "-x"
-  *                         or "--long").
   *     IN valueString  : A string representing a boolean value (0 or 1).
   *                       If NULL, the boolean value is assumed to be
   *                         true.
@@ -59,8 +57,7 @@ typedef enum { false, true } bool;
   *     dropt_error_mismatch
   */
 dropt_error_t
-dropt_handle_bool(dropt_context_t* context, const dropt_char_t* optionName,
-                  const dropt_char_t* valueString, void* handlerData)
+dropt_handle_bool(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
 {
     dropt_error_t err = dropt_error_none;
     bool val = false;
@@ -100,8 +97,6 @@ dropt_handle_bool(dropt_context_t* context, const dropt_char_t* optionName,
   *
   * PARAMETERS:
   *     IN/OUT context  : The options context.
-  *     IN optionName   : The name of the option being handled (e.g. "-x"
-  *                         or "--long").
   *     IN valueString  : A string representing a boolean value.
   *                       If NULL, the boolean value is assumed to be
   *                         true.
@@ -115,10 +110,9 @@ dropt_handle_bool(dropt_context_t* context, const dropt_char_t* optionName,
   *     dropt_error_mismatch
   */
 dropt_error_t
-dropt_handle_verbose_bool(dropt_context_t* context, const dropt_char_t* optionName,
-                          const dropt_char_t* valueString, void* handlerData)
+dropt_handle_verbose_bool(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
 {
-    dropt_error_t err = dropt_handle_bool(context, optionName, valueString, handlerData);
+    dropt_error_t err = dropt_handle_bool(context, valueString, handlerData);
     if (err != dropt_error_none)
     {
         bool val = false;
@@ -145,8 +139,6 @@ dropt_handle_verbose_bool(dropt_context_t* context, const dropt_char_t* optionNa
   *
   * PARAMETERS:
   *     IN/OUT context  : The options context.
-  *     IN optionName   : The name of the option being handled (e.g. "-x"
-  *                         or "--long").
   *     IN valueString  : A string representing a base-10 integer.
   *                       If NULL, returns dropt_error_unsufficient_args.
   *     OUT handlerData : A pointer to an int.
@@ -161,8 +153,7 @@ dropt_handle_verbose_bool(dropt_context_t* context, const dropt_char_t* optionNa
   *     dropt_error_unknown
   */
 dropt_error_t
-dropt_handle_int(dropt_context_t* context, const dropt_char_t* optionName,
-                 const dropt_char_t* valueString, void* handlerData)
+dropt_handle_int(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
 {
     dropt_error_t err = dropt_error_none;
     int val = 0;
@@ -219,8 +210,6 @@ dropt_handle_int(dropt_context_t* context, const dropt_char_t* optionName,
   *
   * PARAMETERS:
   *     IN/OUT context  : The options context.
-  *     IN optionName   : The name of the option being handled (e.g. "-x"
-  *                         or "--long").
   *     IN valueString  : A string representing an unsigned base-10
   *                         integer.
   *                       If NULL, returns dropt_error_unsufficient_args.
@@ -236,8 +225,7 @@ dropt_handle_int(dropt_context_t* context, const dropt_char_t* optionName,
   *     dropt_error_unknown
   */
 dropt_error_t
-dropt_handle_uint(dropt_context_t* context, const dropt_char_t* optionName,
-                  const dropt_char_t* valueString, void* handlerData)
+dropt_handle_uint(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
 {
     dropt_error_t err = dropt_error_none;
     int val = 0;
@@ -298,8 +286,6 @@ dropt_handle_uint(dropt_context_t* context, const dropt_char_t* optionName,
   *
   * PARAMETERS:
   *     IN/OUT context  : The options context.
-  *     IN optionName   : The name of the option being handled (e.g. "-x"
-  *                         or "--long").
   *     IN valueString  : A string representing a base-10 floating-point
   *                         number.
   *                       If NULL, returns dropt_error_unsufficient_args.
@@ -315,8 +301,7 @@ dropt_handle_uint(dropt_context_t* context, const dropt_char_t* optionName,
   *     dropt_error_unknown
   */
 dropt_error_t
-dropt_handle_double(dropt_context_t* context, const dropt_char_t* optionName,
-                    const dropt_char_t* valueString, void* handlerData)
+dropt_handle_double(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
 {
     dropt_error_t err = dropt_error_none;
     double val = 0.0;
@@ -369,8 +354,6 @@ dropt_handle_double(dropt_context_t* context, const dropt_char_t* optionName,
   *
   * PARAMETERS:
   *     IN/OUT context  : The options context.
-  *     IN optionName   : The name of the option being handled (e.g. "-x"
-  *                         or "--long").
   *     IN valueString  : A string.
   *                       May be NULL.
   *     OUT handlerData : A pointer to pointer-to-char.
@@ -383,8 +366,7 @@ dropt_handle_double(dropt_context_t* context, const dropt_char_t* optionName,
   *     dropt_error_insufficient_args
   */
 dropt_error_t
-dropt_handle_string(dropt_context_t* context, const dropt_char_t* optionName,
-                    const dropt_char_t* valueString, void* handlerData)
+dropt_handle_string(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
 {
     dropt_error_t err = dropt_error_none;
 
