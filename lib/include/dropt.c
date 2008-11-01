@@ -57,6 +57,7 @@ struct dropt_context_t
 typedef struct
 {
     const dropt_option_t* option;
+    const dropt_char_t* optionName;
     const dropt_char_t* valueString;
     dropt_char_t** argNext;
 } parseState_t;
@@ -221,7 +222,7 @@ static void
 setShortOptionErrorDetails(dropt_context_t* context, dropt_error_t err,
                            dropt_char_t shortName, const dropt_char_t* valueString)
 {
-    dropt_char_t shortNameBuf[3] = T("-?");
+    dropt_char_t shortNameBuf[3] = T("- ");
 
     assert(shortName != T('\0'));
 
@@ -258,7 +259,8 @@ dropt_get_error(const dropt_context_t* context)
   * PARAMETERS:
   *     IN context      : The options context.
   *     OUT optionName  : On output, the name of the option we failed on.
-  *                         Do not free this string.
+  *                         Will be of the form "-x" or "--long".  Do not
+  *                         free this string.
   *                       Pass NULL if unwanted.
   *     OUT valueString : On output, the value of the option we failed on.
   *                         Do not free this string.
@@ -273,6 +275,7 @@ dropt_get_error_details(const dropt_context_t* context,
 }
 
 
+#ifndef DROPT_NO_STRING_BUFFERS
 /** dropt_set_error_message
   *
   *     Sets a custom error message in the options context.
@@ -297,7 +300,6 @@ dropt_set_error_message(dropt_context_t* context, const dropt_char_t* message)
 }
 
 
-#ifndef DROPT_NO_STRING_BUFFERS
 /** dropt_get_error_message
   *
   * PARAMETERS:
@@ -499,6 +501,8 @@ dropt_print_help(FILE* f, const dropt_option_t* options, dropt_bool_t compact)
   *
   * PARAMETERS:
   *     IN/OUT context : The options context.
+  *     IN optionName  : The name of the option being handled (e.g. "-x"
+  *                        or "--long").
   *     IN option      : The option.
   *     IN valueString : The option's value.  May be NULL.
   *
@@ -506,15 +510,17 @@ dropt_print_help(FILE* f, const dropt_option_t* options, dropt_bool_t compact)
   *     An error code.
   */
 static dropt_error_t
-set(dropt_context_t* context, const dropt_option_t* option, const dropt_char_t* valueString)
+set(dropt_context_t* context, const dropt_option_t* option,
+    const dropt_char_t* optionName, const dropt_char_t* valueString)
 {
     dropt_error_t err = dropt_error_none;
 
     assert(option != NULL);
+    assert(optionName != NULL);
 
     if (option->handler != NULL)
     {
-        err = option->handler(context, valueString, option->handlerData);
+        err = option->handler(context, optionName, valueString, option->handlerData);
     }
     else
     {
@@ -558,7 +564,7 @@ parseArg(dropt_context_t* context, parseState_t* ps)
     /* Even for options that don't ask for arguments, always parse and
      * consume an argument that was specified with '='.
      */
-    err = set(context, ps->option, ps->valueString);
+    err = set(context, ps->option, ps->optionName, ps->valueString);
 
     if (   err != dropt_error_none
         && (ps->option->attr & dropt_attr_optional_val)
@@ -570,7 +576,7 @@ parseArg(dropt_context_t* context, parseState_t* ps)
          */
         consumeNextArg = false;
         ps->valueString = NULL;
-        err = set(context, ps->option, NULL);
+        err = set(context, ps->option, ps->optionName, NULL);
     }
 
     if (err == dropt_error_none && consumeNextArg) { ps->argNext++; }
@@ -683,10 +689,11 @@ dropt_parse(dropt_context_t* context,
                 }
                 else
                 {
+                    ps.optionName = arg;
                     err = parseArg(context, &ps);
                     if (err != dropt_error_none)
                     {
-                        dropt_set_error_details(context, err, arg, ps.valueString);
+                        dropt_set_error_details(context, err, ps.optionName, ps.valueString);
                     }
                 }
 
@@ -705,6 +712,9 @@ dropt_parse(dropt_context_t* context,
             /* Short name. */
             size_t len;
             size_t j;
+
+            dropt_char_t shortNameBuf[] = T("- ");
+            ps.optionName = shortNameBuf;
 
             if (arg[1] == T('='))
             {
@@ -742,6 +752,7 @@ dropt_parse(dropt_context_t* context,
                 }
                 else
                 {
+                    shortNameBuf[1] = arg[j];
                     if (j + 1 == len)
                     {
                         /* The last short option in a condensed list gets
@@ -757,7 +768,7 @@ dropt_parse(dropt_context_t* context,
                     else if (   ps.option->argDescription == NULL
                              || (ps.option->attr & dropt_attr_optional_val))
                     {
-                        err = set(context, ps.option, NULL);
+                        err = set(context, ps.option, ps.optionName, NULL);
                         if (err != dropt_error_none)
                         {
                             setShortOptionErrorDetails(context, err, arg[j], NULL);
