@@ -667,13 +667,11 @@ dropt_parse(dropt_context_t* context,
             else
             {
                 /* --longName */
+                dropt_char_t* p = dropt_strchr(longName, T('='));
+                if (p != NULL)
                 {
-                    dropt_char_t* p = dropt_strchr(longName, T('='));
-                    if (p != NULL)
-                    {
-                        *p = T('\0');
-                        ps.valString = p + 1;
-                    }
+                    *p = T('\0');
+                    ps.valString = p + 1;
                 }
 
                 ps.option = findOptionLong(context->options, longName,
@@ -682,7 +680,6 @@ dropt_parse(dropt_context_t* context,
                 {
                     err = dropt_error_invalid;
                     dropt_set_error_details(context, err, arg, NULL);
-                    goto exit;
                 }
                 else
                 {
@@ -690,11 +687,17 @@ dropt_parse(dropt_context_t* context,
                     if (err != dropt_error_none)
                     {
                         dropt_set_error_details(context, err, arg, ps.valString);
-                        goto exit;
                     }
                 }
 
-                if (ps.option->attr & dropt_attr_halt) { goto exit; }
+                /* Undo the mutation we made. */
+                if (p != NULL) { *p = T('='); }
+
+                if (   err != dropt_error_none
+                    || ps.option->attr & dropt_attr_halt)
+                {
+                    goto exit;
+                }
             }
         }
         else

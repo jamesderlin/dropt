@@ -109,12 +109,15 @@ dropt_char_t* dropt_get_help(const dropt_option_t* options, dropt_bool_t compact
 void dropt_print_help(FILE* f, const dropt_option_t* options, dropt_bool_t compact);
 #endif
 
-dropt_error_t dropt_handle_bool(dropt_context_t* context, const dropt_char_t* valString, void* handlerData);
-dropt_error_t dropt_handle_verbose_bool(dropt_context_t* context, const dropt_char_t* valString, void* handlerData);
-dropt_error_t dropt_handle_int(dropt_context_t* context, const dropt_char_t* valString, void* handlerData);
-dropt_error_t dropt_handle_uint(dropt_context_t* context, const dropt_char_t* valString, void* handlerData);
-dropt_error_t dropt_handle_double(dropt_context_t* context, const dropt_char_t* valString, void* handlerData);
-dropt_error_t dropt_handle_string(dropt_context_t* context, const dropt_char_t* valString, void* handlerData);
+#define DROPT_HANDLER_DECL(func) \
+    dropt_error_t func(dropt_context_t* context, const dropt_char_t* valString, void* handlerData)
+DROPT_HANDLER_DECL(dropt_handle_bool);
+DROPT_HANDLER_DECL(dropt_handle_verbose_bool);
+DROPT_HANDLER_DECL(dropt_handle_int);
+DROPT_HANDLER_DECL(dropt_handle_uint);
+DROPT_HANDLER_DECL(dropt_handle_double);
+DROPT_HANDLER_DECL(dropt_handle_string);
+#undef DROPT_HANDLER_DECL
 
 #ifdef __cplusplus
 } /* extern "C" */
