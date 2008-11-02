@@ -36,7 +36,7 @@
     #define T(s) s
 #endif
 
-#define IS_CUSTOM_ERROR(e) ((e) >= dropt_error_custom && (e) <= dropt_error_last)
+#define IS_CUSTOM_ERROR(e) ((e) >= dropt_error_custom_start && (e) <= dropt_error_custom_last)
 
 typedef enum { false, true } bool;
 
@@ -44,6 +44,9 @@ struct dropt_context_t
 {
     const dropt_option_t* options;
     bool caseSensitive;
+
+    dropt_error_handler_t errorHandler;
+    void* errorHandlerData;
 
     struct
     {
@@ -193,7 +196,7 @@ dropt_set_error_details(dropt_context_t* context, dropt_error_t err,
     free(context->errorDetails.valueString);
 
     context->errorDetails.optionName = dropt_strdup(optionName);
-    context->errorDetails.valueString = valueString != NULL
+    context->errorDetails.valueString = (valueString != NULL)
                                         ? dropt_strdup(valueString)
                                         : NULL;
 
@@ -260,8 +263,8 @@ dropt_get_error(const dropt_context_t* context)
   *     OUT optionName  : On output, the name of the option we failed on.
   *                         Do not free this string.
   *                       Pass NULL if unwanted.
-  *     OUT valueString : On output, the value of the option we failed on.
-  *                         Do not free this string.
+  *     OUT valueString : On output, the value (possibly NULL) of the
+  *                         option we failed on.  Do not free this string.
   *                       Pass NULL if unwanted.
   */
 void
@@ -273,31 +276,6 @@ dropt_get_error_details(const dropt_context_t* context,
 }
 
 
-/** dropt_set_error_message
-  *
-  *     Sets a custom error message in the options context.
-  *
-  * PARAMETERS:
-  *     IN/OUT context : The options context.
-  *     IN message     : The error message.  May be NULL.
-  */
-void
-dropt_set_error_message(dropt_context_t* context, const dropt_char_t* message)
-{
-    if (context == NULL)
-    {
-        assert(!"No dropt context specified.");
-        return;
-    }
-
-    free(context->errorDetails.message);
-
-    context->errorDetails.err = dropt_error_custom;
-    context->errorDetails.message = (message != NULL) ? dropt_strdup(message) : NULL;
-}
-
-
-#ifndef DROPT_NO_STRING_BUFFERS
 /** dropt_get_error_message
   *
   * PARAMETERS:
@@ -310,8 +288,6 @@ dropt_set_error_message(dropt_context_t* context, const dropt_char_t* message)
 const dropt_char_t*
 dropt_get_error_message(dropt_context_t* context)
 {
-    dropt_char_t* s = NULL;
-
     if (context == NULL)
     {
         assert(!"No dropt context specified.");
@@ -320,66 +296,108 @@ dropt_get_error_message(dropt_context_t* context)
 
     if (context->errorDetails.message == NULL)
     {
-        bool hasValue = context->errorDetails.valueString != NULL;
-        switch (context->errorDetails.err)
+        if (context->errorHandler != NULL)
         {
-            case dropt_error_none:
-                break;
-
-            case dropt_error_bad_configuration:
-                s = dropt_strdup(T("Invalid option configuration."));
-                break;
-
-            case dropt_error_invalid:
-                s = dropt_aprintf(T("Invalid option: %s"), context->errorDetails.optionName);
-                break;
-            case dropt_error_insufficient_args:
-                s = dropt_aprintf(T("Value required after option %s"),
-                                  context->errorDetails.optionName);
-                break;
-            case dropt_error_mismatch:
-                s = dropt_aprintf(T("Invalid value for option %s%s%s"),
-                                  context->errorDetails.optionName,
-                                  hasValue ? T(": ") : T(""),
-                                  hasValue ? context->errorDetails.valueString : T(""));
-                break;
-            case dropt_error_overflow:
-                s = dropt_aprintf(T("Value too large for option %s%s%s"),
-                                  context->errorDetails.optionName,
-                                  hasValue ? T(": ") : T(""),
-                                  hasValue ? context->errorDetails.valueString : T(""));
-                break;
-            case dropt_error_underflow:
-                s = dropt_aprintf(T("Value too small for option %s%s%s"),
-                                  context->errorDetails.optionName,
-                                  hasValue ? T(": ") : T(""),
-                                  hasValue ? context->errorDetails.valueString : T(""));
-                break;
-            case dropt_error_insufficient_memory:
-                s = dropt_strdup(T("Insufficient memory."));
-                break;
-            case dropt_error_unknown:
-            default:
-                if (IS_CUSTOM_ERROR(context->errorDetails.err))
-                {
-                    /* Do nothing.  The client is responsible for producing
-                     * an appropriate error message.
-                     */
-                }
-                else
-                {
-                    s = dropt_aprintf(T("Unknown error handling option %s."),
-                                      context->errorDetails.optionName);
-                }
-                break;
+            context->errorDetails.message
+                = context->errorHandler(context->errorDetails.err,
+                                        context->errorDetails.optionName,
+                                        context->errorDetails.valueString,
+                                        context->errorHandlerData);
         }
-
-        context->errorDetails.message = s;
+        else
+        {
+#ifndef DROPT_NO_STRING_BUFFERS
+            context->errorDetails.message
+                = dropt_default_error_handler(context->errorDetails.err,
+                                              context->errorDetails.optionName,
+                                              context->errorDetails.valueString);
+#endif
+        }
     }
 
     return (context->errorDetails.message == NULL)
            ? T("")
            : context->errorDetails.message;
+}
+
+
+#ifndef DROPT_NO_STRING_BUFFERS
+/** dropt_default_error_handler
+  *
+  *     Default error handler.
+  *
+  * PARAMETERS:
+  *     error          : The error code.
+  *     IN optionName  : The name of the option we failed on.
+  *     IN valueString : The value of the option we failed on.
+  *                      Pass NULL if unwanted.
+  *
+  * RETURNS:
+  *     An allocated string for the given error.  The caller is responsible
+  *       for calling free() on it when no longer needed.
+  *     May return NULL.
+  */
+dropt_char_t*
+dropt_default_error_handler(dropt_error_t error,
+                            const dropt_char_t* optionName,
+                            const dropt_char_t* valueString)
+{
+    dropt_char_t* s = NULL;
+    bool hasValue = valueString != NULL;
+
+    switch (error)
+    {
+        case dropt_error_none:
+            break;
+
+        case dropt_error_bad_configuration:
+            s = dropt_strdup(T("Invalid option configuration."));
+            break;
+
+        case dropt_error_invalid:
+            s = dropt_aprintf(T("Invalid option: %s"), optionName);
+            break;
+        case dropt_error_insufficient_args:
+            s = dropt_aprintf(T("Value required after option %s"),
+                              optionName);
+            break;
+        case dropt_error_mismatch:
+            s = dropt_aprintf(T("Invalid value for option %s%s%s"),
+                              optionName,
+                              hasValue ? T(": ") : T(""),
+                              hasValue ? valueString : T(""));
+            break;
+        case dropt_error_overflow:
+            s = dropt_aprintf(T("Value too large for option %s%s%s"),
+                              optionName,
+                              hasValue ? T(": ") : T(""),
+                              hasValue ? valueString : T(""));
+            break;
+        case dropt_error_underflow:
+            s = dropt_aprintf(T("Value too small for option %s%s%s"),
+                              optionName,
+                              hasValue ? T(": ") : T(""),
+                              hasValue ? valueString : T(""));
+            break;
+        case dropt_error_insufficient_memory:
+            s = dropt_strdup(T("Insufficient memory."));
+            break;
+        case dropt_error_unknown:
+        default:
+            if (IS_CUSTOM_ERROR(error))
+            {
+                /* Do nothing.  The client is responsible for producing
+                 * an appropriate error message.
+                 */
+            }
+            else
+            {
+                s = dropt_aprintf(T("Unknown error handling option %s."), optionName);
+            }
+            break;
+    }
+
+    return s;
 }
 
 
@@ -590,7 +608,6 @@ parseArg(dropt_context_t* context, parseState_t* ps)
   *                     NULL sentinel value.
   *                   Note that the command-line arguments might be
   *                     mutated in the process.
-  *                   Must not be NULL.
   *
   * RETURNS:
   *     A pointer to the first unprocessed element in argv.
@@ -608,18 +625,26 @@ dropt_parse(dropt_context_t* context,
     ps.valueString = NULL;
     ps.argNext = argv;
 
+    if (argv == NULL)
+    {
+        /* Nothing to do. */
+        goto exit;
+    }
+
     if (context == NULL)
     {
         assert(!"No dropt context specified.");
         goto exit;
     }
 
-    if (argv == NULL)
+#ifdef DROPT_NO_STRING_BUFFERS
+    if (context->errorHandler == NULL)
     {
-        assert(!"Invalid argument list.");
+        assert(!"No error handler specified.");
+        dropt_set_error_details(context, dropt_error_bad_configuration, "", NULL);
         goto exit;
     }
-
+#endif
 
     while (   (arg = *ps.argNext) != NULL
            && arg[0] == T('-'))
@@ -808,6 +833,8 @@ dropt_new_context(void)
     {
         context->options = NULL;
         context->caseSensitive = true;
+        context->errorHandler = NULL;
+        context->errorHandlerData = NULL;
         context->errorDetails.err = dropt_error_none;
         context->errorDetails.optionName = NULL;
         context->errorDetails.valueString = NULL;
@@ -913,4 +940,28 @@ dropt_set_case_sensitive(dropt_context_t* context, dropt_bool_t caseSensitive)
     }
 
     context->caseSensitive = (caseSensitive != 0);
+}
+
+
+/** dropt_set_error_handler
+  *
+  *     Sets the callback function used to generate error strings from
+  *     error codes.
+  *
+  * PARAMETERS:
+  *     IN/OUT context : The options context.
+  *     handler        : The error handler callback.
+  *     handlerData    : Caller-defined callback data.
+  */
+void
+dropt_set_error_handler(dropt_context_t* context, dropt_error_handler_t handler, void* handlerData)
+{
+    if (context == NULL)
+    {
+        assert(!"No dropt context specified.");
+        return;
+    }
+
+    context->errorHandler = handler;
+    context->errorHandlerData = handlerData;
 }

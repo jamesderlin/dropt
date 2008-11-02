@@ -51,10 +51,10 @@ typedef enum
     dropt_error_overflow,
     dropt_error_underflow,
     dropt_error_insufficient_memory,
-    dropt_error_custom = 0x7F,
 
     /* Errors in the range [0x80, 0xFFFF] are free for clients to use. */
-    dropt_error_last = 0xFFFF
+    dropt_error_custom_start = 0x80,
+    dropt_error_custom_last = 0xFFFF
 } dropt_error_t;
 
 
@@ -71,9 +71,15 @@ typedef unsigned char dropt_bool_t;
 /* Opaque. */
 typedef struct dropt_context_t dropt_context_t;
 
+
 typedef dropt_error_t (*dropt_option_handler_t)(dropt_context_t* context,
                                                 const dropt_char_t* valueString,
                                                 void* handlerData);
+typedef dropt_char_t* (*dropt_error_handler_t)(dropt_error_t error,
+                                               const dropt_char_t* optionName,
+                                               const dropt_char_t* valueString,
+                                               void* handlerData);
+
 
 typedef struct dropt_option_t
 {
@@ -92,6 +98,7 @@ void dropt_free_context(dropt_context_t* context);
 
 dropt_error_t dropt_set_options(dropt_context_t* context, const dropt_option_t* options);
 void dropt_set_case_sensitive(dropt_context_t* context, dropt_bool_t caseSensitive);
+void dropt_set_error_handler(dropt_context_t* context, dropt_error_handler_t handler, void* handlerData);
 
 dropt_char_t** dropt_parse(dropt_context_t* context, dropt_char_t** argv);
 
@@ -99,11 +106,12 @@ dropt_error_t dropt_get_error(const dropt_context_t* context);
 void dropt_get_error_details(const dropt_context_t* context,
                              dropt_char_t** optionName,
                              dropt_char_t** valueString);
-
-void dropt_set_error_message(dropt_context_t* context, const dropt_char_t* message);
+const dropt_char_t* dropt_get_error_message(dropt_context_t* context);
 
 #ifndef DROPT_NO_STRING_BUFFERS
-const dropt_char_t* dropt_get_error_message(dropt_context_t* context);
+dropt_char_t* dropt_default_error_handler(dropt_error_t error,
+                                          const dropt_char_t* optionName,
+                                          const dropt_char_t* valueString);
 
 dropt_char_t* dropt_get_help(const dropt_option_t* options, dropt_bool_t compact);
 void dropt_print_help(FILE* f, const dropt_option_t* options, dropt_bool_t compact);
