@@ -355,29 +355,29 @@ dropt_default_error_handler(dropt_error_t error,
             break;
 
         case dropt_error_invalid:
-            s = dropt_aprintf(T("Invalid option: %s"), optionName);
+            s = dropt_asprintf(T("Invalid option: %s"), optionName);
             break;
         case dropt_error_insufficient_args:
-            s = dropt_aprintf(T("Value required after option %s"),
+            s = dropt_asprintf(T("Value required after option %s"),
                               optionName);
             break;
         case dropt_error_mismatch:
-            s = dropt_aprintf(T("Invalid value for option %s%s%s"),
-                              optionName,
-                              hasValue ? T(": ") : T(""),
-                              hasValue ? valueString : T(""));
+            s = dropt_asprintf(T("Invalid value for option %s%s%s"),
+                               optionName,
+                               hasValue ? T(": ") : T(""),
+                               hasValue ? valueString : T(""));
             break;
         case dropt_error_overflow:
-            s = dropt_aprintf(T("Value too large for option %s%s%s"),
-                              optionName,
-                              hasValue ? T(": ") : T(""),
-                              hasValue ? valueString : T(""));
+            s = dropt_asprintf(T("Value too large for option %s%s%s"),
+                               optionName,
+                               hasValue ? T(": ") : T(""),
+                               hasValue ? valueString : T(""));
             break;
         case dropt_error_underflow:
-            s = dropt_aprintf(T("Value too small for option %s%s%s"),
-                              optionName,
-                              hasValue ? T(": ") : T(""),
-                              hasValue ? valueString : T(""));
+            s = dropt_asprintf(T("Value too small for option %s%s%s"),
+                               optionName,
+                               hasValue ? T(": ") : T(""),
+                               hasValue ? valueString : T(""));
             break;
         case dropt_error_insufficient_memory:
             s = dropt_strdup(T("Insufficient memory."));
@@ -392,7 +392,7 @@ dropt_default_error_handler(dropt_error_t error,
             }
             else
             {
-                s = dropt_aprintf(T("Unknown error handling option %s."), optionName);
+                s = dropt_asprintf(T("Unknown error handling option %s."), optionName);
             }
             break;
     }

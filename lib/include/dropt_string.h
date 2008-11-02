@@ -38,8 +38,8 @@ typedef struct dropt_stringstream dropt_stringstream;
 int dropt_vsnprintf(dropt_char_t* s, size_t n, const dropt_char_t* format, va_list args);
 int dropt_snprintf(dropt_char_t* s, size_t n, const dropt_char_t* format, ...);
 
-dropt_char_t* dropt_vaprintf(const dropt_char_t* format, va_list args);
-dropt_char_t* dropt_aprintf(const dropt_char_t* format, ...);
+dropt_char_t* dropt_vasprintf(const dropt_char_t* format, va_list args);
+dropt_char_t* dropt_asprintf(const dropt_char_t* format, ...);
 
 dropt_stringstream* dropt_ssopen(void);
 void dropt_ssclose(dropt_stringstream* ss);

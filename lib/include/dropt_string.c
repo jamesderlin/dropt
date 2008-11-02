@@ -342,7 +342,7 @@ dropt_snprintf(dropt_char_t* s, size_t n, const dropt_char_t* format, ...)
 }
 
 
-/** dropt_vaprintf
+/** dropt_vasprintf
   *
   *     Allocates a formatted string with vprintf semantics.
   *
@@ -356,7 +356,7 @@ dropt_snprintf(dropt_char_t* s, size_t n, const dropt_char_t* format, ...)
   *     Returns NULL on error.
   */
 dropt_char_t*
-dropt_vaprintf(const dropt_char_t* format, va_list args)
+dropt_vasprintf(const dropt_char_t* format, va_list args)
 {
     dropt_char_t* s = NULL;
     int len;
@@ -381,15 +381,15 @@ dropt_vaprintf(const dropt_char_t* format, va_list args)
 }
 
 
-/* See dropt_vaprintf. */
+/* See dropt_vasprintf. */
 dropt_char_t*
-dropt_aprintf(const dropt_char_t* format, ...)
+dropt_asprintf(const dropt_char_t* format, ...)
 {
     dropt_char_t* s;
 
     va_list args;
     va_start(args, format);
-    s = dropt_vaprintf(format, args);
+    s = dropt_vasprintf(format, args);
     va_end(args);
 
     return s;
