@@ -12,6 +12,7 @@
 #include "dropt_string.h"
 
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
 #define ARRAY_LENGTH(array) (sizeof (array) / sizeof (array)[0])
 
 #define IS_FINALIZED(ss) ((ss)->string == NULL)
@@ -47,71 +48,6 @@ struct dropt_stringstream
 #endif
 
 
-/** dropt_strdup
-  *
-  *     Duplicates a string.
-  *
-  * PARAMETERS:
-  *     IN s : The strings to duplicate.
-  *
-  * RETURNS:
-  *     The duplicated string.  The caller is responsible for calling
-  *       free() on it when no longer needed.
-  *     Returns NULL on error.
-  */
-dropt_char_t*
-dropt_strdup(const dropt_char_t* s)
-{
-    dropt_char_t* copy;
-    size_t n;
-    assert(s != NULL);
-    n = (dropt_strlen(s) + 1 /* NUL */) * sizeof *copy;
-    copy = malloc(n);
-    if (copy != NULL) { memcpy(copy, s, n); }
-    return copy;
-}
-
-
-/** dropt_stricmp
-  *
-  *     Compares two strings ignoring case differences.  Not recommended
-  *       for non-ASCII strings.
-  *
-  * PARAMETERS:
-  *     IN s, t : The strings to compare.
-  *
-  * RETURNS:
-  *     0 if the strings are equivalent,
-  *     < 0 if s is lexically less than t,
-  *     > 0 if s is lexically greater than t.
-  */
-int
-dropt_stricmp(const dropt_char_t* s, const dropt_char_t* t)
-{
-    if (s == t) { return 0; }
-
-    while (1)
-    {
-        if (*s == '\0' && *t == '\0')
-        {
-            return 0;
-        }
-        else if (*s == *t || dropt_tolower(*s) == dropt_tolower(*t))
-        {
-            s++;
-            t++;
-        }
-        else
-        {
-            return (dropt_tolower(*s) < dropt_tolower(*t))
-                   ? -1
-                   : +1;
-        }
-    }
-}
-
-
-#ifndef DROPT_NO_STRING_BUFFERS
 /** dropt_safe_malloc
   *
   *     Wrapper around malloc to check for integer overflow.
@@ -137,6 +73,130 @@ dropt_safe_malloc(size_t numElements, size_t elementSize)
 }
 
 
+/** dropt_strdup
+  *
+  *     Duplicates a string.
+  *
+  * PARAMETERS:
+  *     IN s : The string to duplicate.
+  *
+  * RETURNS:
+  *     The duplicated string.  The caller is responsible for calling
+  *       free() on it when no longer needed.
+  *     Returns NULL on error.
+  */
+dropt_char_t*
+dropt_strdup(const dropt_char_t* s)
+{
+    return dropt_strndup(s, (size_t) -1);
+}
+
+
+/** dropt_strndup
+  *
+  *     Duplicates the first n characters of a string.
+  *
+  * PARAMETERS:
+  *     IN s : The string to duplicate.
+  *     n    : The number of dropt_char_t-s to copy, excluding the
+  *              NUL-terminator.
+  *            Pass -1 to copy the entire string.
+  *
+  * RETURNS:
+  *     The duplicated string.  The caller is responsible for calling
+  *       free() on it when no longer needed.
+  *     Returns NULL on error.
+  */
+dropt_char_t*
+dropt_strndup(const dropt_char_t* s, size_t n)
+{
+    dropt_char_t* copy;
+    size_t len;
+
+    assert(s != NULL);
+
+    len = dropt_strlen(s);
+    n = (n == (size_t) -1) ? len : MIN(n, len);
+
+    copy = dropt_safe_malloc(n + 1 /* NUL */, sizeof *copy);
+    if (copy != NULL)
+    {
+        memcpy(copy, s, n * sizeof *copy);
+        copy[n] = '\0';
+    }
+
+    return copy;
+}
+
+
+/** dropt_stricmp
+  *
+  *     Compares two strings ignoring case differences.  Not recommended
+  *       for non-ASCII strings.
+  *
+  * PARAMETERS:
+  *     IN s, t : The strings to compare.
+  *
+  * RETURNS:
+  *     0 if the strings are equivalent,
+  *     < 0 if s is lexically less than t,
+  *     > 0 if s is lexically greater than t.
+  */
+int
+dropt_stricmp(const dropt_char_t* s, const dropt_char_t* t)
+{
+    assert(s != NULL);
+    assert(t != NULL);
+    return dropt_strnicmp(s, t, dropt_strlen(s) + 1 /* NUL */);
+}
+
+
+/** dropt_strnicmp
+  *
+  *     Compares the first n characters of two strings, ignoring case
+  *       differences.  Not recommended for non-ASCII strings.
+  *
+  * PARAMETERS:
+  *     IN s, t : The strings to compare.
+  *     n       : The maximum number of dropt_char_t-s to compare.
+  *
+  * RETURNS:
+  *     0 if the strings are equivalent,
+  *     < 0 if s is lexically less than t,
+  *     > 0 if s is lexically greater than t.
+  */
+int
+dropt_strnicmp(const dropt_char_t* s, const dropt_char_t* t, size_t n)
+{
+    assert(s != NULL);
+    assert(t != NULL);
+
+    if (s == t) { return 0; }
+
+    while (n--)
+    {
+        if (*s == '\0' && *t == '\0')
+        {
+            break;
+        }
+        else if (*s == *t || dropt_tolower(*s) == dropt_tolower(*t))
+        {
+            s++;
+            t++;
+        }
+        else
+        {
+            return (dropt_tolower(*s) < dropt_tolower(*t))
+                   ? -1
+                   : +1;
+        }
+    }
+
+    return 0;
+}
+
+
+#ifndef DROPT_NO_STRING_BUFFERS
 /** dropt_vswprintf
   *
   *     Wrapper around vswprintf to try to distinguish between truncation

@@ -11,6 +11,7 @@ extern "C" {
 #if defined _UNICODE || defined UNICODE
     #define dropt_strlen wcslen
     #define dropt_strcmp wcscmp
+    #define dropt_strncmp wcsncmp
     #define dropt_strchr wcschr
     #define dropt_strtol wcstol
     #define dropt_strtoul wcstoul
@@ -20,6 +21,7 @@ extern "C" {
 #else
     #define dropt_strlen strlen
     #define dropt_strcmp strcmp
+    #define dropt_strncmp strncmp
     #define dropt_strchr strchr
     #define dropt_strtol strtol
     #define dropt_strtoul strtoul
@@ -30,7 +32,10 @@ extern "C" {
 
 
 dropt_char_t* dropt_strdup(const dropt_char_t* s);
+dropt_char_t* dropt_strndup(const dropt_char_t* s, size_t n);
 int dropt_stricmp(const dropt_char_t* s, const dropt_char_t* t);
+int dropt_strnicmp(const dropt_char_t* s, const dropt_char_t* t, size_t n);
+
 
 #ifndef DROPT_NO_STRING_BUFFERS
 typedef struct dropt_stringstream dropt_stringstream;

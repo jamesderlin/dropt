@@ -92,6 +92,8 @@ isValidOption(const dropt_option_t* option)
   *     IN options    : The list of option specifications.
   *     IN longName   : The "long" option to search for (excluding leading
   *                       dashes).
+  *     longNameLen   : The length of the longName string, excluding the
+  *                       NUL-terminator.
   *     caseSensitive : Pass true to use case-sensitive comparisons, false
   *                       otherwise.
   *
@@ -100,10 +102,12 @@ isValidOption(const dropt_option_t* option)
   *       found.
   */
 static const dropt_option_t*
-findOptionLong(const dropt_option_t* options, const dropt_char_t* longName, bool caseSensitive)
+findOptionLong(const dropt_option_t* options, const dropt_char_t* longName, size_t longNameLen,
+               bool caseSensitive)
 {
     const dropt_option_t* option;
-    int (*cmp)(const dropt_char_t*, const dropt_char_t*) = caseSensitive ? dropt_strcmp : dropt_stricmp;
+    int (*cmp)(const dropt_char_t*, const dropt_char_t*, size_t n)
+        = caseSensitive ? dropt_strncmp : dropt_strnicmp;
 
     if (options == NULL)
     {
@@ -115,7 +119,8 @@ findOptionLong(const dropt_option_t* options, const dropt_char_t* longName, bool
     for (option = options; isValidOption(option); option++)
     {
         if (   option->longName != NULL
-            && cmp(longName, option->longName) == 0)
+            && longNameLen == dropt_strlen(option->longName)
+            && cmp(longName, option->longName, longNameLen) == 0)
         {
             return option;
         }
@@ -171,12 +176,15 @@ findOptionShort(const dropt_option_t* options, dropt_char_t shortName, bool case
   *     IN/OUT context : The options context.
   *     err            : The error code.
   *     IN optionName  : The name of the option we failed on.
+  *     optionNameLen  : The length of the optionName string, excluding the
+  *                        NUL-terminator.
   *     IN valueString : The value of the option we failed on.
   *                      Pass NULL if unwanted.
   */
 static void
 dropt_set_error_details(dropt_context_t* context, dropt_error_t err,
-                        const dropt_char_t* optionName, const dropt_char_t* valueString)
+                        const dropt_char_t* optionName, size_t optionNameLen,
+                        const dropt_char_t* valueString)
 {
     if (context == NULL)
     {
@@ -195,7 +203,7 @@ dropt_set_error_details(dropt_context_t* context, dropt_error_t err,
     free(context->errorDetails.optionName);
     free(context->errorDetails.valueString);
 
-    context->errorDetails.optionName = dropt_strdup(optionName);
+    context->errorDetails.optionName = dropt_strndup(optionName, optionNameLen);
     context->errorDetails.valueString = (valueString != NULL)
                                         ? dropt_strdup(valueString)
                                         : NULL;
@@ -230,7 +238,7 @@ setShortOptionErrorDetails(dropt_context_t* context, dropt_error_t err,
 
     shortNameBuf[1] = shortName;
 
-    dropt_set_error_details(context, err, shortNameBuf, valueString);
+    dropt_set_error_details(context, err, shortNameBuf, 3, valueString);
 }
 
 
@@ -628,13 +636,11 @@ parseArg(dropt_context_t* context, parseState_t* ps)
   *     Parses command-line options.
   *
   * PARAMETERS:
-  *     IN context  : The options context.
-  *                   Must not be NULL.
-  *     IN/OUT argv : The list of command-line arguments, not including the
-  *                     initial program name.  Must be terminated with a
-  *                     NULL sentinel value.
-  *                   Note that the command-line arguments might be
-  *                     (non-destructively) mutated in the process.
+  *     IN context : The options context.
+  *                  Must not be NULL.
+  *     IN argv    : The list of command-line arguments, not including the
+  *                    initial program name.  Must be terminated with a
+  *                    NULL sentinel value.
   *
   * RETURNS:
   *     A pointer to the first unprocessed element in argv.
@@ -668,7 +674,7 @@ dropt_parse(dropt_context_t* context,
     if (context->errorHandler == NULL)
     {
         assert(!"No error handler specified.");
-        dropt_set_error_details(context, dropt_error_bad_configuration, "", NULL);
+        dropt_set_error_details(context, dropt_error_bad_configuration, "", 0, NULL);
         goto exit;
     }
 #endif
@@ -713,37 +719,45 @@ dropt_parse(dropt_context_t* context,
                  * string.
                  */
                 err = dropt_error_invalid;
-                dropt_set_error_details(context, err, arg, NULL);
+                dropt_set_error_details(context, err, arg, dropt_strlen(arg), NULL);
                 goto exit;
             }
             else
             {
                 /* --longName */
-                dropt_char_t* p = dropt_strchr(longName, T('='));
+                const dropt_char_t* p = dropt_strchr(longName, T('='));
+                const dropt_char_t* longNameEnd;
                 if (p != NULL)
                 {
-                    *p = T('\0');
+                    longNameEnd = p;
                     ps.valueString = p + 1;
                 }
+                else
+                {
+                    longNameEnd = longName + dropt_strlen(longName);
+                }
 
-                ps.option = findOptionLong(context->options, longName,
+                /* Pass the length of the option name so that we don't need
+                 * to mutate the original string by inserting a
+                 * NUL-terminator.
+                 */
+                ps.option = findOptionLong(context->options,
+                                           longName, longNameEnd - longName,
                                            context->caseSensitive);
                 if (ps.option == NULL)
                 {
                     err = dropt_error_invalid;
-                    dropt_set_error_details(context, err, arg, NULL);
+                    dropt_set_error_details(context, err, arg, longNameEnd - arg, NULL);
                 }
                 else
                 {
                     err = parseArg(context, &ps);
                     if (err != dropt_error_none)
                     {
-                        dropt_set_error_details(context, err, arg, ps.valueString);
+                        dropt_set_error_details(context, err, arg, longNameEnd - arg,
+                                                ps.valueString);
                     }
                 }
-
-                /* Undo the mutation we made. */
-                if (p != NULL) { *p = T('='); }
 
                 if (   err != dropt_error_none
                     || ps.option->attr & dropt_attr_halt)
@@ -764,7 +778,7 @@ dropt_parse(dropt_context_t* context,
                  * "-=".
                  */
                 err = dropt_error_invalid;
-                dropt_set_error_details(context, err, arg, NULL);
+                dropt_set_error_details(context, err, arg, dropt_strlen(arg), NULL);
                 goto exit;
             }
             else
