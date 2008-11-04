@@ -321,6 +321,33 @@ dropt_get_error_message(dropt_context_t* context)
 }
 
 
+/** dropt_clear_error
+  *
+  *     Clears the error waiting in the dropt context.
+  *
+  * PARAMETERS:
+  *     IN/OUT context : The options context to free.
+  *                      May be NULL.
+  */
+void
+dropt_clear_error(dropt_context_t* context)
+{
+    if (context != NULL)
+    {
+        context->errorDetails.err = dropt_error_none;
+
+        free(context->errorDetails.optionName);
+        context->errorDetails.optionName = NULL;
+
+        free(context->errorDetails.valueString);
+        context->errorDetails.valueString = NULL;
+
+        free(context->errorDetails.message);
+        context->errorDetails.message = NULL;
+    }
+}
+
+
 #ifndef DROPT_NO_STRING_BUFFERS
 /** dropt_default_error_handler
   *
@@ -607,7 +634,7 @@ parseArg(dropt_context_t* context, parseState_t* ps)
   *                     initial program name.  Must be terminated with a
   *                     NULL sentinel value.
   *                   Note that the command-line arguments might be
-  *                     mutated in the process.
+  *                     (non-destructively) mutated in the process.
   *
   * RETURNS:
   *     A pointer to the first unprocessed element in argv.
@@ -800,6 +827,7 @@ dropt_parse(dropt_context_t* context,
                          */
                         err = dropt_error_insufficient_args;
                         setShortOptionErrorDetails(context, err, arg[j], NULL);
+                        goto exit;
                     }
                 }
 
@@ -850,17 +878,13 @@ dropt_new_context(void)
   *
   * PARAMETERS:
   *     IN/OUT context : The options context to free.
+  *                      May be NULL.
   */
 void
 dropt_free_context(dropt_context_t* context)
 {
-    if (context != NULL)
-    {
-        free(context->errorDetails.optionName);
-        free(context->errorDetails.valueString);
-        free(context->errorDetails.message);
-        free(context);
-    }
+    dropt_clear_error(context);
+    free(context);
 }
 
 

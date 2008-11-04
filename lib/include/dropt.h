@@ -107,6 +107,7 @@ void dropt_get_error_details(const dropt_context_t* context,
                              dropt_char_t** optionName,
                              dropt_char_t** valueString);
 const dropt_char_t* dropt_get_error_message(dropt_context_t* context);
+void dropt_clear_error(dropt_context_t* context);
 
 #ifndef DROPT_NO_STRING_BUFFERS
 dropt_char_t* dropt_default_error_handler(dropt_error_t error,

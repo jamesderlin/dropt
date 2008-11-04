@@ -54,6 +54,7 @@ typedef enum { false, true } bool;
   *
   * RETURNS:
   *     dropt_error_none
+  *     dropt_error_insufficient_args
   *     dropt_error_mismatch
   */
 dropt_error_t
@@ -72,17 +73,29 @@ dropt_handle_bool(dropt_context_t* context, const dropt_char_t* valueString, voi
         /* No explicit argument implies that the option is being turned on. */
         val = true;
     }
-    else if (dropt_strcmp(valueString, T("0")) == 0)
+    else if (valueString[0] == T('\0'))
     {
-        val = false;
-    }
-    else if (dropt_strcmp(valueString, T("1")) == 0)
-    {
-        val = true;
+        err = dropt_error_insufficient_args;
     }
     else
     {
-        err = dropt_error_mismatch;
+        unsigned int i = 0;
+        err = dropt_handle_uint(context, valueString, &i);
+        if (err == dropt_error_none)
+        {
+            switch (i)
+            {
+                case 0:
+                    val = false;
+                    break;
+                case 1:
+                    val = true;
+                    break;
+                default:
+                    err = dropt_error_mismatch;
+                    break;
+            }
+        }
     }
 
     if (err == dropt_error_none) { *((dropt_bool_t*) handlerData) = val; }
@@ -107,6 +120,7 @@ dropt_handle_bool(dropt_context_t* context, const dropt_char_t* valueString, voi
   *
   * RETURNS:
   *     dropt_error_none
+  *     dropt_error_insufficient_args
   *     dropt_error_mismatch
   */
 dropt_error_t
