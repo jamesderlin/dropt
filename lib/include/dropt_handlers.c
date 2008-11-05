@@ -1,6 +1,6 @@
 /** dropt_handlers.c
   *
-  *     A deliberately rudimentary command-line option parser.
+  *     Default type handlers for dropt.
   *
   * Copyright (C) 2006-2008 James D. Lin
   *
@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <float.h>
 #include <errno.h>
 #include <assert.h>
 
@@ -35,6 +36,8 @@
 #else
     #define T(s) s
 #endif
+
+#define ABS(x) (((x) < 0) ? -(x) : (x))
 
 typedef enum { false, true } bool;
 
@@ -342,7 +345,13 @@ dropt_handle_double(dropt_context_t* context, const dropt_char_t* valueString, v
         {
             if (errno == ERANGE)
             {
-                err = (val == 0)
+                /* Note that setting errno to ERANGE for underflow errors
+                 * is implementation-defined behavior, but glibc, BSD's
+                 * libc, and Microsoft's CRT all have implementations of
+                 * strtod documented to return 0 and set errno to ERANGE
+                 * for such cases.
+                 */
+                err = (ABS(val) <= DBL_MIN)
                       ? dropt_error_underflow
                       : dropt_error_overflow;
             }
@@ -371,8 +380,9 @@ dropt_handle_double(dropt_context_t* context, const dropt_char_t* valueString, v
   *     IN valueString  : A string.
   *                       May be NULL.
   *     OUT handlerData : A pointer to pointer-to-char.
-  *                       On success, set to the input string.  Do not free
-  *                         it.
+  *                       On success, set to the input string.  The string
+  *                         is NOT copied from the original argv array, so
+  *                         do not free it.
   *                       On error, left untouched.
   *
   * RETURNS:

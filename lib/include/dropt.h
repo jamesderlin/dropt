@@ -45,12 +45,12 @@ typedef enum
     dropt_error_none,
     dropt_error_unknown,
     dropt_error_bad_configuration,
-    dropt_error_invalid,
+    dropt_error_insufficient_memory,
+    dropt_error_invalid_option,
     dropt_error_insufficient_args,
     dropt_error_mismatch,
     dropt_error_overflow,
     dropt_error_underflow,
-    dropt_error_insufficient_memory,
 
     /* Errors in the range [0x80, 0xFFFF] are free for clients to use. */
     dropt_error_custom_start = 0x80,
@@ -83,12 +83,12 @@ typedef dropt_char_t* (*dropt_error_handler_t)(dropt_error_t error,
 
 typedef struct dropt_option_t
 {
-    const dropt_char_t* longName;       /* May be NULL. */
-    dropt_char_t shortName;             /* May be '\0'. */
-    const dropt_char_t* description;    /* May be NULL. */
-    const dropt_char_t* argDescription; /* Set to NULL if no argument. */
+    const dropt_char_t* long_name;       /* May be NULL. */
+    dropt_char_t short_name;             /* May be '\0'. */
+    const dropt_char_t* description;     /* May be NULL. */
+    const dropt_char_t* arg_description; /* Set to NULL if no argument. */
     dropt_option_handler_t handler;
-    void* handlerData;
+    void* handler_data;
     unsigned int attr;
 } dropt_option_t;
 

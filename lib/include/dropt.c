@@ -65,7 +65,7 @@ typedef struct
 } parseState_t;
 
 
-/** isValidOption
+/** is_valid_option
   *
   * PARAMETERS:
   *     IN option : Specification for an individual option.
@@ -75,15 +75,15 @@ typedef struct
   *       value.
   */
 static bool
-isValidOption(const dropt_option_t* option)
+is_valid_option(const dropt_option_t* option)
 {
     return    option != NULL
-           && !(   option->longName == NULL
-                && option->shortName == T('\0'));
+           && !(   option->long_name == NULL
+                && option->short_name == T('\0'));
 }
 
 
-/** findOptionLong
+/** find_long_option
   *
   *     Finds the option specification for a "long" option (i.e., an option
   *     of the form "--option").
@@ -102,8 +102,8 @@ isValidOption(const dropt_option_t* option)
   *       found.
   */
 static const dropt_option_t*
-findOptionLong(const dropt_option_t* options, const dropt_char_t* longName, size_t longNameLen,
-               bool caseSensitive)
+find_long_option(const dropt_option_t* options, const dropt_char_t* longName, size_t longNameLen,
+                 bool caseSensitive)
 {
     const dropt_option_t* option;
     int (*cmp)(const dropt_char_t*, const dropt_char_t*, size_t n)
@@ -116,11 +116,11 @@ findOptionLong(const dropt_option_t* options, const dropt_char_t* longName, size
     }
 
     assert(longName != NULL);
-    for (option = options; isValidOption(option); option++)
+    for (option = options; is_valid_option(option); option++)
     {
-        if (   option->longName != NULL
-            && longNameLen == dropt_strlen(option->longName)
-            && cmp(longName, option->longName, longNameLen) == 0)
+        if (   option->long_name != NULL
+            && longNameLen == dropt_strlen(option->long_name)
+            && cmp(longName, option->long_name, longNameLen) == 0)
         {
             return option;
         }
@@ -129,7 +129,7 @@ findOptionLong(const dropt_option_t* options, const dropt_char_t* longName, size
 }
 
 
-/** findOptionShort
+/** find_short_option
   *
   *     Finds the option specification for a "short" option (i.e., an
   *     option of the form "-o").
@@ -145,7 +145,7 @@ findOptionLong(const dropt_option_t* options, const dropt_char_t* longName, size
   *       found.
   */
 static const dropt_option_t*
-findOptionShort(const dropt_option_t* options, dropt_char_t shortName, bool caseSensitive)
+find_short_option(const dropt_option_t* options, dropt_char_t shortName, bool caseSensitive)
 {
     const dropt_option_t* option;
 
@@ -156,10 +156,11 @@ findOptionShort(const dropt_option_t* options, dropt_char_t shortName, bool case
     }
 
     assert(shortName != T('\0'));
-    for (option = options; isValidOption(option); option++)
+    for (option = options; is_valid_option(option); option++)
     {
-        if (   shortName == option->shortName
-            || (!caseSensitive && dropt_tolower(shortName) == dropt_tolower(option->shortName)))
+        if (   shortName == option->short_name
+            || (   !caseSensitive
+                && dropt_tolower(shortName) == dropt_tolower(option->short_name)))
         {
             return option;
         }
@@ -168,7 +169,7 @@ findOptionShort(const dropt_option_t* options, dropt_char_t shortName, bool case
 }
 
 
-/** dropt_set_error_details
+/** set_error_details
   *
   *     Generates error details in the options context.
   *
@@ -182,9 +183,9 @@ findOptionShort(const dropt_option_t* options, dropt_char_t shortName, bool case
   *                      Pass NULL if unwanted.
   */
 static void
-dropt_set_error_details(dropt_context_t* context, dropt_error_t err,
-                        const dropt_char_t* optionName, size_t optionNameLen,
-                        const dropt_char_t* valueString)
+set_error_details(dropt_context_t* context, dropt_error_t err,
+                  const dropt_char_t* optionName, size_t optionNameLen,
+                  const dropt_char_t* valueString)
 {
     if (context == NULL)
     {
@@ -217,7 +218,7 @@ dropt_set_error_details(dropt_context_t* context, dropt_error_t err,
 }
 
 
-/** setShortOptionErrorDetails
+/** set_short_option_error_details
   *
   *     Generates error details in the options context.
   *
@@ -229,8 +230,8 @@ dropt_set_error_details(dropt_context_t* context, dropt_error_t err,
   *                      Pass NULL if unwanted.
   */
 static void
-setShortOptionErrorDetails(dropt_context_t* context, dropt_error_t err,
-                           dropt_char_t shortName, const dropt_char_t* valueString)
+set_short_option_error_details(dropt_context_t* context, dropt_error_t err,
+                               dropt_char_t shortName, const dropt_char_t* valueString)
 {
     dropt_char_t shortNameBuf[3] = T("-?");
 
@@ -238,7 +239,7 @@ setShortOptionErrorDetails(dropt_context_t* context, dropt_error_t err,
 
     shortNameBuf[1] = shortName;
 
-    dropt_set_error_details(context, err, shortNameBuf, 3, valueString);
+    set_error_details(context, err, shortNameBuf, 3, valueString);
 }
 
 
@@ -291,7 +292,10 @@ dropt_get_error_details(const dropt_context_t* context,
   *
   * RETURNS:
   *     The current error message waiting in the options context or the
-  *       empty string if there are no errors.
+  *       empty string if there are no errors.  Note that calling any dropt
+  *       function other than dropt_get_error, dropt_get_error_details, and
+  *       dropt_get_error_message may invalidate a previously-returned
+  *       string.
   */
 const dropt_char_t*
 dropt_get_error_message(dropt_context_t* context)
@@ -389,7 +393,7 @@ dropt_default_error_handler(dropt_error_t error,
             s = dropt_strdup(T("Invalid option configuration."));
             break;
 
-        case dropt_error_invalid:
+        case dropt_error_invalid_option:
             s = dropt_asprintf(T("Invalid option: %s"), optionName);
             break;
         case dropt_error_insufficient_args:
@@ -459,10 +463,10 @@ dropt_get_help(const dropt_option_t* options, dropt_bool_t compact)
     }
     else if (ss != NULL)
     {
-        static const int maxWidth = 4;
+        const int maxWidth = 4;
         const dropt_option_t* option;
 
-        for (option = options; isValidOption(option); option++)
+        for (option = options; is_valid_option(option); option++)
         {
             int n = 0;
 
@@ -472,20 +476,20 @@ dropt_get_help(const dropt_option_t* options, dropt_bool_t compact)
                 continue;
             }
 
-            if (option->longName != NULL && option->shortName != T('\0'))
+            if (option->long_name != NULL && option->short_name != T('\0'))
             {
-                /* Both shortName and longName */
-                n = dropt_ssprintf(ss, T("  -%c, --%s"), option->shortName, option->longName);
+                /* Both short_name and long_name */
+                n = dropt_ssprintf(ss, T("  -%c, --%s"), option->short_name, option->long_name);
             }
-            else if (option->longName != NULL)
+            else if (option->long_name != NULL)
             {
-                /* longName only */
-                n = dropt_ssprintf(ss, T("  --%s"), option->longName);
+                /* long_name only */
+                n = dropt_ssprintf(ss, T("  --%s"), option->long_name);
             }
-            else if (option->shortName != T('\0'))
+            else if (option->short_name != T('\0'))
             {
-                /* shortName only */
-                n = dropt_ssprintf(ss, T("  -%c"), option->shortName);
+                /* short_name only */
+                n = dropt_ssprintf(ss, T("  -%c"), option->short_name);
             }
             else
             {
@@ -495,13 +499,13 @@ dropt_get_help(const dropt_option_t* options, dropt_bool_t compact)
 
             if (n < 0) { n = 0; }
 
-            if (option->argDescription != NULL)
+            if (option->arg_description != NULL)
             {
                 int m = dropt_ssprintf(ss,
                                        (option->attr & dropt_attr_optional_val)
                                        ? T("[=%s]")
                                        : T("=%s"),
-                                       option->argDescription);
+                                       option->arg_description);
                 if (m > 0) { n += m; }
             }
 
@@ -545,7 +549,7 @@ dropt_print_help(FILE* f, const dropt_option_t* options, dropt_bool_t compact)
 #endif /* DROPT_NO_STRING_BUFFERS */
 
 
-/** set
+/** set_option_value
   *
   *     Sets the value for a specified option by invoking the option's
   *     handler callback.
@@ -559,7 +563,8 @@ dropt_print_help(FILE* f, const dropt_option_t* options, dropt_bool_t compact)
   *     An error code.
   */
 static dropt_error_t
-set(dropt_context_t* context, const dropt_option_t* option, const dropt_char_t* valueString)
+set_option_value(dropt_context_t* context,
+                 const dropt_option_t* option, const dropt_char_t* valueString)
 {
     dropt_error_t err = dropt_error_none;
 
@@ -567,7 +572,7 @@ set(dropt_context_t* context, const dropt_option_t* option, const dropt_char_t* 
 
     if (option->handler != NULL)
     {
-        err = option->handler(context, valueString, option->handlerData);
+        err = option->handler(context, valueString, option->handler_data);
     }
     else
     {
@@ -578,7 +583,7 @@ set(dropt_context_t* context, const dropt_option_t* option, const dropt_char_t* 
 }
 
 
-/** parseArg
+/** parse_option_arg
   *
   *     Helper function to dropt_parse to deal with consuming possibly
   *     optional arguments.
@@ -591,13 +596,13 @@ set(dropt_context_t* context, const dropt_option_t* option, const dropt_char_t* 
   *     An error code.
   */
 static dropt_error_t
-parseArg(dropt_context_t* context, parseState_t* ps)
+parse_option_arg(dropt_context_t* context, parseState_t* ps)
 {
     dropt_error_t err = dropt_error_none;
 
     bool consumeNextArg = false;
 
-    if (   ps->option->argDescription != NULL
+    if (   ps->option->arg_description != NULL
         && ps->valueString == NULL
         && *(ps->argNext) != NULL)
     {
@@ -611,7 +616,7 @@ parseArg(dropt_context_t* context, parseState_t* ps)
     /* Even for options that don't ask for arguments, always parse and
      * consume an argument that was specified with '='.
      */
-    err = set(context, ps->option, ps->valueString);
+    err = set_option_value(context, ps->option, ps->valueString);
 
     if (   err != dropt_error_none
         && (ps->option->attr & dropt_attr_optional_val)
@@ -623,7 +628,7 @@ parseArg(dropt_context_t* context, parseState_t* ps)
          */
         consumeNextArg = false;
         ps->valueString = NULL;
-        err = set(context, ps->option, NULL);
+        err = set_option_value(context, ps->option, NULL);
     }
 
     if (err == dropt_error_none && consumeNextArg) { ps->argNext++; }
@@ -674,7 +679,7 @@ dropt_parse(dropt_context_t* context,
     if (context->errorHandler == NULL)
     {
         assert(!"No error handler specified.");
-        dropt_set_error_details(context, dropt_error_bad_configuration, "", 0, NULL);
+        set_error_details(context, dropt_error_bad_configuration, "", 0, NULL);
         goto exit;
     }
 #endif
@@ -715,11 +720,10 @@ dropt_parse(dropt_context_t* context,
             else if (longName[0] == T('='))
             {
                 /* Deal with the pathological case of a user supplying
-                 * "--=".  It's preferable to do this before we mutate the
-                 * string.
+                 * "--=".
                  */
-                err = dropt_error_invalid;
-                dropt_set_error_details(context, err, arg, dropt_strlen(arg), NULL);
+                err = dropt_error_invalid_option;
+                set_error_details(context, err, arg, dropt_strlen(arg), NULL);
                 goto exit;
             }
             else
@@ -741,21 +745,20 @@ dropt_parse(dropt_context_t* context,
                  * to mutate the original string by inserting a
                  * NUL-terminator.
                  */
-                ps.option = findOptionLong(context->options,
-                                           longName, longNameEnd - longName,
-                                           context->caseSensitive);
+                ps.option = find_long_option(context->options,
+                                             longName, longNameEnd - longName,
+                                             context->caseSensitive);
                 if (ps.option == NULL)
                 {
-                    err = dropt_error_invalid;
-                    dropt_set_error_details(context, err, arg, longNameEnd - arg, NULL);
+                    err = dropt_error_invalid_option;
+                    set_error_details(context, err, arg, longNameEnd - arg, NULL);
                 }
                 else
                 {
-                    err = parseArg(context, &ps);
+                    err = parse_option_arg(context, &ps);
                     if (err != dropt_error_none)
                     {
-                        dropt_set_error_details(context, err, arg, longNameEnd - arg,
-                                                ps.valueString);
+                        set_error_details(context, err, arg, longNameEnd - arg, ps.valueString);
                     }
                 }
 
@@ -777,8 +780,8 @@ dropt_parse(dropt_context_t* context,
                 /* Deal with the pathological case of a user supplying
                  * "-=".
                  */
-                err = dropt_error_invalid;
-                dropt_set_error_details(context, err, arg, dropt_strlen(arg), NULL);
+                err = dropt_error_invalid_option;
+                set_error_details(context, err, arg, dropt_strlen(arg), NULL);
                 goto exit;
             }
             else
@@ -798,12 +801,12 @@ dropt_parse(dropt_context_t* context,
 
             for (j = 1; j < len; j++)
             {
-                ps.option = findOptionShort(context->options, arg[j],
-                                            context->caseSensitive);
+                ps.option = find_short_option(context->options, arg[j],
+                                              context->caseSensitive);
                 if (ps.option == NULL)
                 {
-                    err = dropt_error_invalid;
-                    setShortOptionErrorDetails(context, err, arg[j], NULL);
+                    err = dropt_error_invalid_option;
+                    set_short_option_error_details(context, err, arg[j], NULL);
                     goto exit;
                 }
                 else
@@ -813,20 +816,20 @@ dropt_parse(dropt_context_t* context,
                         /* The last short option in a condensed list gets
                          * to use an argument.
                          */
-                        err = parseArg(context, &ps);
+                        err = parse_option_arg(context, &ps);
                         if (err != dropt_error_none)
                         {
-                            setShortOptionErrorDetails(context, err, arg[j], ps.valueString);
+                            set_short_option_error_details(context, err, arg[j], ps.valueString);
                             goto exit;
                         }
                     }
-                    else if (   ps.option->argDescription == NULL
+                    else if (   ps.option->arg_description == NULL
                              || (ps.option->attr & dropt_attr_optional_val))
                     {
-                        err = set(context, ps.option, NULL);
+                        err = set_option_value(context, ps.option, NULL);
                         if (err != dropt_error_none)
                         {
-                            setShortOptionErrorDetails(context, err, arg[j], NULL);
+                            set_short_option_error_details(context, err, arg[j], NULL);
                             goto exit;
                         }
                     }
@@ -840,7 +843,7 @@ dropt_parse(dropt_context_t* context,
                          *          ^
                          */
                         err = dropt_error_insufficient_args;
-                        setShortOptionErrorDetails(context, err, arg[j], NULL);
+                        set_short_option_error_details(context, err, arg[j], NULL);
                         goto exit;
                     }
                 }
@@ -937,14 +940,13 @@ dropt_set_options(dropt_context_t* context, const dropt_option_t* options)
     else
     {
         const dropt_option_t* option;
-        for (option = options; isValidOption(option); option++)
+        for (option = options; is_valid_option(option); option++)
         {
-            if (   option->shortName == T('=')
-                || (   option->longName != NULL
-                    && dropt_strcmp(option->longName, T("=")) == 0))
+            if (   option->short_name == T('=')
+                || (   option->long_name != NULL
+                    && dropt_strchr(option->long_name, T('=')) != NULL))
             {
-                assert(!"Invalid option list. "
-                        "'=' may not be used for an option shortname or longname.");
+                assert(!"Invalid option list. '=' may not be used in an option name.");
                 err = dropt_error_bad_configuration;
                 goto exit;
             }
