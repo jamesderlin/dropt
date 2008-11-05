@@ -30,8 +30,8 @@
 #include "dropt.h"
 #include "dropt_string.h"
 
-#if defined _UNICODE || defined UNICODE
-    #define T(s) (L ## s)
+#if defined _UNICODE
+    #define T(s) L ## s
 #else
     #define T(s) s
 #endif
@@ -679,7 +679,7 @@ dropt_parse(dropt_context_t* context,
     if (context->errorHandler == NULL)
     {
         assert(!"No error handler specified.");
-        set_error_details(context, dropt_error_bad_configuration, "", 0, NULL);
+        set_error_details(context, dropt_error_bad_configuration, T(""), 0, NULL);
         goto exit;
     }
 #endif

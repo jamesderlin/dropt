@@ -31,7 +31,7 @@
 extern "C" {
 #endif
 
-#if defined _UNICODE || defined UNICODE
+#if defined _UNICODE
     #define dropt_strlen wcslen
     #define dropt_strcmp wcscmp
     #define dropt_strncmp wcsncmp

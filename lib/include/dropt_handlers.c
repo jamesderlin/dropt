@@ -31,8 +31,8 @@
 #include "dropt.h"
 #include "dropt_string.h"
 
-#if defined _UNICODE || defined UNICODE
-    #define T(s) (L ## s)
+#if defined _UNICODE
+    #define T(s) L ## s
 #else
     #define T(s) s
 #endif

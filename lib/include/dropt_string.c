@@ -241,7 +241,7 @@ dropt_strnicmp(const dropt_char_t* s, const dropt_char_t* t, size_t n)
   *     On conversion error, returns -1.
   *     On truncation error, returns -2.
   */
-#if (__STDC_VERSION__ >= 199901L || __GNUC__) && (defined _UNICODE || defined UNICODE)
+#if (__STDC_VERSION__ >= 199901L || __GNUC__) && defined _UNICODE
 static int
 dropt_vswprintf(wchar_t* s, size_t n, const wchar_t* format, va_list args)
 {
@@ -308,7 +308,7 @@ int
 dropt_vsnprintf(dropt_char_t* s, size_t n, const dropt_char_t* format, va_list args)
 {
 #if __STDC_VERSION__ >= 199901L || __GNUC__
-#if defined _UNICODE || defined UNICODE
+#if defined _UNICODE
     /* PORTABILITY:
      * Frustratingly, C99 does not define a vsnwprintf function.  vswprintf
      * is unsuitable since it does not have vsnprintf semantics; it always
@@ -367,7 +367,7 @@ dropt_vsnprintf(dropt_char_t* s, size_t n, const dropt_char_t* format, va_list a
     }
 
     return ret;
-#else /* UNICODE */
+#else /* _UNICODE */
     /* ISO C99-compliant.
      *
      * As far as I can tell, gcc's implementation of vsnprintf has always
@@ -375,7 +375,7 @@ dropt_vsnprintf(dropt_char_t* s, size_t n, const dropt_char_t* format, va_list a
      */
     assert(format != NULL);
     return vsnprintf(s, n, format, args);
-#endif /* UNICODE */
+#endif /* _UNICODE */
 
 #elif defined _WIN32
     /* _vsntprintf and _vsnprintf_s on Windows don't have C99 semantics;

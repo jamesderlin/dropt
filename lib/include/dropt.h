@@ -32,7 +32,7 @@ extern "C" {
 #endif
 
 
-#if defined _UNICODE || defined UNICODE
+#if defined _UNICODE
     typedef wchar_t dropt_char_t;
 #else
     typedef char dropt_char_t;
