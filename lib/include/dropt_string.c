@@ -21,7 +21,7 @@
   * 3. This notice may not be removed or altered from any source distribution.
   */
 
-#if defined _WIN32
+#ifdef _WIN32
     #include <tchar.h>
 #endif
 
@@ -308,7 +308,7 @@ int
 dropt_vsnprintf(dropt_char_t* s, size_t n, const dropt_char_t* format, va_list args)
 {
 #if __STDC_VERSION__ >= 199901L || __GNUC__
-#if defined _UNICODE
+#ifdef _UNICODE
     /* PORTABILITY:
      * Frustratingly, C99 does not define a vsnwprintf function.  vswprintf
      * is unsuitable since it does not have vsnprintf semantics; it always

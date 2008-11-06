@@ -30,13 +30,11 @@
 #include "dropt.h"
 #include "dropt_string.h"
 
-#if defined _UNICODE
+#ifdef _UNICODE
     #define T(s) L ## s
 #else
     #define T(s) s
 #endif
-
-#define IS_CUSTOM_ERROR(e) ((e) >= dropt_error_custom_start && (e) <= dropt_error_custom_last)
 
 typedef enum { false, true } bool;
 
@@ -209,12 +207,9 @@ set_error_details(dropt_context_t* context, dropt_error_t err,
                                         ? dropt_strdup(valueString)
                                         : NULL;
 
-    if (!IS_CUSTOM_ERROR(err))
-    {
-        /* The message will be generated lazily on retrieval. */
-        free(context->errorDetails.message);
-        context->errorDetails.message = NULL;
-    }
+    /* The message will be generated lazily on retrieval. */
+    free(context->errorDetails.message);
+    context->errorDetails.message = NULL;
 }
 
 
@@ -423,16 +418,7 @@ dropt_default_error_handler(dropt_error_t error,
             break;
         case dropt_error_unknown:
         default:
-            if (IS_CUSTOM_ERROR(error))
-            {
-                /* Do nothing.  The client is responsible for producing
-                 * an appropriate error message.
-                 */
-            }
-            else
-            {
-                s = dropt_asprintf(T("Unknown error handling option %s."), optionName);
-            }
+            s = dropt_asprintf(T("Unknown error handling option %s."), optionName);
             break;
     }
 
@@ -823,17 +809,8 @@ dropt_parse(dropt_context_t* context,
                             goto exit;
                         }
                     }
-                    else if (   ps.option->arg_description == NULL
-                             || (ps.option->attr & dropt_attr_optional_val))
-                    {
-                        err = set_option_value(context, ps.option, NULL);
-                        if (err != dropt_error_none)
-                        {
-                            set_short_option_error_details(context, err, arg[j], NULL);
-                            goto exit;
-                        }
-                    }
-                    else
+                    else if (   ps.option->arg_description != NULL
+                             && !(ps.option->attr & dropt_attr_optional_val))
                     {
                         /* Short options with required arguments can't be
                          * used in condensed lists except in the last
@@ -845,6 +822,15 @@ dropt_parse(dropt_context_t* context,
                         err = dropt_error_insufficient_args;
                         set_short_option_error_details(context, err, arg[j], NULL);
                         goto exit;
+                    }
+                    else
+                    {
+                        err = set_option_value(context, ps.option, NULL);
+                        if (err != dropt_error_none)
+                        {
+                            set_short_option_error_details(context, err, arg[j], NULL);
+                            goto exit;
+                        }
                     }
                 }
 
