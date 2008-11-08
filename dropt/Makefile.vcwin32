@@ -1,0 +1,83 @@
+# dropt Makefile for Microsoft nmake
+
+.SILENT:
+
+cc = cl.exe
+link = link.exe
+linklib = lib.exe
+
+DEBUG_SUFFIX =
+NO_STRING_SUFFIX =
+UNICODE_SUFFIX =
+
+!IF !DEFINED(CC_FLAGS)
+CC_FLAGS =
+!ENDIF
+
+CC_FLAGS = /EHsc /nologo /GF /Gy /GS /W3 /wd4146 /DSTRICT /DWIN32_LEAN_AND_MEAN $(CC_FLAGS)
+LINK_FLAGS = /NOLOGO /NXCOMPAT
+LINKLIB_FLAGS = /NOLOGO
+
+!IF "$(DEBUG)" != ""
+DEBUG_SUFFIX = -debug
+CC_FLAGS = $(CC_FLAGS) /Od /DDEBUG /RTC1 /Zi /MTd /DDROPT_DEBUG_STRING_BUFFERS
+LINK_FLAGS = $(LINK_FLAGS) /DEBUG
+!ELSE
+CC_FLAGS = $(CC_FLAGS) /Ox /DNDEBUG /MT
+LINK_FLAGS = $(LINK_FLAGS) /RELEASE /OPT:REF
+!ENDIF
+
+!IF "$(DROPT_NO_STRING_BUFFERS)" != ""
+NO_STRING_SUFFIX = -nostring
+CC_FLAGS = $(CC_FLAGS) /DDROPT_NO_STRING_BUFFERS
+!ENDIF
+
+!IF "$(_UNICODE)" != ""
+UNICODE_SUFFIX = -w
+CC_FLAGS = $(CC_FLAGS) /D_UNICODE
+!ENDIF
+
+!IF !DEFINED(SRC_ROOT)
+SRC_ROOT = $(MAKEDIR)
+!ENDIF
+
+!IF !DEFINED(BUILD_ROOT)
+BUILD_ROOT = $(SRC_ROOT)\build
+!ENDIF
+
+OUTDIR = $(BUILD_ROOT)\lib$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)$(UNICODE_SUFFIX)
+OBJDIR = $(BUILD_ROOT)\obj$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)$(UNICODE_SUFFIX)
+
+GLOBAL_DEP = "$(SRC_ROOT)\dropt.h" "$(SRC_ROOT)\dropt_string.h" "$(OBJDIR)" "$(OUTDIR)"
+OBJ_FILES = "$(OBJDIR)\dropt.obj" "$(OBJDIR)\dropt_handlers.obj" "$(OBJDIR)\dropt_string.obj"
+
+
+# Targets --------------------------------------------------------------
+
+all: "$(OUTDIR)\dropt.lib"
+
+test: "$(OBJDIR)\test_dropt.exe"
+    $**
+    @echo.Tests passed.
+
+"$(OUTDIR)\dropt.lib": $(OBJ_FILES)
+    $(linklib) $(LINKLIB_FLAGS) $** /OUT:$@
+
+"$(OBJDIR)\test_dropt.exe": "$(OBJDIR)\$(@B:"=).obj" "$(OUTDIR)\dropt.lib"
+    $(link) $(LINK_FLAGS) $** /SUBSYSTEM:CONSOLE /OUT:$@
+
+$(OBJ_FILES) "$(OBJDIR)\test_dropt.obj": $(GLOBAL_DEP)
+    $(cc) $(CC_FLAGS) /c /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" "$(SRC_ROOT)\$(@B:"=).c"
+
+
+# Directories ----------------------------------------------------------
+
+# Create directories as necessary.
+"$(OUTDIR)":
+    if not exist "$(OUTDIR)\$(NULL)" md $@
+"$(OBJDIR)":
+    if not exist "$(OBJDIR)\$(NULL)" md $@
+
+
+clean:
+    -if exist "$(BUILD_ROOT)\$(NULL)" rd /s /q "$(BUILD_ROOT)"
