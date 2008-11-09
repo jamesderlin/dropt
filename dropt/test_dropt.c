@@ -966,6 +966,47 @@ testDroptParse(dropt_context_t* context)
         dropt_clear_error(context);
     }
 
+    /* Test strncmp callback. */
+    {
+        {
+            dropt_char_t* args[] = { T("-N"), NULL };
+            rest = dropt_parse(context, args);
+            success &= VERIFY(dropt_get_error(context) == dropt_error_invalid_option);
+            success &= VERIFY(*rest == NULL);
+            dropt_clear_error(context);
+        }
+
+        {
+            dropt_char_t* args[] = { T("--NORMALFLAG"), NULL };
+            rest = dropt_parse(context, args);
+            success &= VERIFY(dropt_get_error(context) == dropt_error_invalid_option);
+            success &= VERIFY(*rest == NULL);
+            dropt_clear_error(context);
+        }
+
+        dropt_set_strncmp(context, dropt_strnicmp);
+
+        {
+            dropt_char_t* args[] = { T("-N"), NULL };
+            normalFlag = false;
+            rest = dropt_parse(context, args);
+            success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
+            success &= VERIFY(normalFlag == true);
+            success &= VERIFY(*rest == NULL);
+        }
+
+        {
+            dropt_char_t* args[] = { T("--NORMALFLAG"), NULL };
+            normalFlag = false;
+            rest = dropt_parse(context, args);
+            success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
+            success &= VERIFY(normalFlag == true);
+            success &= VERIFY(*rest == NULL);
+        }
+
+        dropt_set_strncmp(context, NULL);
+    }
+
     /* TO DO: Test repeated invocations of dropt_parse. */
 
     return success;

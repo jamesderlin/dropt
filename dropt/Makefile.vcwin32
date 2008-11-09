@@ -66,7 +66,7 @@ test: "$(OBJDIR)\test_dropt.exe"
 "$(OBJDIR)\test_dropt.exe": "$(OBJDIR)\$(@B:"=).obj" "$(OUTDIR)\dropt.lib"
     $(link) $(LINK_FLAGS) $** /SUBSYSTEM:CONSOLE /OUT:$@
 
-$(OBJ_FILES) "$(OBJDIR)\test_dropt.obj": $(GLOBAL_DEP)
+$(OBJ_FILES) "$(OBJDIR)\test_dropt.obj": $(GLOBAL_DEP) "$(SRC_ROOT)\$(@B:"=).c"
     $(cc) $(CC_FLAGS) /c /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" "$(SRC_ROOT)\$(@B:"=).c"
 
 

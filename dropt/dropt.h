@@ -79,6 +79,7 @@ typedef dropt_char_t* (*dropt_error_handler_t)(dropt_error_t error,
                                                const dropt_char_t* optionName,
                                                const dropt_char_t* valueString,
                                                void* handlerData);
+typedef int (*dropt_strncmp_t)(const dropt_char_t* s, const dropt_char_t* t, size_t n);
 
 
 typedef struct dropt_option_t
@@ -97,7 +98,7 @@ dropt_context_t* dropt_new_context(void);
 void dropt_free_context(dropt_context_t* context);
 
 dropt_error_t dropt_set_options(dropt_context_t* context, const dropt_option_t* options);
-void dropt_set_case_sensitive(dropt_context_t* context, dropt_bool_t caseSensitive);
+void dropt_set_strncmp(dropt_context_t* context, dropt_strncmp_t cmp);
 void dropt_set_error_handler(dropt_context_t* context, dropt_error_handler_t handler, void* handlerData);
 
 dropt_char_t** dropt_parse(dropt_context_t* context, dropt_char_t** argv);

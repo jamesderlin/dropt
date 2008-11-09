@@ -41,7 +41,8 @@ typedef enum { false, true } bool;
 struct dropt_context_t
 {
     const dropt_option_t* options;
-    bool caseSensitive;
+
+    dropt_strncmp_t strncmp;
 
     dropt_error_handler_t errorHandler;
     void* errorHandlerData;
@@ -87,34 +88,36 @@ is_valid_option(const dropt_option_t* option)
   *     of the form "--option").
   *
   * PARAMETERS:
-  *     IN options    : The list of option specifications.
-  *     IN longName   : The "long" option to search for (excluding leading
-  *                       dashes).
-  *     longNameLen   : The length of the longName string, excluding the
-  *                       NUL-terminator.
-  *     caseSensitive : Pass true to use case-sensitive comparisons, false
-  *                       otherwise.
+  *     IN context  : The options context.
+  *     IN longName : The "long" option to search for (excluding leading
+  *                     dashes).
+  *     longNameLen : The length of the longName string, excluding the
+  *                     NUL-terminator.
   *
   * RETURNS:
   *     A pointer to the corresponding option specification or NULL if not
   *       found.
   */
 static const dropt_option_t*
-find_long_option(const dropt_option_t* options, const dropt_char_t* longName, size_t longNameLen,
-                 bool caseSensitive)
+find_long_option(const dropt_context_t* context, const dropt_char_t* longName, size_t longNameLen)
 {
+    dropt_strncmp_t cmp;
     const dropt_option_t* option;
-    int (*cmp)(const dropt_char_t*, const dropt_char_t*, size_t n)
-        = caseSensitive ? dropt_strncmp : dropt_strnicmp;
 
-    if (options == NULL)
+    assert(context != NULL);
+
+    if (context->options == NULL)
     {
         assert(!"No options specified.");
         return NULL;
     }
 
+    cmp = (context->strncmp != NULL)
+          ? context->strncmp
+          : dropt_strncmp;
+
     assert(longName != NULL);
-    for (option = options; is_valid_option(option); option++)
+    for (option = context->options; is_valid_option(option); option++)
     {
         if (   option->long_name != NULL
             && longNameLen == dropt_strlen(option->long_name)
@@ -133,32 +136,32 @@ find_long_option(const dropt_option_t* options, const dropt_char_t* longName, si
   *     option of the form "-o").
   *
   * PARAMETERS:
-  *     IN options    : The list of option specifications.
-  *     shortName     : The "short" option to search for.
-  *     caseSensitive : Pass true to use case-sensitive comparisons, false
-  *                       otherwise.
+  *     IN context : The options context.
+  *     shortName  : The "short" option to search for.
   *
   * RETURNS:
   *     A pointer to the corresponding option specification or NULL if not
   *       found.
   */
 static const dropt_option_t*
-find_short_option(const dropt_option_t* options, dropt_char_t shortName, bool caseSensitive)
+find_short_option(const dropt_context_t* context, dropt_char_t shortName)
 {
     const dropt_option_t* option;
 
-    if (options == NULL)
+    assert(context != NULL);
+
+    if (context->options == NULL)
     {
         assert(!"No options specified.");
         return NULL;
     }
 
     assert(shortName != T('\0'));
-    for (option = options; is_valid_option(option); option++)
+    for (option = context->options; is_valid_option(option); option++)
     {
         if (   shortName == option->short_name
-            || (   !caseSensitive
-                && dropt_tolower(shortName) == dropt_tolower(option->short_name)))
+            || (   context->strncmp != NULL
+                && context->strncmp(&shortName, &option->short_name, 1) == 0))
         {
             return option;
         }
@@ -731,9 +734,7 @@ dropt_parse(dropt_context_t* context,
                  * to mutate the original string by inserting a
                  * NUL-terminator.
                  */
-                ps.option = find_long_option(context->options,
-                                             longName, longNameEnd - longName,
-                                             context->caseSensitive);
+                ps.option = find_long_option(context, longName, longNameEnd - longName);
                 if (ps.option == NULL)
                 {
                     err = dropt_error_invalid_option;
@@ -787,8 +788,7 @@ dropt_parse(dropt_context_t* context,
 
             for (j = 1; j < len; j++)
             {
-                ps.option = find_short_option(context->options, arg[j],
-                                              context->caseSensitive);
+                ps.option = find_short_option(context, arg[j]);
                 if (ps.option == NULL)
                 {
                     err = dropt_error_invalid_option;
@@ -863,7 +863,7 @@ dropt_new_context(void)
     if (context != NULL)
     {
         context->options = NULL;
-        context->caseSensitive = true;
+        context->strncmp = NULL;
         context->errorHandler = NULL;
         context->errorHandlerData = NULL;
         context->errorDetails.err = dropt_error_none;
@@ -944,20 +944,18 @@ exit:
 }
 
 
-/** dropt_set_case_sensitive
+/** dropt_set_strncmp
   *
-  *     Specifies whether options should be case-sensitive. (Options are
-  *     case-sensitive by default.)
-  *
-  *     Not recommended for non-ASCII strings.
+  *     Sets the callback function usde to compare strings.
   *
   * PARAMETERS:
   *     IN/OUT context : The options context.
-  *     caseSensitive  : Pass 1 if options should be case-sensitive,
-  *                        0 otherwise.
+  *     cmp            : The string comparison function.
+  *                      Pass NULL to use the default string comparison
+  *                        function.
   */
 void
-dropt_set_case_sensitive(dropt_context_t* context, dropt_bool_t caseSensitive)
+dropt_set_strncmp(dropt_context_t* context, dropt_strncmp_t cmp)
 {
     if (context == NULL)
     {
@@ -965,7 +963,7 @@ dropt_set_case_sensitive(dropt_context_t* context, dropt_bool_t caseSensitive)
         return;
     }
 
-    context->caseSensitive = (caseSensitive != 0);
+    context->strncmp = cmp;
 }
 
 
@@ -977,6 +975,7 @@ dropt_set_case_sensitive(dropt_context_t* context, dropt_bool_t caseSensitive)
   * PARAMETERS:
   *     IN/OUT context : The options context.
   *     handler        : The error handler callback.
+  *                      Pass NULL to use the default error handler.
   *     handlerData    : Caller-defined callback data.
   */
 void
