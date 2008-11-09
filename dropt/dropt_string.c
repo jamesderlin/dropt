@@ -220,73 +220,6 @@ dropt_strnicmp(const dropt_char_t* s, const dropt_char_t* t, size_t n)
 
 
 #ifndef DROPT_NO_STRING_BUFFERS
-/** dropt_vswprintf
-  *
-  *     Wrapper around vswprintf to try to distinguish between truncation
-  *     errors and conversion errors.
-  *
-  *     Note that this might not be portable.  See comments.
-  *
-  * PARAMETERS:
-  *     OUT s     : The destination buffer.  May be NULL if n is 0.
-  *                 If non-NULL, always NUL-terminated.
-  *     n         : The size of the destination buffer, measured in
-  *                   dropt_char_t-s.
-  *     IN format : printf-style format specifier.  Must not be NULL.
-  *     IN args   : Arguments to insert into the formatted string.
-  *
-  * RETURNS:
-  *     On success, returns the number of characters written to the
-  *       destination buffer, excluding the NUL-terminator.
-  *     On conversion error, returns -1.
-  *     On truncation error, returns -2.
-  */
-#if (__STDC_VERSION__ >= 199901L || __GNUC__) && defined _UNICODE
-static int
-dropt_vswprintf(wchar_t* s, size_t n, const wchar_t* format, va_list args)
-{
-    int ret;
-
-    if (s == NULL || n == 0) { return -2; }
-
-    assert(format != NULL);
-
-    s[n - 1] = ~0;
-
-    ret = vswprintf(s, n, format, args);
-    if (ret != -1)
-    {
-        /* Success. */
-    }
-    else if (s[n - 1] == L'\0')
-    {
-        /* PORTABILITY:
-         * Probably a truncation error.
-         *
-         * Note C99 does not specify how vswprintf should behave on
-         * failure, so distinguishing between truncation errors from
-         * conversion errors might not be portable:
-         *
-         * 1. There is no guarantee that vswprintf fills the destination
-         *    buffer to capacity on truncation errors.
-         * 2. There is no guarantee that vswprintf won't zero the end of
-         *    the destination buffer on encoding errors.
-         *
-         * This is probably unlikely to be an issue with sane vswprintf
-         * implementations.
-         */
-        ret = -2;
-    }
-    else
-    {
-        /* Encoding error. */
-    }
-
-    return ret;
-}
-#endif
-
-
 /** dropt_vsnprintf
   *
   *     vsnprintf wrapper to provide ISO C99-compliant behavior.
@@ -308,66 +241,6 @@ int
 dropt_vsnprintf(dropt_char_t* s, size_t n, const dropt_char_t* format, va_list args)
 {
 #if __STDC_VERSION__ >= 199901L || __GNUC__
-#ifdef _UNICODE
-    /* PORTABILITY:
-     * Frustratingly, C99 does not define a vsnwprintf function.  vswprintf
-     * is unsuitable since it does not have vsnprintf semantics; it always
-     * returns -1 if the buffer is not sufficiently large rather than
-     * returning the required buffer size.
-     */
-    int ret;
-    va_list argsCopy;
-
-    assert(format != NULL);
-
-    va_copy(argsCopy, args);
-    ret = dropt_vswprintf(s, n, format, argsCopy);
-    va_end(argsCopy);
-
-    if (ret == -2)
-    {
-        /* Try a reasonably-sized stack-allocated buffer first as an
-         * optimization.
-         */
-        dropt_char_t fixedBuf[DEFAULT_STRINGSTREAM_BUFFER_SIZE];
-        size_t bufSize = ARRAY_LENGTH(fixedBuf);
-
-        va_copy(argsCopy, args);
-        ret = dropt_vswprintf(fixedBuf, bufSize, format, argsCopy);
-        va_end(argsCopy);
-
-        while (ret == -2)
-        {
-            dropt_char_t* buf;
-            size_t oldBufSize = bufSize;
-#ifdef DROPT_DEBUG_STRING_BUFFERS
-            bufSize += 1;
-#else
-            bufSize *= 2;
-#endif
-
-            if (oldBufSize >= bufSize)
-            {
-                /* Overflow. */
-                return -1;
-            }
-
-            buf = dropt_safe_malloc(bufSize, sizeof *buf);
-            if (buf == NULL)
-            {
-                return -1;
-            }
-
-            va_copy(argsCopy, args);
-            ret = dropt_vswprintf(buf, bufSize, format, argsCopy);
-            va_end(argsCopy);
-
-            free(buf);
-        }
-    }
-
-    return ret;
-#else /* _UNICODE */
     /* ISO C99-compliant.
      *
      * As far as I can tell, gcc's implementation of vsnprintf has always
@@ -375,8 +248,6 @@ dropt_vsnprintf(dropt_char_t* s, size_t n, const dropt_char_t* format, va_list a
      */
     assert(format != NULL);
     return vsnprintf(s, n, format, args);
-#endif /* _UNICODE */
-
 #elif defined _WIN32
     /* _vsntprintf and _vsnprintf_s on Windows don't have C99 semantics;
      * they return -1 if truncation occurs.

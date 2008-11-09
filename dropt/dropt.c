@@ -30,7 +30,7 @@
 #include "dropt.h"
 #include "dropt_string.h"
 
-#ifdef _UNICODE
+#if defined _UNICODE && defined _WIN32
     #define T(s) L ## s
 #else
     #define T(s) s

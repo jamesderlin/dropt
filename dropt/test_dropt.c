@@ -37,7 +37,7 @@
 #include "dropt_string.h"
 
 /* Compatibility junk. */
-#ifdef _UNICODE
+#if defined _UNICODE && defined _WIN32
     #define T(s) L ## s
 
     #define ftprintf fwprintf
@@ -972,7 +972,7 @@ testDroptParse(dropt_context_t* context)
 }
 
 
-#ifdef _UNICODE
+#if defined _UNICODE && defined _WIN32
 int
 wmain(int argc, wchar_t** argv)
 #else
@@ -1038,7 +1038,7 @@ main(int argc, char** argv)
 #else
                  T(""),
 #endif
-#ifdef _UNICODE
+#if defined _UNICODE && defined _WIN32
                  T("_UNICODE "),
 #else
                  T(""),
