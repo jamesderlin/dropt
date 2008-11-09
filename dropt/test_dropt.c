@@ -89,10 +89,11 @@ static dropt_bool_t hiddenFlag;
 static dropt_char_t* stringVal;
 static dropt_char_t* stringVal2;
 static int intVal;
-unsigned int ipAddress;
 
 static bool unified;
 static unsigned int lines;
+
+unsigned int ipAddress;
 
 
 static void
@@ -105,10 +106,11 @@ initOptionDefaults(void)
     stringVal = NULL;
     stringVal2 = NULL;
     intVal = 0;
-    ipAddress = 0;
 
     unified = false;
     lines = 10;
+
+    ipAddress = 0;
 }
 
 
@@ -213,8 +215,8 @@ dropt_option_t options[] = {
     { T("string"), T('s'), T("Test string value."), T("foo"), dropt_handle_string, &stringVal },
     { T("string2"), T('S'), T("Test string value."), T("foo"), dropt_handle_string, &stringVal2 },
     { T("int"), T('i'), T("Test integer value."), T("int"), dropt_handle_int, &intVal },
-    { T("ip"), T('\0'), T("Test IP address."), T("address"), handleIPAddress, &ipAddress},
     { T("unified"), T('u'), T("Unified"), T("lines"), handleUnified, NULL, dropt_attr_optional_val },
+    { T("ip"), T('\0'), T("Test IP address."), T("address"), handleIPAddress, &ipAddress},
     { NULL }
 };
 
@@ -1066,12 +1068,12 @@ main(int argc, char** argv)
 
         ftprintf(stdout, T("Compilation flags: %s%s\n")
                          T("verbose: %u\n")
-                         T("hiddenFlag: %u\n")
                          T("normalFlag: %u\n")
+                         T("hiddenFlag: %u\n")
                          T("string: %s\n")
+                         T("intVal: %d\n")
                          T("unified: %u\n")
                          T("lines: %u\n")
-                         T("intVal: %d\n")
                          T("ipAddress: %u.%u.%u.%u (%u)\n")
                          T("\n"),
 #ifdef DROPT_NO_STRING_BUFFERS
@@ -1084,9 +1086,9 @@ main(int argc, char** argv)
 #else
                  T(""),
 #endif
-                 verbose, hiddenFlag, normalFlag,
+                 verbose, normalFlag, hiddenFlag,
                  (stringVal == NULL) ? T("(null)") : stringVal,
-                 unified, lines, intVal,
+                 intVal, unified, lines,
                  (ipAddress >> 24) & 0xFF,
                  (ipAddress >> 16) & 0xFF,
                  (ipAddress >> 8) & 0xFF,

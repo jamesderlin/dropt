@@ -42,8 +42,6 @@ struct dropt_context_t
 {
     const dropt_option_t* options;
 
-    dropt_strncmp_t strncmp;
-
     dropt_error_handler_t errorHandler;
     void* errorHandlerData;
 
@@ -54,6 +52,8 @@ struct dropt_context_t
         dropt_char_t* valueString;
         dropt_char_t* message;
     } errorDetails;
+
+    dropt_strncmp_t strncmp;
 };
 
 typedef struct
@@ -795,42 +795,38 @@ dropt_parse(dropt_context_t* context,
                     set_short_option_error_details(context, err, arg[j], NULL);
                     goto exit;
                 }
-                else
+                else if (j + 1 == len)
                 {
-                    if (j + 1 == len)
+                    /* The last short option in a condensed list gets
+                     * to use an argument.
+                     */
+                    err = parse_option_arg(context, &ps);
+                    if (err != dropt_error_none)
                     {
-                        /* The last short option in a condensed list gets
-                         * to use an argument.
-                         */
-                        err = parse_option_arg(context, &ps);
-                        if (err != dropt_error_none)
-                        {
-                            set_short_option_error_details(context, err, arg[j], ps.valueString);
-                            goto exit;
-                        }
-                    }
-                    else if (   ps.option->arg_description != NULL
-                             && !(ps.option->attr & dropt_attr_optional_val))
-                    {
-                        /* Short options with required arguments can't be
-                         * used in condensed lists except in the last
-                         * position.
-                         *
-                         * e.g. -abcd arg
-                         *          ^
-                         */
-                        err = dropt_error_insufficient_args;
-                        set_short_option_error_details(context, err, arg[j], NULL);
+                        set_short_option_error_details(context, err, arg[j], ps.valueString);
                         goto exit;
                     }
-                    else
+                }
+                else if (   ps.option->arg_description != NULL
+                         && !(ps.option->attr & dropt_attr_optional_val))
+                {
+                    /* Short options with required arguments can't be used
+                     * in condensed lists except in the last position.
+                     *
+                     * e.g. -abcd arg
+                     *          ^
+                     */
+                    err = dropt_error_insufficient_args;
+                    set_short_option_error_details(context, err, arg[j], NULL);
+                    goto exit;
+                }
+                else
+                {
+                    err = set_option_value(context, ps.option, NULL);
+                    if (err != dropt_error_none)
                     {
-                        err = set_option_value(context, ps.option, NULL);
-                        if (err != dropt_error_none)
-                        {
-                            set_short_option_error_details(context, err, arg[j], NULL);
-                            goto exit;
-                        }
+                        set_short_option_error_details(context, err, arg[j], NULL);
+                        goto exit;
                     }
                 }
 
@@ -863,13 +859,13 @@ dropt_new_context(void)
     if (context != NULL)
     {
         context->options = NULL;
-        context->strncmp = NULL;
         context->errorHandler = NULL;
         context->errorHandlerData = NULL;
         context->errorDetails.err = dropt_error_none;
         context->errorDetails.optionName = NULL;
         context->errorDetails.valueString = NULL;
         context->errorDetails.message = NULL;
+        context->strncmp = NULL;
     }
     return context;
 }
@@ -944,29 +940,6 @@ exit:
 }
 
 
-/** dropt_set_strncmp
-  *
-  *     Sets the callback function usde to compare strings.
-  *
-  * PARAMETERS:
-  *     IN/OUT context : The options context.
-  *     cmp            : The string comparison function.
-  *                      Pass NULL to use the default string comparison
-  *                        function.
-  */
-void
-dropt_set_strncmp(dropt_context_t* context, dropt_strncmp_t cmp)
-{
-    if (context == NULL)
-    {
-        assert(!"No dropt context specified.");
-        return;
-    }
-
-    context->strncmp = cmp;
-}
-
-
 /** dropt_set_error_handler
   *
   *     Sets the callback function used to generate error strings from
@@ -989,4 +962,27 @@ dropt_set_error_handler(dropt_context_t* context, dropt_error_handler_t handler,
 
     context->errorHandler = handler;
     context->errorHandlerData = handlerData;
+}
+
+
+/** dropt_set_strncmp
+  *
+  *     Sets the callback function usde to compare strings.
+  *
+  * PARAMETERS:
+  *     IN/OUT context : The options context.
+  *     cmp            : The string comparison function.
+  *                      Pass NULL to use the default string comparison
+  *                        function.
+  */
+void
+dropt_set_strncmp(dropt_context_t* context, dropt_strncmp_t cmp)
+{
+    if (context == NULL)
+    {
+        assert(!"No dropt context specified.");
+        return;
+    }
+
+    context->strncmp = cmp;
 }
