@@ -207,15 +207,15 @@ myDroptErrorHandler(dropt_error_t error, const dropt_char_t* optionName,
 
 
 dropt_option_t options[] = {
-    { T('h'), T("help"), T("Shows help."), NULL, dropt_handle_bool, &showHelp, dropt_attr_halt },
-    { T('?'), NULL, NULL, NULL, dropt_handle_bool, &showHelp, dropt_attr_halt },
-    { T('v'), T("verbose"), T("Verbose mode."), NULL, dropt_handle_bool, &verbose },
-    { T('n'), T("normalFlag"), T("Blah blah blah."), NULL, dropt_handle_bool, &normalFlag },
-    { T('H'), T("hiddenFlag"), T("This is hidden."), NULL, dropt_handle_bool, &hiddenFlag, dropt_attr_hidden },
-    { T('s'), T("string"), T("Test string value."), T("foo"), dropt_handle_string, &stringVal },
-    { T('S'), T("string2"), T("Test string value."), T("foo"), dropt_handle_string, &stringVal2 },
-    { T('i'), T("int"), T("Test integer value."), T("int"), dropt_handle_int, &intVal },
-    { T('u'), T("unified"), T("Unified"), T("lines"), handleUnified, NULL, dropt_attr_optional_val },
+    { T('h'),  T("help"), T("Shows help."), NULL, dropt_handle_bool, &showHelp, dropt_attr_halt },
+    { T('?'),  NULL, NULL, NULL, dropt_handle_bool, &showHelp, dropt_attr_halt },
+    { T('v'),  T("verbose"), T("Verbose mode."), NULL, dropt_handle_bool, &verbose },
+    { T('n'),  T("normalFlag"), T("Blah blah blah."), NULL, dropt_handle_bool, &normalFlag },
+    { T('H'),  T("hiddenFlag"), T("This is hidden."), NULL, dropt_handle_bool, &hiddenFlag, dropt_attr_hidden },
+    { T('s'),  T("string"), T("Test string value."), T("foo"), dropt_handle_string, &stringVal },
+    { T('S'),  T("string2"), T("Test string value."), T("foo"), dropt_handle_string, &stringVal2 },
+    { T('i'),  T("int"), T("Test integer value."), T("int"), dropt_handle_int, &intVal },
+    { T('u'),  T("unified"), T("Unified"), T("lines"), handleUnified, NULL, dropt_attr_optional_val },
     { T('\0'), T("ip"), T("Test IP address."), T("address"), handleIPAddress, &ipAddress},
     { 0 }
 };
