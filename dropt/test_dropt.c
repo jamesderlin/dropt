@@ -207,17 +207,17 @@ myDroptErrorHandler(dropt_error_t error, const dropt_char_t* optionName,
 
 
 dropt_option_t options[] = {
-    { T("help"), T('h'), T("Shows help."), NULL, dropt_handle_bool, &showHelp, dropt_attr_halt },
-    { NULL, T('?'), NULL, NULL, dropt_handle_bool, &showHelp, dropt_attr_halt },
-    { T("verbose"), T('v'), T("Verbose mode."), NULL, dropt_handle_bool, &verbose },
-    { T("normalFlag"), T('n'), T("Blah blah blah."), NULL, dropt_handle_bool, &normalFlag },
-    { T("hiddenFlag"), T('H'), T("This is hidden."), NULL, dropt_handle_bool, &hiddenFlag, dropt_attr_hidden },
-    { T("string"), T('s'), T("Test string value."), T("foo"), dropt_handle_string, &stringVal },
-    { T("string2"), T('S'), T("Test string value."), T("foo"), dropt_handle_string, &stringVal2 },
-    { T("int"), T('i'), T("Test integer value."), T("int"), dropt_handle_int, &intVal },
-    { T("unified"), T('u'), T("Unified"), T("lines"), handleUnified, NULL, dropt_attr_optional_val },
-    { T("ip"), T('\0'), T("Test IP address."), T("address"), handleIPAddress, &ipAddress},
-    { NULL }
+    { T('h'), T("help"), T("Shows help."), NULL, dropt_handle_bool, &showHelp, dropt_attr_halt },
+    { T('?'), NULL, NULL, NULL, dropt_handle_bool, &showHelp, dropt_attr_halt },
+    { T('v'), T("verbose"), T("Verbose mode."), NULL, dropt_handle_bool, &verbose },
+    { T('n'), T("normalFlag"), T("Blah blah blah."), NULL, dropt_handle_bool, &normalFlag },
+    { T('H'), T("hiddenFlag"), T("This is hidden."), NULL, dropt_handle_bool, &hiddenFlag, dropt_attr_hidden },
+    { T('s'), T("string"), T("Test string value."), T("foo"), dropt_handle_string, &stringVal },
+    { T('S'), T("string2"), T("Test string value."), T("foo"), dropt_handle_string, &stringVal2 },
+    { T('i'), T("int"), T("Test integer value."), T("int"), dropt_handle_int, &intVal },
+    { T('u'), T("unified"), T("Unified"), T("lines"), handleUnified, NULL, dropt_attr_optional_val },
+    { T('\0'), T("ip"), T("Test IP address."), T("address"), handleIPAddress, &ipAddress},
+    { 0 }
 };
 
 

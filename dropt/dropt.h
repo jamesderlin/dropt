@@ -84,8 +84,8 @@ typedef int (*dropt_strncmp_t)(const dropt_char_t* s, const dropt_char_t* t, siz
 
 typedef struct dropt_option_t
 {
-    const dropt_char_t* long_name;       /* May be NULL. */
     dropt_char_t short_name;             /* May be '\0'. */
+    const dropt_char_t* long_name;       /* May be NULL. */
     const dropt_char_t* description;     /* May be NULL. */
     const dropt_char_t* arg_description; /* Set to NULL if no argument. */
     dropt_option_handler_t handler;
