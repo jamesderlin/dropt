@@ -36,6 +36,8 @@
     #define T(s) s
 #endif
 
+#define OPTION_TAKES_ARG(option) ((option)->arg_description != NULL)
+
 typedef enum { false, true } bool;
 
 struct dropt_context_t
@@ -304,6 +306,11 @@ dropt_get_error_message(dropt_context_t* context)
         return T("");
     }
 
+    if (context->errorDetails.err == dropt_error_none)
+    {
+        return T("");
+    }
+
     if (context->errorDetails.message == NULL)
     {
         if (context->errorHandler != NULL)
@@ -326,7 +333,7 @@ dropt_get_error_message(dropt_context_t* context)
     }
 
     return (context->errorDetails.message == NULL)
-           ? T("")
+           ? T("Unknown error")
            : context->errorDetails.message;
 }
 
@@ -591,15 +598,21 @@ parse_option_arg(dropt_context_t* context, parseState_t* ps)
 
     bool consumeNextArg = false;
 
-    if (   ps->option->arg_description != NULL
-        && ps->valueString == NULL
-        && *(ps->argNext) != NULL)
+    if (OPTION_TAKES_ARG(ps->option) && ps->valueString == NULL)
     {
-        /* The option expects an argument, but none was specified with '='.
-         * Try using the next item from the command-line.
-         */
-        consumeNextArg = true;
-        ps->valueString = *(ps->argNext);
+        if (*(ps->argNext) != NULL)
+        {
+            /* The option expects an argument, but none was specified with '='.
+             * Try using the next item from the command-line.
+             */
+            consumeNextArg = true;
+            ps->valueString = *(ps->argNext);
+        }
+        else if (!(ps->option->attr & dropt_attr_optional_val))
+        {
+            err = dropt_error_insufficient_args;
+            goto exit;
+        }
     }
 
     /* Even for options that don't ask for arguments, always parse and
@@ -620,6 +633,7 @@ parse_option_arg(dropt_context_t* context, parseState_t* ps)
         err = set_option_value(context, ps->option, NULL);
     }
 
+exit:
     if (err == dropt_error_none && consumeNextArg) { ps->argNext++; }
     return err;
 }
@@ -807,7 +821,7 @@ dropt_parse(dropt_context_t* context,
                         goto exit;
                     }
                 }
-                else if (   ps.option->arg_description != NULL
+                else if (   OPTION_TAKES_ARG(ps.option)
                          && !(ps.option->attr & dropt_attr_optional_val))
                 {
                     /* Short options with required arguments can't be used

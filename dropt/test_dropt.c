@@ -83,32 +83,37 @@ enum
 typedef enum { false, true } bool;
 
 static dropt_bool_t showHelp;
-static dropt_bool_t verbose;
+static dropt_bool_t quiet;
 static dropt_bool_t normalFlag;
+static dropt_bool_t requiredArgFlag;
 static dropt_bool_t hiddenFlag;
 static dropt_char_t* stringVal;
 static dropt_char_t* stringVal2;
 static int intVal;
 
-static bool unified;
-static unsigned int lines;
+static struct
+{
+    bool enabled;
+    unsigned int lines;
+} unified;
 
-unsigned int ipAddress;
+static unsigned int ipAddress;
 
 
 static void
 initOptionDefaults(void)
 {
     showHelp = false;
-    verbose = false;
+    quiet = false;
     normalFlag = false;
+    requiredArgFlag = false;
     hiddenFlag = false;
     stringVal = NULL;
     stringVal2 = NULL;
     intVal = 0;
 
-    unified = false;
-    lines = 10;
+    unified.enabled = false;
+    unified.lines = 10;
 
     ipAddress = 0;
 }
@@ -118,8 +123,8 @@ static dropt_error_t
 handleUnified(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
 {
     dropt_error_t err = dropt_error_none;
-    if (valueString != NULL) { err = dropt_handle_uint(context, valueString, &lines); }
-    if (err == dropt_error_none) { unified = true; }
+    if (valueString != NULL) { err = dropt_handle_uint(context, valueString, &unified.lines); }
+    if (err == dropt_error_none) { unified.enabled = true; }
     return err;
 }
 
@@ -209,8 +214,9 @@ myDroptErrorHandler(dropt_error_t error, const dropt_char_t* optionName,
 dropt_option_t options[] = {
     { T('h'),  T("help"), T("Shows help."), NULL, dropt_handle_bool, &showHelp, dropt_attr_halt },
     { T('?'),  NULL, NULL, NULL, dropt_handle_bool, &showHelp, dropt_attr_halt },
-    { T('v'),  T("verbose"), T("Verbose mode."), NULL, dropt_handle_bool, &verbose },
-    { T('n'),  T("normalFlag"), T("Blah blah blah."), NULL, dropt_handle_bool, &normalFlag },
+    { T('q'),  T("quiet"), T("Quiet mode."), NULL, dropt_handle_bool, &quiet },
+    { T('n'),  T("normalFlag"), T("A normal flag."), NULL, dropt_handle_bool, &normalFlag },
+    { T('r'),  T("requiredArgFlag"), T("A flag with a required argument."), "bool", dropt_handle_verbose_bool, &requiredArgFlag },
     { T('H'),  T("hiddenFlag"), T("This is hidden."), NULL, dropt_handle_bool, &hiddenFlag, dropt_attr_hidden },
     { T('s'),  T("string"), T("Test string value."), T("foo"), dropt_handle_string, &stringVal },
     { T('S'),  T("string2"), T("Test string value."), T("foo"), dropt_handle_string, &stringVal2 },
@@ -633,26 +639,26 @@ testDroptParse(dropt_context_t* context)
     /* Test optional arguments with no acceptable argument provided. */
     {
         dropt_char_t* args[] = { T("-u"), T("-n"), NULL };
-        unified = false;
-        lines = 10;
+        unified.enabled = false;
+        unified.lines = 10;
         normalFlag = false;
         rest = dropt_parse(context, args);
         success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
-        success &= VERIFY(unified == true);
-        success &= VERIFY(lines == 10);
+        success &= VERIFY(unified.enabled == true);
+        success &= VERIFY(unified.lines == 10);
         success &= VERIFY(normalFlag == true);
         success &= VERIFY(*rest == NULL);
     }
 
     {
         dropt_char_t* args[] = { T("--unified"), T("-n"), NULL };
-        unified = false;
-        lines = 10;
+        unified.enabled = false;
+        unified.lines = 10;
         normalFlag = false;
         rest = dropt_parse(context, args);
         success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
-        success &= VERIFY(unified == true);
-        success &= VERIFY(lines == 10);
+        success &= VERIFY(unified.enabled == true);
+        success &= VERIFY(unified.lines == 10);
         success &= VERIFY(normalFlag == true);
         success &= VERIFY(*rest == NULL);
     }
@@ -660,26 +666,26 @@ testDroptParse(dropt_context_t* context)
     /* Test that optional arguments are consumed when possible. */
     {
         dropt_char_t* args[] = { T("-u"), T("42"), T("-n"), NULL };
-        unified = false;
-        lines = 10;
+        unified.enabled = false;
+        unified.lines = 10;
         normalFlag = false;
         rest = dropt_parse(context, args);
         success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
-        success &= VERIFY(unified == true);
-        success &= VERIFY(lines == 42);
+        success &= VERIFY(unified.enabled == true);
+        success &= VERIFY(unified.lines == 42);
         success &= VERIFY(normalFlag == true);
         success &= VERIFY(*rest == NULL);
     }
 
     {
         dropt_char_t* args[] = { T("--unified"), T("42"), T("-n"), NULL };
-        unified = false;
-        lines = 10;
+        unified.enabled = false;
+        unified.lines = 10;
         normalFlag = false;
         rest = dropt_parse(context, args);
         success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
-        success &= VERIFY(unified == true);
-        success &= VERIFY(lines == 42);
+        success &= VERIFY(unified.enabled == true);
+        success &= VERIFY(unified.lines == 42);
         success &= VERIFY(normalFlag == true);
         success &= VERIFY(*rest == NULL);
     }
@@ -687,13 +693,13 @@ testDroptParse(dropt_context_t* context)
     /* Test grouping short boolean options where one has an optional argument. */
     {
         dropt_char_t* args[] = { T("-un"), NULL };
-        unified = false;
-        lines = 10;
+        unified.enabled = false;
+        unified.lines = 10;
         normalFlag = false;
         rest = dropt_parse(context, args);
         success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
-        success &= VERIFY(unified == true);
-        success &= VERIFY(lines == 10);
+        success &= VERIFY(unified.enabled == true);
+        success &= VERIFY(unified.lines == 10);
         success &= VERIFY(normalFlag == true);
         success &= VERIFY(*rest == NULL);
     }
@@ -701,13 +707,13 @@ testDroptParse(dropt_context_t* context)
     {
         dropt_char_t* args[] = { T("-nu"), T("42"), NULL };
         normalFlag = false;
-        unified = false;
-        lines = 10;
+        unified.enabled = false;
+        unified.lines = 10;
         rest = dropt_parse(context, args);
         success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
         success &= VERIFY(normalFlag == true);
-        success &= VERIFY(unified == true);
-        success &= VERIFY(lines == 42);
+        success &= VERIFY(unified.enabled == true);
+        success &= VERIFY(unified.lines == 42);
         success &= VERIFY(*rest == NULL);
     }
 
@@ -724,6 +730,25 @@ testDroptParse(dropt_context_t* context)
     {
         dropt_char_t* args[] = { T("--string"), NULL };
         stringVal = NULL;
+        rest = dropt_parse(context, args);
+        success &= VERIFY(dropt_get_error(context) == dropt_error_insufficient_args);
+        success &= VERIFY(*rest == NULL);
+        dropt_clear_error(context);
+    }
+
+    /* Test options that require arguments with handlers that can accept NULL. */
+    {
+        dropt_char_t* args[] = { T("-r"), NULL };
+        requiredArgFlag = false;
+        rest = dropt_parse(context, args);
+        success &= VERIFY(dropt_get_error(context) == dropt_error_insufficient_args);
+        success &= VERIFY(*rest == NULL);
+        dropt_clear_error(context);
+    }
+
+    {
+        dropt_char_t* args[] = { T("--requiredArgFlag"), NULL };
+        requiredArgFlag = false;
         rest = dropt_parse(context, args);
         success &= VERIFY(dropt_get_error(context) == dropt_error_insufficient_args);
         success &= VERIFY(*rest == NULL);
@@ -1062,18 +1087,17 @@ main(int argc, char** argv)
         goto exit;
     }
 
-    if (verbose)
+    if (argc > 1 && !quiet)
     {
         dropt_char_t** arg;
 
         ftprintf(stdout, T("Compilation flags: %s%s\n")
-                         T("verbose: %u\n")
                          T("normalFlag: %u\n")
+                         T("requiredArgFlag: %u\n")
                          T("hiddenFlag: %u\n")
                          T("string: %s\n")
                          T("intVal: %d\n")
-                         T("unified: %u\n")
-                         T("lines: %u\n")
+                         T("unified: %u, lines: %u\n")
                          T("ipAddress: %u.%u.%u.%u (%u)\n")
                          T("\n"),
 #ifdef DROPT_NO_STRING_BUFFERS
@@ -1086,9 +1110,9 @@ main(int argc, char** argv)
 #else
                  T(""),
 #endif
-                 verbose, normalFlag, hiddenFlag,
+                 normalFlag, requiredArgFlag, hiddenFlag,
                  (stringVal == NULL) ? T("(null)") : stringVal,
-                 intVal, unified, lines,
+                 intVal, unified.enabled, unified.lines,
                  (ipAddress >> 24) & 0xFF,
                  (ipAddress >> 16) & 0xFF,
                  (ipAddress >> 8) & 0xFF,
