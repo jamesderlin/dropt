@@ -135,7 +135,6 @@ handleIPAddress(dropt_context_t* context, const dropt_char_t* valueString, void*
     dropt_error_t err = dropt_error_none;
     unsigned int octet[4];
     size_t i;
-    int n;
 
     assert(handlerData != NULL);
 
@@ -158,8 +157,8 @@ handleIPAddress(dropt_context_t* context, const dropt_char_t* valueString, void*
         }
     }
 
-    n = stscanf(valueString, T("%u.%u.%u.%u"), &octet[0], &octet[1], &octet[2], &octet[3]);
-    if (n != ARRAY_LENGTH(octet))
+    if (stscanf(valueString, T("%u.%u.%u.%u"), &octet[0], &octet[1], &octet[2], &octet[3])
+        != ARRAY_LENGTH(octet))
     {
         err = my_dropt_error_bad_ip_address;
         goto exit;
