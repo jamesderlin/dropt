@@ -2,7 +2,7 @@
   *
   *     A deliberately rudimentary command-line option parser.
   *
-  * Copyright (C) 2006-2008 James D. Lin
+  * Copyright (C) 2006-2008 James D. Lin <jameslin@csua.berkeley.edu>
   *
   * This software is provided 'as-is', without any express or implied
   * warranty.  In no event will the authors be held liable for any damages
