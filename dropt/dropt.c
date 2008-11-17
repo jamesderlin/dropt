@@ -107,18 +107,12 @@ find_long_option(const dropt_context_t* context, const dropt_char_t* longName, s
     const dropt_option_t* option;
 
     assert(context != NULL);
-
-    if (context->options == NULL)
-    {
-        DROPT_PANIC("No options specified.");
-        return NULL;
-    }
+    assert(longName != NULL);
 
     cmp = (context->strncmp != NULL)
           ? context->strncmp
           : dropt_strncmp;
 
-    assert(longName != NULL);
     for (option = context->options; is_valid_option(option); option++)
     {
         if (   option->long_name != NULL
@@ -151,14 +145,8 @@ find_short_option(const dropt_context_t* context, dropt_char_t shortName)
     const dropt_option_t* option;
 
     assert(context != NULL);
-
-    if (context->options == NULL)
-    {
-        DROPT_PANIC("No options specified.");
-        return NULL;
-    }
-
     assert(shortName != T('\0'));
+
     for (option = context->options; is_valid_option(option); option++)
     {
         if (   shortName == option->short_name
@@ -864,26 +852,56 @@ exit:
   *
   *     Creates a new options context.
   *
+  * PARAMETERS:
+  *     IN options : The list of option specifications.
+  *                  Must not be NULL.
+  *
   * RETURNS:
   *     An allocated options context.  The caller is responsible for
   *       freeing it with dropt_free_context when no longer needed.
   *     Returns NULL on error.
   */
 dropt_context_t*
-dropt_new_context(void)
+dropt_new_context(const dropt_option_t* options)
 {
-    dropt_context_t* context = malloc(sizeof *context);
-    if (context != NULL)
+    dropt_context_t* context = NULL;
+
+    if (options == NULL)
     {
-        context->options = NULL;
-        context->errorHandler = NULL;
-        context->errorHandlerData = NULL;
-        context->errorDetails.err = dropt_error_none;
-        context->errorDetails.optionName = NULL;
-        context->errorDetails.valueString = NULL;
-        context->errorDetails.message = NULL;
-        context->strncmp = NULL;
+        DROPT_PANIC("No option list specified.");
+        goto exit;
     }
+
+    context = malloc(sizeof *context);
+    if (context == NULL) { goto exit; }
+
+    context->options = options;
+    context->errorHandler = NULL;
+    context->errorHandlerData = NULL;
+    context->errorDetails.err = dropt_error_none;
+    context->errorDetails.optionName = NULL;
+    context->errorDetails.valueString = NULL;
+    context->errorDetails.message = NULL;
+    context->strncmp = NULL;
+
+    /* Sanity-check the options. */
+    {
+        const dropt_option_t* option;
+        for (option = options; is_valid_option(option); option++)
+        {
+            if (   option->short_name == T('=')
+                || (   option->long_name != NULL
+                    && dropt_strchr(option->long_name, T('=')) != NULL))
+            {
+                DROPT_PANIC("Invalid option list. '=' may not be used in an option name.");
+                free(context);
+                context = NULL;
+                goto exit;
+            }
+        }
+    }
+
+exit:
     return context;
 }
 
@@ -901,60 +919,6 @@ dropt_free_context(dropt_context_t* context)
 {
     dropt_clear_error(context);
     free(context);
-}
-
-
-/** dropt_set_options
-  *
-  *     Specifies a list of options to use with an options context.
-  *
-  * PARAMETERS:
-  *     IN/OUT context : The options context.
-  *     IN options     : The list of option specifications.
-  *                      Must not be NULL.
-  *
-  * RETURNS:
-  *     dropt_error_none
-  *     dropt_error_bad_configuration
-  */
-dropt_error_t
-dropt_set_options(dropt_context_t* context, const dropt_option_t* options)
-{
-    dropt_error_t err = dropt_error_none;
-
-    if (context == NULL)
-    {
-        DROPT_PANIC("No dropt context specified.");
-        err = dropt_error_bad_configuration;
-        goto exit;
-    }
-
-    context->options = options;
-
-    /* Sanity-check the options. */
-    if (options == NULL)
-    {
-        DROPT_PANIC("No option list specified.");
-        err = dropt_error_bad_configuration;
-    }
-    else
-    {
-        const dropt_option_t* option;
-        for (option = options; is_valid_option(option); option++)
-        {
-            if (   option->short_name == T('=')
-                || (   option->long_name != NULL
-                    && dropt_strchr(option->long_name, T('=')) != NULL))
-            {
-                DROPT_PANIC("Invalid option list. '=' may not be used in an option name.");
-                err = dropt_error_bad_configuration;
-                goto exit;
-            }
-        }
-    }
-
-exit:
-    return err;
 }
 
 

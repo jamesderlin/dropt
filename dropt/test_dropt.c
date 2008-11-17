@@ -1055,10 +1055,11 @@ main(int argc, char** argv)
     success = testStrings();
     if (!success) { goto exit; }
 
-    droptContext = dropt_new_context();
+    droptContext = dropt_new_context(options);
     if (droptContext == NULL)
     {
         fputts(T("Insufficient memory.\n"), stderr);
+        success = false;
         goto exit;
     }
 
@@ -1066,7 +1067,6 @@ main(int argc, char** argv)
     if (!success) { goto exit; }
 
     dropt_set_error_handler(droptContext, myDroptErrorHandler, NULL);
-    dropt_set_options(droptContext, options);
 
     initOptionDefaults();
     success = testDroptParse(droptContext);

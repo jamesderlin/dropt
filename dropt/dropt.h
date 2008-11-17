@@ -94,10 +94,9 @@ typedef struct dropt_option_t
 } dropt_option_t;
 
 
-dropt_context_t* dropt_new_context(void);
+dropt_context_t* dropt_new_context(const dropt_option_t* options);
 void dropt_free_context(dropt_context_t* context);
 
-dropt_error_t dropt_set_options(dropt_context_t* context, const dropt_option_t* options);
 void dropt_set_error_handler(dropt_context_t* context, dropt_error_handler_t handler, void* handlerData);
 void dropt_set_strncmp(dropt_context_t* context, dropt_strncmp_t cmp);
 
