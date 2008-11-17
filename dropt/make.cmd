@@ -1,1 +1,1 @@
-@nmake /f Makefile.vcwin32 %*
+@nmake /NOLOGO /f Makefile.vcwin32 %*

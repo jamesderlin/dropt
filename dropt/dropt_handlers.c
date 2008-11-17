@@ -26,7 +26,6 @@
 #include <limits.h>
 #include <float.h>
 #include <errno.h>
-#include <assert.h>
 
 #include "dropt.h"
 #include "dropt_string.h"
@@ -57,8 +56,11 @@ typedef enum { false, true } bool;
   *
   * RETURNS:
   *     dropt_error_none
+  *     dropt_error_unknown
+  *     dropt_error_bad_configuration
   *     dropt_error_insufficient_args
   *     dropt_error_mismatch
+  *     dropt_error_overflow
   */
 dropt_error_t
 dropt_handle_bool(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
@@ -68,7 +70,7 @@ dropt_handle_bool(dropt_context_t* context, const dropt_char_t* valueString, voi
 
     if (handlerData == NULL)
     {
-        assert(!"No handler data specified.");
+        DROPT_PANIC("No handler data specified.");
         err = dropt_error_bad_configuration;
     }
     else if (valueString == NULL)
@@ -122,9 +124,7 @@ dropt_handle_bool(dropt_context_t* context, const dropt_char_t* valueString, voi
   *                       On error, left untouched.
   *
   * RETURNS:
-  *     dropt_error_none
-  *     dropt_error_insufficient_args
-  *     dropt_error_mismatch
+  *     See dropt_handle_bool.
   */
 dropt_error_t
 dropt_handle_verbose_bool(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
@@ -157,17 +157,18 @@ dropt_handle_verbose_bool(dropt_context_t* context, const dropt_char_t* valueStr
   * PARAMETERS:
   *     IN/OUT context  : The options context.
   *     IN valueString  : A string representing a base-10 integer.
-  *                       If NULL, returns dropt_error_unsufficient_args.
+  *                       If NULL, returns dropt_error_insufficient_args.
   *     OUT handlerData : A pointer to an int.
   *                       On success, set to the interpreted integer.
   *                       On error, left untouched.
   *
   * RETURNS:
   *     dropt_error_none
+  *     dropt_error_unknown
+  *     dropt_error_bad_configuration
   *     dropt_error_insufficient_args
   *     dropt_error_mismatch
   *     dropt_error_overflow
-  *     dropt_error_unknown
   */
 dropt_error_t
 dropt_handle_int(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
@@ -177,7 +178,7 @@ dropt_handle_int(dropt_context_t* context, const dropt_char_t* valueString, void
 
     if (handlerData == NULL)
     {
-        assert(!"No handler data specified.");
+        DROPT_PANIC("No handler data specified.");
         err = dropt_error_bad_configuration;
     }
     else if (valueString == NULL || valueString[0] == T('\0'))
@@ -229,17 +230,18 @@ dropt_handle_int(dropt_context_t* context, const dropt_char_t* valueString, void
   *     IN/OUT context  : The options context.
   *     IN valueString  : A string representing an unsigned base-10
   *                         integer.
-  *                       If NULL, returns dropt_error_unsufficient_args.
+  *                       If NULL, returns dropt_error_insufficient_args.
   *     OUT handlerData : A pointer to an unsigned int.
   *                       On success, set to the interpreted integer.
   *                       On error, left untouched.
   *
   * RETURNS:
   *     dropt_error_none
+  *     dropt_error_unknown
+  *     dropt_error_bad_configuration
   *     dropt_error_insufficient_args
   *     dropt_error_mismatch
   *     dropt_error_overflow
-  *     dropt_error_unknown
   */
 dropt_error_t
 dropt_handle_uint(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
@@ -249,7 +251,7 @@ dropt_handle_uint(dropt_context_t* context, const dropt_char_t* valueString, voi
 
     if (handlerData == NULL)
     {
-        assert(!"No handler data specified.");
+        DROPT_PANIC("No handler data specified.");
         err = dropt_error_bad_configuration;
     }
     else if (valueString == NULL || valueString[0] == T('\0'))
@@ -305,17 +307,19 @@ dropt_handle_uint(dropt_context_t* context, const dropt_char_t* valueString, voi
   *     IN/OUT context  : The options context.
   *     IN valueString  : A string representing a base-10 floating-point
   *                         number.
-  *                       If NULL, returns dropt_error_unsufficient_args.
+  *                       If NULL, returns dropt_error_insufficient_args.
   *     OUT handlerData : A pointer to a double.
   *                       On success, set to the interpreted double.
   *                       On error, left untouched.
   *
   * RETURNS:
   *     dropt_error_none
+  *     dropt_error_unknown
+  *     dropt_error_bad_configuration
   *     dropt_error_insufficient_args
   *     dropt_error_mismatch
   *     dropt_error_overflow
-  *     dropt_error_unknown
+  *     dropt_error_underflow
   */
 dropt_error_t
 dropt_handle_double(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
@@ -325,7 +329,7 @@ dropt_handle_double(dropt_context_t* context, const dropt_char_t* valueString, v
 
     if (handlerData == NULL)
     {
-        assert(!"No handler data specified.");
+        DROPT_PANIC("No handler data specified.");
         err = dropt_error_bad_configuration;
     }
     else if (valueString == NULL || valueString[0] == T('\0'))
@@ -378,7 +382,7 @@ dropt_handle_double(dropt_context_t* context, const dropt_char_t* valueString, v
   * PARAMETERS:
   *     IN/OUT context  : The options context.
   *     IN valueString  : A string.
-  *                       May be NULL.
+  *                       If NULL, returns dropt_error_insufficient_args.
   *     OUT handlerData : A pointer to pointer-to-char.
   *                       On success, set to the input string.  The string
   *                         is NOT copied from the original argv array, so
@@ -387,6 +391,7 @@ dropt_handle_double(dropt_context_t* context, const dropt_char_t* valueString, v
   *
   * RETURNS:
   *     dropt_error_none
+  *     dropt_error_bad_configuration
   *     dropt_error_insufficient_args
   */
 dropt_error_t
@@ -396,7 +401,7 @@ dropt_handle_string(dropt_context_t* context, const dropt_char_t* valueString, v
 
     if (handlerData == NULL)
     {
-        assert(!"No handler data specified.");
+        DROPT_PANIC("No handler data specified.");
         err = dropt_error_bad_configuration;
     }
     else if (valueString == NULL)

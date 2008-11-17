@@ -127,7 +127,9 @@ DROPT_HANDLER_DECL(dropt_handle_int);
 DROPT_HANDLER_DECL(dropt_handle_uint);
 DROPT_HANDLER_DECL(dropt_handle_double);
 DROPT_HANDLER_DECL(dropt_handle_string);
-#undef DROPT_HANDLER_DECL
+
+#define DROPT_PANIC(message) dropt_panic(message, __FILE__, __LINE__)
+void dropt_panic(const char* message, const char* filename, int line);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -51,19 +51,23 @@ OBJDIR = $(BUILD_ROOT)\obj$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)$(UNICODE_SUFFIX)
 GLOBAL_DEP = "$(SRC_ROOT)\dropt.h" "$(SRC_ROOT)\dropt_string.h" "$(OBJDIR)" "$(OUTDIR)"
 OBJ_FILES = "$(OBJDIR)\dropt.obj" "$(OBJDIR)\dropt_handlers.obj" "$(OBJDIR)\dropt_string.obj"
 
+DROPT_LIB = "$(OUTDIR)\dropt.lib"
+TEST_BIN = "$(OBJDIR)\test_dropt.exe"
+
 
 # Targets --------------------------------------------------------------
 
-all: "$(OUTDIR)\dropt.lib"
+all: $(DROPT_LIB)
 
-test: "$(OBJDIR)\test_dropt.exe"
+test: $(TEST_BIN)
+    @echo.Running tests.
     $**
     @echo.Tests passed.
 
-"$(OUTDIR)\dropt.lib": $(OBJ_FILES)
+$(DROPT_LIB): $(OBJ_FILES)
     $(linklib) $(LINKLIB_FLAGS) $** /OUT:$@
 
-"$(OBJDIR)\test_dropt.exe": "$(OBJDIR)\$(@B:"=).obj" "$(OUTDIR)\dropt.lib"
+$(TEST_BIN): "$(OBJDIR)\$(@B:"=).obj" $(DROPT_LIB)
     $(link) $(LINK_FLAGS) $** /SUBSYSTEM:CONSOLE /OUT:$@
 
 $(OBJ_FILES) "$(OBJDIR)\test_dropt.obj": $(GLOBAL_DEP) "$(SRC_ROOT)\$(@B:"=).c"

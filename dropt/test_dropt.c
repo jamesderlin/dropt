@@ -1078,7 +1078,7 @@ main(int argc, char** argv)
 
     if (showHelp)
     {
-        fputts(T("Usage: test_dropt [options] [operands]\n\n"), stdout);
+        fputts(T("Usage: test_dropt [options] [operands] [--] [arguments]\n\n"), stdout);
 #ifndef DROPT_NO_STRING_BUFFERS
         fputts(T("Options:\n"), stdout);
         dropt_print_help(stdout, options, 0);
