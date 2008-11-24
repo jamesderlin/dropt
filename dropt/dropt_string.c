@@ -65,8 +65,8 @@
 struct dropt_stringstream
 {
     dropt_char_t* string; /* The string buffer. */
-    size_t maxSize;       /* Size of the string buffer, including space for NUL. */
-    size_t used;          /* Number of bytes used in the string buffer, excluding NUL. */
+    size_t maxSize;       /* Size of the string buffer, in dropt_char_t-s, including space for NUL. */
+    size_t used;          /* Number of elements used in the string buffer, excluding NUL. */
 };
 #endif
 
@@ -93,6 +93,32 @@ dropt_safe_malloc(size_t numElements, size_t elementSize)
     }
 
     return malloc(numBytes);
+}
+
+
+/** dropt_safe_realloc
+  *
+  *     Wrapper around realloc to check for integer overflow.
+  *
+  * PARAMETERS:
+  *     IN/OUT p    : A pointer to the memory block to resize.
+  *     numElements : The number of elements to allocate.
+  *     elementSize : The size of each of element, in bytes.
+  *
+  * RETURNS:
+  *     A pointer to the allocated memory, or NULL on failure.
+  */
+static void*
+dropt_safe_realloc(void* p, size_t numElements, size_t elementSize)
+{
+    size_t numBytes = numElements * elementSize;
+    if (numBytes / elementSize != numElements)
+    {
+        /* Overflow. */
+        return NULL;
+    }
+
+    return realloc(p, numBytes);
 }
 
 
@@ -422,7 +448,7 @@ dropt_ssgetfreespace(const dropt_stringstream* ss)
   *
   * PARAMETERS:
   *     IN/OUT ss : The dropt_stringstream.
-  *     n         : The desired buffer size.
+  *     n         : The desired buffer size, in dropt_char_t-s.
   *
   * RETURNS:
   *     The new size of the dropt_stringstream's buffer in dropt_char_t-s,
@@ -434,22 +460,19 @@ dropt_ssresize(dropt_stringstream* ss, size_t n)
     assert(ss != NULL);
     if (!IS_FINALIZED(ss))
     {
-        if (n > ss->maxSize)
+        /* Don't allow shrinking if it will truncate the string. */
+        if (n < ss->maxSize) { n = MAX(n, ss->used + 1 /* NUL */); }
+
+        if (n != ss->maxSize)
         {
-            dropt_char_t* p = realloc(ss->string, n * sizeof *ss->string);
+            dropt_char_t* p = dropt_safe_realloc(ss->string, n, sizeof *ss->string);
             if (p != NULL)
             {
                 ss->string = p;
                 ss->maxSize = n;
+                assert(ss->maxSize > 0);
             }
         }
-        else
-        {
-            n = MAX(n, ss->used + 1 /* NUL */);
-            realloc(ss->string, n * sizeof *ss->string);
-            ss->maxSize = n;
-        }
-        assert(ss->maxSize > 0);
     }
     return ss->maxSize;
 }
@@ -470,8 +493,8 @@ dropt_ssclear(dropt_stringstream* ss)
     {
         ss->string[0] = '\0';
         ss->used = 0;
-        ss->maxSize = DEFAULT_STRINGSTREAM_BUFFER_SIZE;
-        realloc(ss->string, ss->maxSize * sizeof *ss->string);
+
+        dropt_ssresize(ss, DEFAULT_STRINGSTREAM_BUFFER_SIZE);
     }
 }
 
@@ -496,7 +519,10 @@ dropt_ssfinalize(dropt_stringstream* ss)
 {
     dropt_char_t* s;
     assert(ss != NULL);
+
+    /* Shrink to fit. */
     dropt_ssresize(ss, 0);
+
     s = ss->string;
     ss->string = NULL;
     ss->maxSize = 0;
