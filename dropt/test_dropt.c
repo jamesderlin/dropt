@@ -101,7 +101,7 @@ static unsigned int ipAddress;
 
 
 static void
-initOptionDefaults(void)
+init_option_defaults(void)
 {
     showHelp = false;
     quiet = false;
@@ -120,7 +120,7 @@ initOptionDefaults(void)
 
 
 static dropt_error_t
-handleUnified(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
+handle_unified(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
 {
     dropt_error_t err = dropt_error_none;
     if (valueString != NULL) { err = dropt_handle_uint(context, valueString, &unified.lines); }
@@ -130,7 +130,7 @@ handleUnified(dropt_context_t* context, const dropt_char_t* valueString, void* h
 
 
 static dropt_error_t
-handleIPAddress(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
+handle_ip_address(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
 {
     dropt_error_t err = dropt_error_none;
     unsigned int octet[4];
@@ -181,8 +181,8 @@ exit:
 
 
 static dropt_char_t*
-myDroptErrorHandler(dropt_error_t error, const dropt_char_t* optionName,
-                    const dropt_char_t* valueString, void* handlerData)
+my_dropt_error_handler(dropt_error_t error, const dropt_char_t* optionName,
+                       const dropt_char_t* valueString, void* handlerData)
 {
 #ifdef DROPT_NO_STRING_BUFFERS
     if (error == my_dropt_error_bad_ip_address)
@@ -220,21 +220,21 @@ dropt_option_t options[] = {
     { T('s'),  T("string"), T("Test string value."), T("foo"), dropt_handle_string, &stringVal },
     { T('S'),  T("string2"), T("Test string value."), T("foo"), dropt_handle_string, &stringVal2 },
     { T('i'),  T("int"), T("Test integer value."), T("int"), dropt_handle_int, &intVal },
-    { T('u'),  T("unified"), T("Unified"), T("lines"), handleUnified, NULL, dropt_attr_optional_val },
-    { T('\0'), T("ip"), T("Test IP address."), T("address"), handleIPAddress, &ipAddress},
+    { T('u'),  T("unified"), T("Unified"), T("lines"), handle_unified, NULL, dropt_attr_optional_val },
+    { T('\0'), T("ip"), T("Test IP address."), T("address"), handle_ip_address, &ipAddress},
     { 0 }
 };
 
 
 
 #define MAKE_EQUALITY_FUNC(name, type) static bool name(type a, type b) { return a == b; }
-MAKE_EQUALITY_FUNC(boolEqual, dropt_bool_t)
-MAKE_EQUALITY_FUNC(intEqual, int)
-MAKE_EQUALITY_FUNC(uintEqual, unsigned int)
+MAKE_EQUALITY_FUNC(bool_equal, dropt_bool_t)
+MAKE_EQUALITY_FUNC(int_equal, int)
+MAKE_EQUALITY_FUNC(uint_equal, unsigned int)
 
 
 static bool
-doubleEqual(double a, double b)
+double_equal(double a, double b)
 {
     double a0 = ABS(a);
     double b0 = ABS(b);
@@ -244,7 +244,7 @@ doubleEqual(double a, double b)
 
 
 static bool
-stringEqual(const dropt_char_t* a, const dropt_char_t* b)
+string_equal(const dropt_char_t* a, const dropt_char_t* b)
 {
     if (a == NULL || b == NULL)
     {
@@ -258,7 +258,7 @@ stringEqual(const dropt_char_t* a, const dropt_char_t* b)
 
 
 static bool
-testStrings(void)
+test_strings(void)
 {
 #ifdef DROPT_NO_STRING_BUFFERS
     return true;
@@ -329,11 +329,11 @@ testStrings(void)
 
         ZERO_MEMORY(buf, sizeof buf);
         success &= dropt_snprintf(buf, ARRAY_LENGTH(buf), T("%s"), T("foo")) == 3;
-        success &= stringEqual(buf, T("foo"));
+        success &= string_equal(buf, T("foo"));
 
         ZERO_MEMORY(buf, sizeof buf);
         success &= dropt_snprintf(buf, ARRAY_LENGTH(buf), T("%s"), T("bar baz")) == 7;
-        success &= stringEqual(buf, T("bar"));
+        success &= string_equal(buf, T("bar"));
 
         if (!success)
         {
@@ -365,12 +365,12 @@ testStrings(void)
         dropt_ssprintf(ss, T("In eu nisl. Curabitur non tellus id arcu feugiat porta orci aliquam."));
         s = dropt_ssfinalize(ss);
 
-        success = stringEqual(s, T("hello world CAFEBABE 31337!\n")
-                                 T("Lorem ipsum dolor sit amet, consectetuer adipiscing elit. ")
-                                 T("Aenean quis mauris. In augue. ")
-                                 T("Suspendisse orci felis, tristique eget, lacinia rhoncus, interdum at, lorem.")
-                                 T("Aliquam gravida dui nec erat. Integer pede. Aliquam erat volutpat.")
-                                 T("In eu nisl. Curabitur non tellus id arcu feugiat porta orci aliquam."));
+        success = string_equal(s, T("hello world CAFEBABE 31337!\n")
+                                  T("Lorem ipsum dolor sit amet, consectetuer adipiscing elit. ")
+                                  T("Aenean quis mauris. In augue. ")
+                                  T("Suspendisse orci felis, tristique eget, lacinia rhoncus, interdum at, lorem.")
+                                  T("Aliquam gravida dui nec erat. Integer pede. Aliquam erat volutpat.")
+                                  T("In eu nisl. Curabitur non tellus id arcu feugiat porta orci aliquam."));
         free(s);
     }
 
@@ -412,16 +412,16 @@ test_ ## handler(dropt_context_t* context, const dropt_char_t* valueString, \
 }
 
 
-MAKE_TEST_FOR_HANDLER(dropt_handle_bool, dropt_bool_t, boolEqual, T("%d"))
-MAKE_TEST_FOR_HANDLER(dropt_handle_verbose_bool, dropt_bool_t, boolEqual, T("%d"))
-MAKE_TEST_FOR_HANDLER(dropt_handle_int, int, intEqual, T("%d"))
-MAKE_TEST_FOR_HANDLER(dropt_handle_uint, unsigned int, uintEqual, T("%u"))
-MAKE_TEST_FOR_HANDLER(dropt_handle_double, double, doubleEqual, T("%g"))
-MAKE_TEST_FOR_HANDLER(dropt_handle_string, dropt_char_t*, stringEqual, T("%s"))
+MAKE_TEST_FOR_HANDLER(dropt_handle_bool, dropt_bool_t, bool_equal, T("%d"))
+MAKE_TEST_FOR_HANDLER(dropt_handle_verbose_bool, dropt_bool_t, bool_equal, T("%d"))
+MAKE_TEST_FOR_HANDLER(dropt_handle_int, int, int_equal, T("%d"))
+MAKE_TEST_FOR_HANDLER(dropt_handle_uint, unsigned int, uint_equal, T("%u"))
+MAKE_TEST_FOR_HANDLER(dropt_handle_double, double, double_equal, T("%g"))
+MAKE_TEST_FOR_HANDLER(dropt_handle_string, dropt_char_t*, string_equal, T("%s"))
 
 
 static bool
-testDroptHandlers(dropt_context_t* context)
+test_dropt_handlers(dropt_context_t* context)
 {
     bool success = true;
 
@@ -525,7 +525,7 @@ verify(bool b, const char* s, unsigned int line)
 
 
 static dropt_error_t
-getAndPrintDroptError(dropt_context_t* context)
+get_and_print_dropt_error(dropt_context_t* context)
 {
     dropt_error_t error = dropt_get_error(context);
     if (error != dropt_error_none)
@@ -538,7 +538,7 @@ getAndPrintDroptError(dropt_context_t* context)
 
 
 static bool
-testDroptParse(dropt_context_t* context)
+test_dropt_parse(dropt_context_t* context)
 {
     bool success = true;
     dropt_char_t** rest = NULL;
@@ -561,7 +561,7 @@ testDroptParse(dropt_context_t* context)
         normalFlag = false;
         hiddenFlag = false;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
         success &= VERIFY(normalFlag == true);
         success &= VERIFY(hiddenFlag == true);
         success &= VERIFY(*rest == NULL);
@@ -573,7 +573,7 @@ testDroptParse(dropt_context_t* context)
         normalFlag = true;
         hiddenFlag = true;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
         success &= VERIFY(normalFlag == false);
         success &= VERIFY(hiddenFlag == false);
         success &= VERIFY(*rest == NULL);
@@ -585,7 +585,7 @@ testDroptParse(dropt_context_t* context)
         normalFlag = false;
         hiddenFlag = false;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
         success &= VERIFY(normalFlag == false);
         success &= VERIFY(hiddenFlag == false);
         success &= VERIFY(*rest == NULL);
@@ -596,7 +596,7 @@ testDroptParse(dropt_context_t* context)
         dropt_char_t* args[] = { T("-n"), T("1"), NULL };
         normalFlag = false;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
         success &= VERIFY(normalFlag == true);
         success &= VERIFY(rest == &args[1]);
     }
@@ -605,7 +605,7 @@ testDroptParse(dropt_context_t* context)
         dropt_char_t* args[] = { T("--normalFlag"), T("1"), NULL };
         normalFlag = false;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
         success &= VERIFY(normalFlag == true);
         success &= VERIFY(rest == &args[1]);
     }
@@ -616,7 +616,7 @@ testDroptParse(dropt_context_t* context)
         hiddenFlag = false;
         normalFlag = false;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
         success &= VERIFY(hiddenFlag == true);
         success &= VERIFY(normalFlag == true);
         success &= VERIFY(*rest == NULL);
@@ -628,7 +628,7 @@ testDroptParse(dropt_context_t* context)
         hiddenFlag = false;
         normalFlag = true;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
         success &= VERIFY(hiddenFlag == true);
         success &= VERIFY(normalFlag == false);
         success &= VERIFY(*rest == NULL);
@@ -641,7 +641,7 @@ testDroptParse(dropt_context_t* context)
         unified.lines = 10;
         normalFlag = false;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
         success &= VERIFY(unified.enabled == true);
         success &= VERIFY(unified.lines == 10);
         success &= VERIFY(normalFlag == true);
@@ -654,7 +654,7 @@ testDroptParse(dropt_context_t* context)
         unified.lines = 10;
         normalFlag = false;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
         success &= VERIFY(unified.enabled == true);
         success &= VERIFY(unified.lines == 10);
         success &= VERIFY(normalFlag == true);
@@ -668,7 +668,7 @@ testDroptParse(dropt_context_t* context)
         unified.lines = 10;
         normalFlag = false;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
         success &= VERIFY(unified.enabled == true);
         success &= VERIFY(unified.lines == 42);
         success &= VERIFY(normalFlag == true);
@@ -681,7 +681,7 @@ testDroptParse(dropt_context_t* context)
         unified.lines = 10;
         normalFlag = false;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
         success &= VERIFY(unified.enabled == true);
         success &= VERIFY(unified.lines == 42);
         success &= VERIFY(normalFlag == true);
@@ -695,7 +695,7 @@ testDroptParse(dropt_context_t* context)
         unified.lines = 10;
         normalFlag = false;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
         success &= VERIFY(unified.enabled == true);
         success &= VERIFY(unified.lines == 10);
         success &= VERIFY(normalFlag == true);
@@ -708,7 +708,7 @@ testDroptParse(dropt_context_t* context)
         unified.enabled = false;
         unified.lines = 10;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
         success &= VERIFY(normalFlag == true);
         success &= VERIFY(unified.enabled == true);
         success &= VERIFY(unified.lines == 42);
@@ -781,9 +781,9 @@ testDroptParse(dropt_context_t* context)
         normalFlag = false;
         stringVal = NULL;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
         success &= VERIFY(normalFlag == true);
-        success &= VERIFY(stringEqual(stringVal, T("foo")));
+        success &= VERIFY(string_equal(stringVal, T("foo")));
         success &= VERIFY(*rest == NULL);
         dropt_clear_error(context);
     }
@@ -793,9 +793,9 @@ testDroptParse(dropt_context_t* context)
         normalFlag = false;
         stringVal = NULL;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
         success &= VERIFY(normalFlag == true);
-        success &= VERIFY(stringEqual(stringVal, T("foo")));
+        success &= VERIFY(string_equal(stringVal, T("foo")));
         success &= VERIFY(*rest == NULL);
         dropt_clear_error(context);
     }
@@ -806,9 +806,9 @@ testDroptParse(dropt_context_t* context)
         stringVal = NULL;
         stringVal2 = NULL;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
-        success &= VERIFY(stringEqual(stringVal, T("")));
-        success &= VERIFY(stringEqual(stringVal2, T("")));
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
+        success &= VERIFY(string_equal(stringVal, T("")));
+        success &= VERIFY(string_equal(stringVal2, T("")));
         success &= VERIFY(*rest == NULL);
     }
 
@@ -817,9 +817,9 @@ testDroptParse(dropt_context_t* context)
         stringVal = NULL;
         stringVal2 = NULL;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
-        success &= VERIFY(stringEqual(stringVal, T("")));
-        success &= VERIFY(stringEqual(stringVal2, T("")));
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
+        success &= VERIFY(string_equal(stringVal, T("")));
+        success &= VERIFY(string_equal(stringVal2, T("")));
         success &= VERIFY(*rest == NULL);
     }
 
@@ -829,9 +829,9 @@ testDroptParse(dropt_context_t* context)
         stringVal = NULL;
         stringVal2 = NULL;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
-        success &= VERIFY(stringEqual(stringVal, T("foo bar")));
-        success &= VERIFY(stringEqual(stringVal2, T("baz qux")));
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
+        success &= VERIFY(string_equal(stringVal, T("foo bar")));
+        success &= VERIFY(string_equal(stringVal2, T("baz qux")));
         success &= VERIFY(*rest == NULL);
     }
 
@@ -840,9 +840,9 @@ testDroptParse(dropt_context_t* context)
         stringVal = NULL;
         stringVal2 = NULL;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
-        success &= VERIFY(stringEqual(stringVal, T("foo bar")));
-        success &= VERIFY(stringEqual(stringVal2, T("baz qux")));
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
+        success &= VERIFY(string_equal(stringVal, T("foo bar")));
+        success &= VERIFY(string_equal(stringVal2, T("baz qux")));
         success &= VERIFY(*rest == NULL);
     }
 
@@ -852,9 +852,9 @@ testDroptParse(dropt_context_t* context)
         stringVal = NULL;
         stringVal2 = NULL;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
-        success &= VERIFY(stringEqual(stringVal, T("foo=bar")));
-        success &= VERIFY(stringEqual(stringVal2, T("baz=qux")));
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
+        success &= VERIFY(string_equal(stringVal, T("foo=bar")));
+        success &= VERIFY(string_equal(stringVal2, T("baz=qux")));
         success &= VERIFY(*rest == NULL);
     }
 
@@ -863,9 +863,9 @@ testDroptParse(dropt_context_t* context)
         stringVal = NULL;
         stringVal2 = NULL;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
-        success &= VERIFY(stringEqual(stringVal, T("=foo")));
-        success &= VERIFY(stringEqual(stringVal2, T("=bar")));
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
+        success &= VERIFY(string_equal(stringVal, T("=foo")));
+        success &= VERIFY(string_equal(stringVal2, T("=bar")));
         success &= VERIFY(*rest == NULL);
     }
 
@@ -879,10 +879,10 @@ testDroptParse(dropt_context_t* context)
         stringVal2 = NULL;
         hiddenFlag = false;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
-        success &= VERIFY(stringEqual(stringVal, T("-n")));
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
+        success &= VERIFY(string_equal(stringVal, T("-n")));
         success &= VERIFY(normalFlag == false);
-        success &= VERIFY(stringEqual(stringVal2, T("-H")));
+        success &= VERIFY(string_equal(stringVal2, T("-H")));
         success &= VERIFY(hiddenFlag == false);
         success &= VERIFY(*rest == NULL);
     }
@@ -894,7 +894,7 @@ testDroptParse(dropt_context_t* context)
         normalFlag = false;
         hiddenFlag = false;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
         success &= VERIFY(showHelp == true);
         success &= VERIFY(normalFlag == false);
         success &= VERIFY(hiddenFlag == false);
@@ -907,7 +907,7 @@ testDroptParse(dropt_context_t* context)
         normalFlag = false;
         hiddenFlag = false;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
         success &= VERIFY(normalFlag == true);
         success &= VERIFY(hiddenFlag == false);
         success &= VERIFY(rest == &args[2]);
@@ -919,7 +919,7 @@ testDroptParse(dropt_context_t* context)
         normalFlag = false;
         hiddenFlag = false;
         rest = dropt_parse(context, args);
-        success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
+        success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
         success &= VERIFY(normalFlag == true);
         success &= VERIFY(hiddenFlag == false);
         success &= VERIFY(rest == &args[1]);
@@ -1015,7 +1015,7 @@ testDroptParse(dropt_context_t* context)
             dropt_char_t* args[] = { T("-N"), NULL };
             normalFlag = false;
             rest = dropt_parse(context, args);
-            success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
+            success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
             success &= VERIFY(normalFlag == true);
             success &= VERIFY(*rest == NULL);
         }
@@ -1024,7 +1024,7 @@ testDroptParse(dropt_context_t* context)
             dropt_char_t* args[] = { T("--NORMALFLAG"), NULL };
             normalFlag = false;
             rest = dropt_parse(context, args);
-            success &= VERIFY(getAndPrintDroptError(context) == dropt_error_none);
+            success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
             success &= VERIFY(normalFlag == true);
             success &= VERIFY(*rest == NULL);
         }
@@ -1051,7 +1051,7 @@ main(int argc, char** argv)
     dropt_char_t** rest = NULL;
     dropt_context_t* droptContext = NULL;
 
-    success = testStrings();
+    success = test_strings();
     if (!success) { goto exit; }
 
     droptContext = dropt_new_context(options);
@@ -1062,18 +1062,18 @@ main(int argc, char** argv)
         goto exit;
     }
 
-    success = testDroptHandlers(droptContext);
+    success = test_dropt_handlers(droptContext);
     if (!success) { goto exit; }
 
-    dropt_set_error_handler(droptContext, myDroptErrorHandler, NULL);
+    dropt_set_error_handler(droptContext, my_dropt_error_handler, NULL);
 
-    initOptionDefaults();
-    success = testDroptParse(droptContext);
+    init_option_defaults();
+    success = test_dropt_parse(droptContext);
     if (!success) { goto exit; }
 
-    initOptionDefaults();
+    init_option_defaults();
     rest = dropt_parse(droptContext, &argv[1]);
-    if (getAndPrintDroptError(droptContext) != dropt_error_none) { fputtc(T('\n'), stdout); }
+    if (get_and_print_dropt_error(droptContext) != dropt_error_none) { fputtc(T('\n'), stdout); }
 
     if (showHelp)
     {
