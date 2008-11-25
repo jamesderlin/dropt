@@ -1,4 +1,6 @@
 # dropt Makefile for Microsoft nmake
+#
+# Written by James D. Lin and assigned to the public domain.
 
 .SILENT:
 
@@ -55,28 +57,34 @@ OUTDIR = $(BUILD_ROOT)\lib$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)$(UNICODE_SUFFIX)
 OBJDIR = $(BUILD_ROOT)\obj$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)$(UNICODE_SUFFIX)
 
 GLOBAL_DEP = "$(SRC_ROOT)\dropt.h" "$(SRC_ROOT)\dropt_string.h" "$(OBJDIR)" "$(OUTDIR)"
-OBJ_FILES = "$(OBJDIR)\dropt.obj" "$(OBJDIR)\dropt_handlers.obj" "$(OBJDIR)\dropt_string.obj"
+LIB_OBJ_FILES = "$(OBJDIR)\dropt.obj" "$(OBJDIR)\dropt_handlers.obj" "$(OBJDIR)\dropt_string.obj"
+OBJ_FILES = $(LIB_OBJ_FILES) "$(OBJDIR)\dropt_example.obj" "$(OBJDIR)\test_dropt.obj"
 
 DROPT_LIB = "$(OUTDIR)\dropt.lib"
-TEST_BIN = "$(OBJDIR)\test_dropt.exe"
+EXAMPLE_EXE = "$(OBJDIR)\dropt_example.exe"
+TEST_EXE = "$(OBJDIR)\test_dropt.exe"
 
 
 # Targets --------------------------------------------------------------
 
-all: $(DROPT_LIB)
+default: $(DROPT_LIB)
 
-test: $(TEST_BIN)
+all: default example test
+
+example: $(EXAMPLE_EXE)
+
+test: $(TEST_EXE)
     @echo.Running tests.
     $**
     @echo.Tests passed.
 
-$(DROPT_LIB): $(OBJ_FILES)
+$(DROPT_LIB): $(LIB_OBJ_FILES)
     $(linklib) $(LINKLIB_FLAGS) $** /OUT:$@
 
-$(TEST_BIN): "$(OBJDIR)\$(@B:"=).obj" $(DROPT_LIB)
+$(EXAMPLE_EXE) $(TEST_EXE): "$(OBJDIR)\$(@B:"=).obj" $(DROPT_LIB)
     $(link) $(LINK_FLAGS) $** /SUBSYSTEM:CONSOLE /OUT:$@
 
-$(OBJ_FILES) "$(OBJDIR)\test_dropt.obj": $(GLOBAL_DEP) "$(SRC_ROOT)\$(@B:"=).c"
+$(OBJ_FILES): $(GLOBAL_DEP) "$(SRC_ROOT)\$(@B:"=).c"
     $(cc) $(CC_FLAGS) /c /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" "$(SRC_ROOT)\$(@B:"=).c"
 
 
