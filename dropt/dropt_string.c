@@ -38,8 +38,6 @@
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 #define ARRAY_LENGTH(array) (sizeof (array) / sizeof (array)[0])
 
-#define IS_FINALIZED(ss) ((ss)->string == NULL)
-
 #ifdef DROPT_DEBUG_STRING_BUFFERS
     #define DEFAULT_STRINGSTREAM_BUFFER_SIZE 1
 #else
@@ -382,7 +380,8 @@ dropt_asprintf(const dropt_char_t* format, ...)
   *
   * RETURNS:
   *     An initialized dropt_stringstream.  The caller is responsible for
-  *       calling dropt_ssclose() on it when no longer needed.
+  *       calling either dropt_ssclose() or dropt_ssfinalize() on it when
+  *       no longer needed.
   *     Returns NULL on error.
   */
 dropt_stringstream*
@@ -458,21 +457,19 @@ static size_t
 dropt_ssresize(dropt_stringstream* ss, size_t n)
 {
     assert(ss != NULL);
-    if (!IS_FINALIZED(ss))
-    {
-        /* Don't allow shrinking if it will truncate the string. */
-        if (n < ss->maxSize) { n = MAX(n, ss->used + 1 /* NUL */); }
 
-        if (n != ss->maxSize)
+    /* Don't allow shrinking if it will truncate the string. */
+    if (n < ss->maxSize) { n = MAX(n, ss->used + 1 /* NUL */); }
+
+    if (n != ss->maxSize)
+    {
+        dropt_char_t* p = dropt_safe_realloc(ss->string, n, sizeof *ss->string);
+        if (p != NULL)
         {
-            dropt_char_t* p = dropt_safe_realloc(ss->string, n, sizeof *ss->string);
-            if (p != NULL)
-            {
-                ss->string = p;
-                ss->maxSize = n;
-                assert(ss->maxSize > 0);
-            }
-        }
+            ss->string = p;
+            ss->maxSize = n;
+            assert(ss->maxSize > 0);
+         }
     }
     return ss->maxSize;
 }
@@ -489,30 +486,26 @@ void
 dropt_ssclear(dropt_stringstream* ss)
 {
     assert(ss != NULL);
-    if (!IS_FINALIZED(ss))
-    {
-        ss->string[0] = '\0';
-        ss->used = 0;
 
-        dropt_ssresize(ss, DEFAULT_STRINGSTREAM_BUFFER_SIZE);
-    }
+    ss->string[0] = '\0';
+    ss->used = 0;
+
+    dropt_ssresize(ss, DEFAULT_STRINGSTREAM_BUFFER_SIZE);
 }
 
 
 /** dropt_ssfinalize
   *
-  *     Finalizes a dropt_stringstream.  Except for dropt_ssclose(), no
-  *     further operations may be performed on the dropt_stringstream.
+  *     Finalizes a dropt_stringstream; returns the contained string and
+  *     destroys the dropt_stringstream.
   *
   * PARAMETERS:
   *     IN/OUT ss : The dropt_stringstream.
   *
   * RETURNS:
   *     The dropt_stringstream's string.  Note that the caller assumes
-  *       ownership of the returned string.  The string remains valid after
-  *       calling dropt_ssclose() on the stringstream, and the the caller
-  *       is responsible for calling free() on the returned string when no
-  *       longer needed.
+  *       ownership of the returned string and is responsible for calling
+  *       free() on it when no longer needed.
   */
 dropt_char_t*
 dropt_ssfinalize(dropt_stringstream* ss)
@@ -525,8 +518,9 @@ dropt_ssfinalize(dropt_stringstream* ss)
 
     s = ss->string;
     ss->string = NULL;
-    ss->maxSize = 0;
-    ss->used = 0;
+
+    dropt_ssclose(ss);
+
     return s;
 }
 
@@ -575,7 +569,7 @@ dropt_vssprintf(dropt_stringstream* ss, const dropt_char_t* format, va_list args
     n = dropt_vsnprintf(NULL, 0, format, argsCopy);
     va_end(argsCopy);
 
-    if (n > 0 && !IS_FINALIZED(ss))
+    if (n > 0)
     {
         size_t available = dropt_ssgetfreespace(ss);
         if ((unsigned int) n + 1 > available)

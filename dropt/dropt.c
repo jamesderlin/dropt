@@ -507,7 +507,6 @@ dropt_get_help(const dropt_option_t* options, dropt_bool_t compact)
             if (!compact) { dropt_ssprintf(ss, T("\n")); }
         }
         helpText = dropt_ssfinalize(ss);
-        dropt_ssclose(ss);
     }
 
     return helpText;

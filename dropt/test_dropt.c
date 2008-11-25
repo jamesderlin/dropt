@@ -364,7 +364,6 @@ testStrings(void)
         dropt_ssprintf(ss, T("Aliquam gravida dui nec erat. Integer pede. Aliquam erat volutpat."));
         dropt_ssprintf(ss, T("In eu nisl. Curabitur non tellus id arcu feugiat porta orci aliquam."));
         s = dropt_ssfinalize(ss);
-        dropt_ssclose(ss);
 
         success = stringEqual(s, T("hello world CAFEBABE 31337!\n")
                                  T("Lorem ipsum dolor sit amet, consectetuer adipiscing elit. ")
