@@ -77,7 +77,7 @@ $(DROPT_LIB) $(DROPTXX_LIB): $(LIB_OBJ_FILES)
 $(DROPTXX_LIB): $(OBJDIR)/droptxx.o
 
 $(OBJDIR)/% : $(OBJDIR)/%.o $(DROPT_LIB)
-	$(CC) $(CC_FLAGS) $< -static -L$(OUTDIR) -ldropt -o $@
+	$(CC) $(CC_FLAGS) $< -L$(OUTDIR) -ldropt -o $@
 
 $(OBJDIR)/%.o : $(SRC_ROOT)/%.c $(GLOBAL_DEP)
 	mkdir -p $(@D)
