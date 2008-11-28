@@ -1,0 +1,97 @@
+# dropt Makefile for GNU make
+#
+# Written by James D. Lin and assigned to the public domain.
+
+.SILENT:
+.SUFFIXES:
+
+CC = gcc
+CXX = g++
+LINKLIB = ar
+
+CC_FLAGS := -g -Wall $(CC_FLAGS)
+LINKLIB_FLAGS := rcs
+
+DEBUG_SUFFIX :=
+NO_STRING_SUFFIX :=
+
+ifdef DEBUG
+DEBUG_SUFFIX := -debug
+CC_FLAGS := -O0 -DDDROPT_DEBUG_STRING_BUFFERS $(CC_FLAGS)
+else
+CC_FLAGS := -O3 -DNDEBUG $(CC_FLAGS)
+endif
+
+ifdef DROPT_NO_STRING_BUFFERS
+NO_STRING_SUFFIX := -nostring
+CC_FLAGS := -DDROPT_NO_STRING_BUFFERS $(CC_FLAGS)
+endif
+
+ifndef SRC_ROOT
+SRC_ROOT := $(CURDIR)
+endif
+
+ifndef BUILD_ROOT
+BUILD_ROOT := $(SRC_ROOT)/build
+endif
+
+OUTDIR := $(BUILD_ROOT)/lib$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)
+OBJDIR := $(BUILD_ROOT)/obj$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)
+
+GLOBAL_DEP := $(SRC_ROOT)/dropt.h $(SRC_ROOT)/dropt_string.h
+LIB_OBJ_FILES := $(OBJDIR)/dropt.o $(OBJDIR)/dropt_handlers.o $(OBJDIR)/dropt_string.o
+OBJ_FILES := $(LIB_OBJ_FILES) $(OBJDIR)/dropt_example.o $(OBJDIR)/test_dropt.o
+
+DROPT_LIB := $(OUTDIR)/libdropt.a
+DROPTXX_LIB := $(OUTDIR)/libdroptxx.a
+EXAMPLE_EXE := $(OBJDIR)/dropt_example
+TEST_EXE := $(OBJDIR)/test_dropt
+
+
+# Targets --------------------------------------------------------------
+
+.PHONY: default all lib libxx
+default: lib libxx
+all: default example test
+lib: $(DROPT_LIB)
+libxx: $(DROPTXX_LIB)
+
+.PHONY: example
+ifdef DROPT_NO_STRING_BUFFERS
+example:
+	@echo "(Skipping dropt_example because of DROPT_NO_STRING_BUFFERS.)"
+else
+example: $(EXAMPLE_EXE)
+endif
+
+.PHONY: test
+test: $(TEST_EXE)
+	@echo "Running tests..."
+	$<
+	@echo "Tests passed."
+
+$(DROPT_LIB) $(DROPTXX_LIB): $(LIB_OBJ_FILES)
+	mkdir -p $(@D)
+	$(LINKLIB) $(LINKLIB_FLAGS) $@ $^
+
+$(DROPTXX_LIB): $(OBJDIR)/droptxx.o
+
+$(OBJDIR)/% : $(OBJDIR)/%.o $(DROPT_LIB)
+	$(CC) $(CC_FLAGS) $< -static -L$(OUTDIR) -ldropt -o $@
+
+$(OBJDIR)/%.o : $(SRC_ROOT)/%.c $(GLOBAL_DEP)
+	mkdir -p $(@D)
+	$(CC) -c -o $@ $(CC_FLAGS) $<
+	@echo "$(<F)"
+
+$(OBJDIR)/droptxx.o : $(SRC_ROOT)/droptxx.cpp $(GLOBAL_DEP) $(SRC_ROOT)/droptxx.hpp
+	mkdir -p $(@D)
+	$(CXX) -c -o $@ $(CC_FLAGS) $(CXX_FLAGS) $<
+	@echo "$(<F)"
+
+
+# Directories ----------------------------------------------------------
+
+.PHONY: clean
+clean:
+	-rm -rf "$(BUILD_ROOT)"

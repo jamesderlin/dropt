@@ -71,7 +71,7 @@ struct dropt_stringstream
 
 /** dropt_safe_malloc
   *
-  *     Wrapper around malloc to check for integer overflow.
+  *     A version of malloc that checks for integer overflow.
   *
   * PARAMETERS:
   *     numElements : The number of elements to allocate.
@@ -80,18 +80,8 @@ struct dropt_stringstream
   * RETURNS:
   *     A pointer to the allocated memory, or NULL on failure.
   */
-static void*
-dropt_safe_malloc(size_t numElements, size_t elementSize)
-{
-    size_t numBytes = numElements * elementSize;
-    if (numBytes / elementSize != numElements)
-    {
-        /* Overflow. */
-        return NULL;
-    }
-
-    return malloc(numBytes);
-}
+#define dropt_safe_malloc(numElements, elementSize) \
+    dropt_safe_realloc(NULL, numElements, elementSize)
 
 
 /** dropt_safe_realloc
@@ -100,6 +90,8 @@ dropt_safe_malloc(size_t numElements, size_t elementSize)
   *
   * PARAMETERS:
   *     IN/OUT p    : A pointer to the memory block to resize.
+  *                   If NULL, a new memory block of the specified size
+  *                     will be allocated.
   *     numElements : The number of elements to allocate.
   *     elementSize : The size of each of element, in bytes.
   *
