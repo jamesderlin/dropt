@@ -4,15 +4,15 @@
 
 .SILENT:
 
-cc = cl.exe
-link = link.exe
-linklib = lib.exe
+CC = cl.exe
+LINK = link.exe
+LINKLIB = lib.exe
 
 DEBUG_SUFFIX =
 NO_STRING_SUFFIX =
 UNICODE_SUFFIX =
 
-!IF !DEFINED(CC_FLAGS)
+!IFNDEF CC_FLAGS
 CC_FLAGS =
 !ENDIF
 
@@ -45,11 +45,11 @@ UNICODE_SUFFIX = -w
 CC_FLAGS = $(CC_FLAGS) /D_UNICODE
 !ENDIF
 
-!IF !DEFINED(SRC_ROOT)
+!IFNDEF SRC_ROOT
 SRC_ROOT = $(MAKEDIR)
 !ENDIF
 
-!IF !DEFINED(BUILD_ROOT)
+!IFNDEF BUILD_ROOT
 BUILD_ROOT = $(SRC_ROOT)\build
 !ENDIF
 
@@ -71,21 +71,26 @@ default: $(DROPT_LIB)
 
 all: default example test
 
+!IF "$(DROPT_NO_STRING_BUFFERS)" != ""
+example:
+    @echo.(Skipping dropt_example because of DROPT_NO_STRING_BUFFERS.)
+!ELSE
 example: $(EXAMPLE_EXE)
+!ENDIF
 
 test: $(TEST_EXE)
-    @echo.Running tests.
+    @echo.Running tests...
     $**
     @echo.Tests passed.
 
 $(DROPT_LIB): $(LIB_OBJ_FILES)
-    $(linklib) $(LINKLIB_FLAGS) $** /OUT:$@
+    $(LINKLIB) /OUT:$@ $(LINKLIB_FLAGS) $**
 
 $(EXAMPLE_EXE) $(TEST_EXE): "$(OBJDIR)\$(@B:"=).obj" $(DROPT_LIB)
-    $(link) $(LINK_FLAGS) $** /SUBSYSTEM:CONSOLE /OUT:$@
+    $(LINK) /SUBSYSTEM:CONSOLE /OUT:$@ $(LINK_FLAGS) $**
 
 $(OBJ_FILES): $(GLOBAL_DEP) "$(SRC_ROOT)\$(@B:"=).c"
-    $(cc) $(CC_FLAGS) /c /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" "$(SRC_ROOT)\$(@B:"=).c"
+    $(CC) /c /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $(CC_FLAGS) "$(SRC_ROOT)\$(@B:"=).c"
 
 
 # Directories ----------------------------------------------------------
