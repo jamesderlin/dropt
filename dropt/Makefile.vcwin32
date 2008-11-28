@@ -61,15 +61,19 @@ LIB_OBJ_FILES = "$(OBJDIR)\dropt.obj" "$(OBJDIR)\dropt_handlers.obj" "$(OBJDIR)\
 OBJ_FILES = $(LIB_OBJ_FILES) "$(OBJDIR)\dropt_example.obj" "$(OBJDIR)\test_dropt.obj"
 
 DROPT_LIB = "$(OUTDIR)\dropt.lib"
+DROPTXX_LIB = "$(OUTDIR)\droptxx.lib"
 EXAMPLE_EXE = "$(OBJDIR)\dropt_example.exe"
 TEST_EXE = "$(OBJDIR)\test_dropt.exe"
 
 
 # Targets --------------------------------------------------------------
 
-default: $(DROPT_LIB)
+default: lib libxx
 
 all: default example test
+
+lib: $(DROPT_LIB)
+libxx: $(DROPTXX_LIB)
 
 !IF "$(DROPT_NO_STRING_BUFFERS)" != ""
 example:
@@ -86,11 +90,17 @@ test: $(TEST_EXE)
 $(DROPT_LIB): $(LIB_OBJ_FILES)
     $(LINKLIB) /OUT:$@ $(LINKLIB_FLAGS) $**
 
+$(DROPTXX_LIB): $(DROPT_LIB) "$(OBJDIR)\droptxx.obj"
+    $(LINKLIB) /OUT:$@ $(LINKLIB_FLAGS) $**
+
 $(EXAMPLE_EXE) $(TEST_EXE): "$(OBJDIR)\$(@B:"=).obj" $(DROPT_LIB)
     $(LINK) /SUBSYSTEM:CONSOLE /OUT:$@ $(LINK_FLAGS) $**
 
 $(OBJ_FILES): $(GLOBAL_DEP) "$(SRC_ROOT)\$(@B:"=).c"
     $(CC) /c /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $(CC_FLAGS) "$(SRC_ROOT)\$(@B:"=).c"
+
+"$(OBJDIR)\droptxx.obj": $(GLOBAL_DEP) "$(SRC_ROOT)\$(@B:"=).hpp" "$(SRC_ROOT)\$(@B:"=).cpp"
+    $(CC) /c /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $(CC_FLAGS) "$(SRC_ROOT)\$(@B:"=).cpp"
 
 
 # Directories ----------------------------------------------------------
