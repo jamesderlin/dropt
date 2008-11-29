@@ -5,6 +5,14 @@
 .SILENT:
 .SUFFIXES:
 
+ifndef SRC_DIR
+SRC_DIR := $(CURDIR)
+endif
+
+ifndef BUILD_ROOT
+BUILD_ROOT := $(SRC_DIR)/build
+endif
+
 CC = gcc
 CXX = g++
 AR = ar
@@ -27,18 +35,10 @@ NO_STRING_SUFFIX := -nostring
 CFLAGS := -DDROPT_NO_STRING_BUFFERS $(CFLAGS)
 endif
 
-ifndef SRC_ROOT
-SRC_ROOT := $(CURDIR)
-endif
-
-ifndef BUILD_ROOT
-BUILD_ROOT := $(SRC_ROOT)/build
-endif
-
 OUTDIR := $(BUILD_ROOT)/lib$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)
-OBJDIR := $(BUILD_ROOT)/obj$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)
+OBJDIR := $(BUILD_ROOT)/tmp$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)
 
-GLOBAL_DEP := $(SRC_ROOT)/dropt.h $(SRC_ROOT)/dropt_string.h
+GLOBAL_DEP := $(SRC_DIR)/dropt.h $(SRC_DIR)/dropt_string.h
 LIB_OBJ_FILES := $(OBJDIR)/dropt.o $(OBJDIR)/dropt_handlers.o $(OBJDIR)/dropt_string.o
 OBJ_FILES := $(LIB_OBJ_FILES) $(OBJDIR)/dropt_example.o $(OBJDIR)/test_dropt.o
 
@@ -64,14 +64,15 @@ else
 example: $(EXAMPLE_EXE)
 endif
 
-.PHONY: test
+.PHONY: check test
+check: test
 test: $(TEST_EXE)
 	@echo "Running tests..."
 	$<
 	@echo "Tests passed."
 
 $(DROPT_LIB) $(DROPTXX_LIB): $(LIB_OBJ_FILES)
-	mkdir -p $(@D)
+	-mkdir -p $(@D)
 	$(AR) $(ARFLAGS) $@ $^
 
 $(DROPTXX_LIB): $(OBJDIR)/droptxx.o
@@ -79,14 +80,14 @@ $(DROPTXX_LIB): $(OBJDIR)/droptxx.o
 $(OBJDIR)/% : $(OBJDIR)/%.o $(DROPT_LIB)
 	$(CC) $(CFLAGS) $< -L$(OUTDIR) -ldropt -o $@
 
-$(OBJDIR)/%.o : $(SRC_ROOT)/%.c $(GLOBAL_DEP)
-	mkdir -p $(@D)
+$(OBJDIR)/%.o : $(SRC_DIR)/%.c $(GLOBAL_DEP)
+	-mkdir -p $(@D)
 	$(CC) -c -o $@ $(CFLAGS) $<
 	@echo "$(<F)"
 
-$(OBJDIR)/droptxx.o : $(SRC_ROOT)/droptxx.cpp $(GLOBAL_DEP) $(SRC_ROOT)/droptxx.hpp
-	mkdir -p $(@D)
-	$(CXX) -c -o $@ $(CFLAGS) $(CXX_FLAGS) $<
+$(OBJDIR)/droptxx.o : $(SRC_DIR)/droptxx.cpp $(GLOBAL_DEP) $(SRC_DIR)/droptxx.hpp
+	-mkdir -p $(@D)
+	$(CXX) -c -o $@ $(CFLAGS) $(CXXFLAGS) $<
 	@echo "$(<F)"
 
 

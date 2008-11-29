@@ -3,22 +3,33 @@
 # Written by James D. Lin and assigned to the public domain.
 
 .SILENT:
+.SUFFIXES:
+
+!IFNDEF SRC_DIR
+SRC_DIR = $(MAKEDIR)
+!ENDIF
+
+!IFNDEF BUILD_ROOT
+BUILD_ROOT = $(SRC_DIR)\build
+!ENDIF
+
+# nmake doesn't support the special .PHONY target.  Create our own
+# pseudo-target as a substitute.  Note that usage is backwards from .PHONY;
+# use $(PHONY) as a dependency of pseudo-targets.
+#
+# (Assumes that there will never be an actual file named ".phony".)
+#
+PHONY = .phony
+
+MKDIR_DEST = if not exist "$(@D:"=)\$(NULL)" md "$(@D:"=)"
 
 CC = cl.exe
 LINK = link.exe
 LINKLIB = lib.exe
 
-DEBUG_SUFFIX =
-NO_STRING_SUFFIX =
-UNICODE_SUFFIX =
-
-!IFNDEF CFLAGS
-CFLAGS =
-!ENDIF
-
 CFLAGS = /EHsc /nologo /GF /Gy /GS /W3 /DSTRICT /DWIN32_LEAN_AND_MEAN $(CFLAGS)
-LINK_FLAGS = /NOLOGO /NXCOMPAT
-LINKLIB_FLAGS = /NOLOGO
+LINK_FLAGS = /NOLOGO /NXCOMPAT $(LINK_FLAGS)
+LINKLIB_FLAGS = /NOLOGO $(LINKLIB_FLAGS)
 
 !IF "$(DYNAMIC_CRT)" != ""
 CC_CRT_FLAG = /MD
@@ -26,37 +37,32 @@ CC_CRT_FLAG = /MD
 CC_CRT_FLAG = /MT
 !ENDIF
 
+DEBUG_SUFFIX =
 !IF "$(DEBUG)" != ""
 DEBUG_SUFFIX = -debug
-CFLAGS = $(CFLAGS) /Od /DDEBUG /RTC1 /Zi $(CC_CRT_FLAG)d /DDROPT_DEBUG_STRING_BUFFERS
-LINK_FLAGS = $(LINK_FLAGS) /DEBUG
+CFLAGS = /Od /DDEBUG /RTC1 /Zi $(CC_CRT_FLAG)d /DDROPT_DEBUG_STRING_BUFFERS $(CFLAGS)
+LINK_FLAGS = /DEBUG $(LINK_FLAGS)
 !ELSE
-CFLAGS = $(CFLAGS) /Ox /DNDEBUG $(CC_CRT_FLAG)
-LINK_FLAGS = $(LINK_FLAGS) /RELEASE /OPT:REF
+CFLAGS = /Ox /DNDEBUG $(CC_CRT_FLAG) $(CFLAGS)
+LINK_FLAGS = /RELEASE /OPT:REF $(LINK_FLAGS)
 !ENDIF
 
+NO_STRING_SUFFIX =
 !IF "$(DROPT_NO_STRING_BUFFERS)" != ""
 NO_STRING_SUFFIX = -nostring
-CFLAGS = $(CFLAGS) /DDROPT_NO_STRING_BUFFERS
+CFLAGS = /DDROPT_NO_STRING_BUFFERS $(CFLAGS)
 !ENDIF
 
+UNICODE_SUFFIX =
 !IF "$(_UNICODE)" != ""
 UNICODE_SUFFIX = -w
-CFLAGS = $(CFLAGS) /D_UNICODE
-!ENDIF
-
-!IFNDEF SRC_ROOT
-SRC_ROOT = $(MAKEDIR)
-!ENDIF
-
-!IFNDEF BUILD_ROOT
-BUILD_ROOT = $(SRC_ROOT)\build
+CFLAGS = /D_UNICODE $(CFLAGS)
 !ENDIF
 
 OUTDIR = $(BUILD_ROOT)\lib$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)$(UNICODE_SUFFIX)
-OBJDIR = $(BUILD_ROOT)\obj$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)$(UNICODE_SUFFIX)
+OBJDIR = $(BUILD_ROOT)\tmp$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)$(UNICODE_SUFFIX)
 
-GLOBAL_DEP = "$(SRC_ROOT)\dropt.h" "$(SRC_ROOT)\dropt_string.h" "$(OBJDIR)" "$(OUTDIR)"
+GLOBAL_DEP = "$(SRC_DIR)\dropt.h" "$(SRC_DIR)\dropt_string.h"
 LIB_OBJ_FILES = "$(OBJDIR)\dropt.obj" "$(OBJDIR)\dropt_handlers.obj" "$(OBJDIR)\dropt_string.obj"
 OBJ_FILES = $(LIB_OBJ_FILES) "$(OBJDIR)\dropt_example.obj" "$(OBJDIR)\test_dropt.obj"
 
@@ -68,49 +74,46 @@ TEST_EXE = "$(OBJDIR)\test_dropt.exe"
 
 # Targets --------------------------------------------------------------
 
-default: lib libxx
-
-all: default example test
-
-lib: $(DROPT_LIB)
-libxx: $(DROPTXX_LIB)
+default: $(PHONY) lib libxx
+all: $(PHONY) default example test
+lib: $(PHONY) $(DROPT_LIB)
+libxx: $(PHONY) $(DROPTXX_LIB)
 
 !IF "$(DROPT_NO_STRING_BUFFERS)" != ""
-example:
+example: $(PHONY)
     @echo.(Skipping dropt_example because of DROPT_NO_STRING_BUFFERS.)
 !ELSE
-example: $(EXAMPLE_EXE)
+example: $(PHONY) $(EXAMPLE_EXE)
 !ENDIF
 
-test: $(TEST_EXE)
+check: $(PHONY) test
+test: $(PHONY) $(TEST_EXE)
     @echo.Running tests...
-    $**
+    $(TEST_EXE)
     @echo.Tests passed.
 
 $(DROPT_LIB): $(LIB_OBJ_FILES)
-    $(LINKLIB) /OUT:$@ $(LINKLIB_FLAGS) $**
-
 $(DROPTXX_LIB): $(DROPT_LIB) "$(OBJDIR)\droptxx.obj"
+
+$(DROPT_LIB) $(DROPTXX_LIB):
+    $(MKDIR_DEST)
     $(LINKLIB) /OUT:$@ $(LINKLIB_FLAGS) $**
 
 $(EXAMPLE_EXE) $(TEST_EXE): "$(OBJDIR)\$(@B:"=).obj" $(DROPT_LIB)
+    $(MKDIR_DEST)
     $(LINK) /SUBSYSTEM:CONSOLE /OUT:$@ $(LINK_FLAGS) $**
 
-$(OBJ_FILES): $(GLOBAL_DEP) "$(SRC_ROOT)\$(@B:"=).c"
-    $(CC) /c /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $(CFLAGS) "$(SRC_ROOT)\$(@B:"=).c"
+$(OBJ_FILES): "$(SRC_DIR)\$(@B:"=).c" $(GLOBAL_DEP)
+"$(OBJDIR)\droptxx.obj": "$(SRC_DIR)\$(@B:"=).cpp" "$(SRC_DIR)\$(@B:"=).hpp" $(GLOBAL_DEP)
 
-"$(OBJDIR)\droptxx.obj": $(GLOBAL_DEP) "$(SRC_ROOT)\$(@B:"=).hpp" "$(SRC_ROOT)\$(@B:"=).cpp"
-    $(CC) /c /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $(CFLAGS) "$(SRC_ROOT)\$(@B:"=).cpp"
+$(OBJ_FILES) "$(OBJDIR)\droptxx.obj":
+    $(MKDIR_DEST)
+    $(CC) /c /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $(CFLAGS) %s
 
 
-# Directories ----------------------------------------------------------
+# Special targets ------------------------------------------------------
 
-# Create directories as necessary.
-"$(OUTDIR)":
-    if not exist "$(OUTDIR)\$(NULL)" md $@
-"$(OBJDIR)":
-    if not exist "$(OBJDIR)\$(NULL)" md $@
-
+.phony:
 
 clean:
     -if exist "$(BUILD_ROOT)\$(NULL)" rd /s /q "$(BUILD_ROOT)"
