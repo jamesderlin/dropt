@@ -7,24 +7,24 @@
 
 CC = gcc
 CXX = g++
-LINKLIB = ar
+AR = ar
 
-CC_FLAGS := -g -Wall $(CC_FLAGS)
-LINKLIB_FLAGS := rcs
+CFLAGS := -g -Wall $(CFLAGS)
+ARFLAGS := rcs
 
 DEBUG_SUFFIX :=
 NO_STRING_SUFFIX :=
 
 ifdef DEBUG
 DEBUG_SUFFIX := -debug
-CC_FLAGS := -O0 -DDDROPT_DEBUG_STRING_BUFFERS $(CC_FLAGS)
+CFLAGS := -O0 -DDDROPT_DEBUG_STRING_BUFFERS $(CFLAGS)
 else
-CC_FLAGS := -O3 -DNDEBUG $(CC_FLAGS)
+CFLAGS := -O3 -DNDEBUG $(CFLAGS)
 endif
 
 ifdef DROPT_NO_STRING_BUFFERS
 NO_STRING_SUFFIX := -nostring
-CC_FLAGS := -DDROPT_NO_STRING_BUFFERS $(CC_FLAGS)
+CFLAGS := -DDROPT_NO_STRING_BUFFERS $(CFLAGS)
 endif
 
 ifndef SRC_ROOT
@@ -72,21 +72,21 @@ test: $(TEST_EXE)
 
 $(DROPT_LIB) $(DROPTXX_LIB): $(LIB_OBJ_FILES)
 	mkdir -p $(@D)
-	$(LINKLIB) $(LINKLIB_FLAGS) $@ $^
+	$(AR) $(ARFLAGS) $@ $^
 
 $(DROPTXX_LIB): $(OBJDIR)/droptxx.o
 
 $(OBJDIR)/% : $(OBJDIR)/%.o $(DROPT_LIB)
-	$(CC) $(CC_FLAGS) $< -L$(OUTDIR) -ldropt -o $@
+	$(CC) $(CFLAGS) $< -L$(OUTDIR) -ldropt -o $@
 
 $(OBJDIR)/%.o : $(SRC_ROOT)/%.c $(GLOBAL_DEP)
 	mkdir -p $(@D)
-	$(CC) -c -o $@ $(CC_FLAGS) $<
+	$(CC) -c -o $@ $(CFLAGS) $<
 	@echo "$(<F)"
 
 $(OBJDIR)/droptxx.o : $(SRC_ROOT)/droptxx.cpp $(GLOBAL_DEP) $(SRC_ROOT)/droptxx.hpp
 	mkdir -p $(@D)
-	$(CXX) -c -o $@ $(CC_FLAGS) $(CXX_FLAGS) $<
+	$(CXX) -c -o $@ $(CFLAGS) $(CXX_FLAGS) $<
 	@echo "$(<F)"
 
 
