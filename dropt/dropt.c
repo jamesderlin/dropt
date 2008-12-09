@@ -2,7 +2,10 @@
   *
   *     A deliberately rudimentary command-line option parser.
   *
-  * Copyright (C) 2006-2008 James D. Lin <jameslin@csua.berkeley.edu>
+  * Copyright (c) 2006-2008 James D. Lin <jameslin@csua.berkeley.edu>
+  *
+  * The latest version of this file can be downloaded from:
+  * <http://www.taenarum.com/software/dropt/>
   *
   * This software is provided 'as-is', without any express or implied
   * warranty.  In no event will the authors be held liable for any damages
@@ -16,8 +19,10 @@
   *    claim that you wrote the original software. If you use this software
   *    in a product, an acknowledgment in the product documentation would be
   *    appreciated but is not required.
+  *
   * 2. Altered source versions must be plainly marked as such, and must not be
   *    misrepresented as being the original software.
+  *
   * 3. This notice may not be removed or altered from any source distribution.
   */
 

@@ -3,6 +3,9 @@
   *     A simple dropt example.
   *
   * Written by James D. Lin and assigned to the public domain.
+  *
+  * The latest version of this file can be downloaded from:
+  * <http://www.taenarum.com/software/dropt/>
   */
 
 #include <stdio.h>
@@ -12,12 +15,15 @@ int
 main(int argc, char** argv)
 {
     dropt_bool_t showHelp = 0;
+    dropt_bool_t showVersion = 0;
     int i = 0;
 
     dropt_option_t options[] = {
         { 'h',  "help", "Shows help.", NULL, dropt_handle_bool, &showHelp, dropt_attr_halt },
+        { '?', NULL, NULL, NULL, dropt_handle_bool, &showHelp, dropt_attr_halt | dropt_attr_hidden },
+        { '\0', "version", "Shows version information.", NULL, dropt_handle_bool, &showVersion, dropt_attr_halt },
         { 'i',  "int", "Test integer value.", "value", dropt_handle_int, &i },
-        { 0 }
+        { 0 } /* Sentinel value. */
     };
 
     dropt_context_t* droptContext = dropt_new_context(options);
@@ -33,6 +39,10 @@ main(int argc, char** argv)
             printf("Usage: dropt_example [options] [operands] [--] [arguments]\n\n"
                    "Options:\n");
             dropt_print_help(stdout, options, 0);
+        }
+        else if (showVersion)
+        {
+            printf("dropt_example 1.0\n");
         }
         else
         {

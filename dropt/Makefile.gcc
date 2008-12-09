@@ -1,6 +1,9 @@
 # dropt Makefile for GNU make
 #
 # Written by James D. Lin and assigned to the public domain.
+#
+# The latest version of this file can be downloaded from:
+# <http://www.taenarum.com/software/dropt/>
 
 .SILENT:
 .SUFFIXES:
