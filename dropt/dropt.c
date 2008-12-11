@@ -85,7 +85,12 @@ is_valid_option(const dropt_option_t* option)
 {
     return    option != NULL
            && !(   option->long_name == NULL
-                && option->short_name == T('\0'));
+                && option->short_name == T('\0')
+                && option->description == NULL
+                && option->arg_description == NULL
+                && option->handler == NULL
+                && option->handler_data == NULL
+                && option->attr == 0);
 }
 
 
@@ -460,28 +465,34 @@ dropt_get_help(const dropt_option_t* options, dropt_bool_t compact)
 
         for (option = options; is_valid_option(option); option++)
         {
+            bool hasLongName =    option->long_name != NULL
+                               && option->long_name[0] != T('\0');
+            bool hasShortName = option->short_name != T('\0');
+
             int n = 0;
 
-            /* Undocumented option.  Ignore it and move on. */
-            if (option->description == NULL || option->attr & dropt_attr_hidden)
+            if (option->description == NULL || (option->attr & dropt_attr_hidden))
             {
+                /* Undocumented option.  Ignore it and move on. */
                 continue;
             }
-
-            if (option->long_name != NULL && option->short_name != T('\0'))
+            else if (hasLongName && hasShortName)
             {
-                /* Both short_name and long_name */
                 n = dropt_ssprintf(ss, T("  -%c, --%s"), option->short_name, option->long_name);
             }
-            else if (option->long_name != NULL)
+            else if (hasLongName)
             {
-                /* long_name only */
                 n = dropt_ssprintf(ss, T("  --%s"), option->long_name);
             }
-            else if (option->short_name != T('\0'))
+            else if (hasShortName)
             {
-                /* short_name only */
                 n = dropt_ssprintf(ss, T("  -%c"), option->short_name);
+            }
+            else if (option->description != NULL)
+            {
+                /* Comment text.  Don't bother with indentation. */
+                dropt_ssprintf(ss, T("%s\n"), option->description);
+                goto next;
             }
             else
             {
@@ -509,6 +520,7 @@ dropt_get_help(const dropt_option_t* options, dropt_bool_t compact)
             dropt_ssprintf(ss, T("%*s  %s\n"),
                            maxWidth - n, T(""),
                            option->description);
+        next:
             if (!compact) { dropt_ssprintf(ss, T("\n")); }
         }
         helpText = dropt_ssfinalize(ss);
@@ -995,9 +1007,9 @@ void
 dropt_panic(const char* message, const char* filename, int line)
 {
 #ifdef NDEBUG
-    fprintf(stderr, "%s\n", message);
+    fprintf(stderr, "dropt: %s\n", message);
 #else
-    fprintf(stderr, "%s (%s: %d)\n", message, filename, line);
+    fprintf(stderr, "dropt: %s (%s: %d)\n", message, filename, line);
     abort();
 #endif
 }

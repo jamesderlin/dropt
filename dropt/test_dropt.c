@@ -211,6 +211,7 @@ my_dropt_error_handler(dropt_error_t error, const dropt_char_t* optionName,
 
 
 dropt_option_t options[] = {
+    { T('\0'), NULL, "Options:" },
     { T('h'),  T("help"), T("Shows help."), NULL, dropt_handle_bool, &showHelp, dropt_attr_halt },
     { T('?'),  NULL, NULL, NULL, dropt_handle_bool, &showHelp, dropt_attr_halt },
     { T('q'),  T("quiet"), T("Quiet mode."), NULL, dropt_handle_bool, &quiet },
@@ -220,6 +221,7 @@ dropt_option_t options[] = {
     { T('s'),  T("string"), T("Test string value."), T("value"), dropt_handle_string, &stringVal },
     { T('S'),  T("string2"), T("Test string value."), T("value"), dropt_handle_string, &stringVal2 },
     { T('i'),  T("int"), T("Test integer value."), T("value"), dropt_handle_int, &intVal },
+    { T('\0'), NULL, "Options for testing custom handlers:" },
     { T('u'),  T("unified"), T("Unified"), T("lines"), handle_unified, NULL, dropt_attr_optional_val },
     { T('\0'), T("ip"), T("Test IP address."), T("address"), handle_ip_address, &ipAddress},
     { 0 }
@@ -1080,7 +1082,6 @@ main(int argc, char** argv)
     {
         fputts(T("Usage: test_dropt [options] [operands] [--] [arguments]\n\n"), stdout);
 #ifndef DROPT_NO_STRING_BUFFERS
-        fputts(T("Options:\n"), stdout);
         dropt_print_help(stdout, options, 0);
 #endif
         goto exit;
