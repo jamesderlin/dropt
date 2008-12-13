@@ -71,7 +71,7 @@ endif
 check: test
 test: $(TEST_EXE)
 	@echo "Running tests..."
-	$<
+	$(TEST_EXE) $(TEST_DROPT_ARGS)
 	@echo "Tests passed."
 
 $(DROPT_LIB) $(DROPTXX_LIB): $(LIB_OBJ_FILES)

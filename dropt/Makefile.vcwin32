@@ -92,7 +92,7 @@ example: $(PHONY) $(EXAMPLE_EXE)
 check: $(PHONY) test
 test: $(PHONY) $(TEST_EXE)
     @echo.Running tests...
-    $(TEST_EXE)
+    $(TEST_EXE) $(TEST_DROPT_ARGS)
     @echo.Tests passed.
 
 $(DROPT_LIB): $(LIB_OBJ_FILES)
