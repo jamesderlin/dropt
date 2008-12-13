@@ -479,6 +479,7 @@ dropt_get_help(const dropt_option_t* options, const dropt_help_params_t* helpPar
                                && option->long_name[0] != T('\0');
             bool hasShortName = option->short_name != T('\0');
 
+            /* The number of characters printed on the current line so far. */
             int n = 0;
 
             if (option->description == NULL || (option->attr & dropt_attr_hidden))
@@ -533,9 +534,35 @@ dropt_get_help(const dropt_option_t* options, const dropt_help_params_t* helpPar
                 dropt_ssprintf(ss, T("\n"));
                 n = 0;
             }
-            dropt_ssprintf(ss, T("%*s%s\n"),
-                           hp.description_start_column - n, T(""),
-                           option->description);
+
+            {
+                const dropt_char_t* line = option->description;
+                while (line != NULL)
+                {
+                    int lineLen;
+                    const dropt_char_t* nextLine;
+                    const dropt_char_t* newline = dropt_strchr(line, T('\n'));
+
+                    if (newline == NULL)
+                    {
+                        lineLen = dropt_strlen(line);
+                        nextLine = NULL;
+                    }
+                    else
+                    {
+                        lineLen = newline - line;
+                        nextLine = newline + 1;
+                    }
+
+                    dropt_ssprintf(ss, T("%*s%.*s\n"),
+                                   hp.description_start_column - n, T(""),
+                                   lineLen, line);
+                    n = 0;
+
+                    line = nextLine;
+                }
+            }
+
         next:
             if (hp.blank_lines_between_options) { dropt_ssprintf(ss, T("\n")); }
         }

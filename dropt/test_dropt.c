@@ -211,19 +211,19 @@ my_dropt_error_handler(dropt_error_t error, const dropt_char_t* optionName,
 
 
 dropt_option_t options[] = {
-    { T('\0'), NULL, "Main options:" },
+    { T('\0'), NULL, T("Main options:") },
     { T('h'),  T("help"), T("Shows help."), NULL, dropt_handle_bool, &showHelp, dropt_attr_halt },
     { T('?'),  NULL, NULL, NULL, dropt_handle_bool, &showHelp, dropt_attr_halt },
     { T('q'),  T("quiet"), T("Quiet mode."), NULL, dropt_handle_bool, &quiet },
     { T('n'),  T("normalFlag"), T("A normal flag."), NULL, dropt_handle_bool, &normalFlag },
-    { T('r'),  T("requiredArgFlag"), T("A flag with a required argument."), "bool", dropt_handle_verbose_bool, &requiredArgFlag },
+    { T('r'),  T("requiredArgFlag"), T("A flag with a required argument."), T("bool"), dropt_handle_verbose_bool, &requiredArgFlag },
     { T('H'),  T("hiddenFlag"), T("This is hidden."), NULL, dropt_handle_bool, &hiddenFlag, dropt_attr_hidden },
     { T('s'),  T("string"), T("Test string value."), T("value"), dropt_handle_string, &stringVal },
     { T('S'),  T("string2"), T("Test string value."), T("value"), dropt_handle_string, &stringVal2 },
     { T('i'),  T("int"), T("Test integer value."), T("value"), dropt_handle_int, &intVal },
-    { T('\0'), NULL, "" },
-    { T('\0'), NULL, "Options for testing custom handlers:" },
-    { T('u'),  T("unified"), T("Test unified value with optional argument."), T("lines"), handle_unified, NULL, dropt_attr_optional_val },
+    { T('\0'), NULL, T("") },
+    { T('\0'), NULL, T("Options for testing custom handlers:") },
+    { T('u'),  T("unified"), T("Test unified value with optional argument.\nAlso test multiple\nlines."), T("lines"), handle_unified, NULL, dropt_attr_optional_val },
     { T('\0'), T("ip"), T("Test IP address."), T("address"), handle_ip_address, &ipAddress},
     { 0 }
 };
