@@ -92,17 +92,27 @@ typedef struct dropt_option_t
     dropt_char_t short_name;             /* May be '\0'. */
     const dropt_char_t* long_name;       /* May be NULL. */
     const dropt_char_t* description;     /* May be NULL. */
-    const dropt_char_t* arg_description; /* Set to NULL if no argument. */
+    const dropt_char_t* arg_description; /* If non-NULL, the option takes an argument. */
     dropt_option_handler_t handler;
     void* handler_data;
     unsigned int attr;
 } dropt_option_t;
 
+typedef struct dropt_help_params_t
+{
+    unsigned int indent;
+    unsigned int description_start_column;
+    dropt_bool_t blank_lines_between_options;
+} dropt_help_params_t;
+
 
 dropt_context_t* dropt_new_context(const dropt_option_t* options);
 void dropt_free_context(dropt_context_t* context);
 
-void dropt_set_error_handler(dropt_context_t* context, dropt_error_handler_t handler, void* handlerData);
+void dropt_init_help_params(dropt_help_params_t* helpParams);
+
+void dropt_set_error_handler(dropt_context_t* context,
+                             dropt_error_handler_t handler, void* handlerData);
 void dropt_set_strncmp(dropt_context_t* context, dropt_strncmp_t cmp);
 
 dropt_char_t** dropt_parse(dropt_context_t* context, dropt_char_t** argv);
@@ -119,12 +129,15 @@ dropt_char_t* dropt_default_error_handler(dropt_error_t error,
                                           const dropt_char_t* optionName,
                                           const dropt_char_t* valueString);
 
-dropt_char_t* dropt_get_help(const dropt_option_t* options, dropt_bool_t compact);
-void dropt_print_help(FILE* f, const dropt_option_t* options, dropt_bool_t compact);
+dropt_char_t* dropt_get_help(const dropt_option_t* options,
+                             const dropt_help_params_t* helpParams);
+void dropt_print_help(FILE* f, const dropt_option_t* options,
+                      const dropt_help_params_t* helpParams);
 #endif
 
 #define DROPT_HANDLER_DECL(func) \
-    dropt_error_t func(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
+    dropt_error_t func(dropt_context_t* context, const dropt_char_t* valueString, \
+                       void* handlerData)
 DROPT_HANDLER_DECL(dropt_handle_bool);
 DROPT_HANDLER_DECL(dropt_handle_verbose_bool);
 DROPT_HANDLER_DECL(dropt_handle_int);

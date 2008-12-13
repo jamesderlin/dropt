@@ -440,8 +440,9 @@ dropt_default_error_handler(dropt_error_t error,
 /** dropt_get_help
   *
   * PARAMETERS:
-  *     IN options : The list of option specifications.
-  *     compact    : Pass false to include blank lines between options.
+  *     IN options    : The list of option specifications.
+  *     IN helpParams : The help parameters.
+  *                     Pass NULL to use the default help parameters.
   *
   * RETURNS:
   *     An allocated help string for the available options.  The caller is
@@ -449,7 +450,7 @@ dropt_default_error_handler(dropt_error_t error,
   *     Returns NULL on error.
   */
 dropt_char_t*
-dropt_get_help(const dropt_option_t* options, dropt_bool_t compact)
+dropt_get_help(const dropt_option_t* options, const dropt_help_params_t* helpParams)
 {
     dropt_char_t* helpText = NULL;
     dropt_stringstream* ss = dropt_ssopen();
@@ -460,8 +461,17 @@ dropt_get_help(const dropt_option_t* options, dropt_bool_t compact)
     }
     else if (ss != NULL)
     {
-        const int maxWidth = 4;
         const dropt_option_t* option;
+        dropt_help_params_t hp;
+
+        if (helpParams == NULL)
+        {
+            dropt_init_help_params(&hp);
+        }
+        else
+        {
+            hp = *helpParams;
+        }
 
         for (option = options; is_valid_option(option); option++)
         {
@@ -478,15 +488,18 @@ dropt_get_help(const dropt_option_t* options, dropt_bool_t compact)
             }
             else if (hasLongName && hasShortName)
             {
-                n = dropt_ssprintf(ss, T("  -%c, --%s"), option->short_name, option->long_name);
+                n = dropt_ssprintf(ss, T("%*s-%c, --%s"), hp.indent, T(""),
+                                   option->short_name, option->long_name);
             }
             else if (hasLongName)
             {
-                n = dropt_ssprintf(ss, T("  --%s"), option->long_name);
+                n = dropt_ssprintf(ss, T("%*s--%s"), hp.indent, T(""),
+                                   option->long_name);
             }
             else if (hasShortName)
             {
-                n = dropt_ssprintf(ss, T("  -%c"), option->short_name);
+                n = dropt_ssprintf(ss, T("%*s-%c"), hp.indent, T(""),
+                                   option->short_name);
             }
             else if (option->description != NULL)
             {
@@ -512,16 +525,19 @@ dropt_get_help(const dropt_option_t* options, dropt_bool_t compact)
                 if (m > 0) { n += m; }
             }
 
-            if (n > maxWidth)
+            /* Check for equality to make sure that there's at least one
+             * space between the option name and its description.
+             */
+            if ((unsigned int) n >= hp.description_start_column)
             {
                 dropt_ssprintf(ss, T("\n"));
                 n = 0;
             }
-            dropt_ssprintf(ss, T("%*s  %s\n"),
-                           maxWidth - n, T(""),
+            dropt_ssprintf(ss, T("%*s%s\n"),
+                           hp.description_start_column - n, T(""),
                            option->description);
         next:
-            if (!compact) { dropt_ssprintf(ss, T("\n")); }
+            if (hp.blank_lines_between_options) { dropt_ssprintf(ss, T("\n")); }
         }
         helpText = dropt_ssfinalize(ss);
     }
@@ -535,14 +551,16 @@ dropt_get_help(const dropt_option_t* options, dropt_bool_t compact)
   *     Prints help for the available options.
   *
   * PARAMETERS:
-  *     IN/OUT f   : The file stream to print to.
-  *     IN options : The list of option specifications.
-  *     compact    : Pass false to include blank lines between options.
+  *     IN/OUT f      : The file stream to print to.
+  *     IN options    : The list of option specifications.
+  *     IN helpParams : The help parameters.
+  *                     Pass NULL to use the default help parameters.
   */
 void
-dropt_print_help(FILE* f, const dropt_option_t* options, dropt_bool_t compact)
+dropt_print_help(FILE* f, const dropt_option_t* options,
+                 const dropt_help_params_t* helpParams)
 {
-    dropt_char_t* helpText = dropt_get_help(options, compact);
+    dropt_char_t* helpText = dropt_get_help(options, helpParams);
     if (helpText != NULL)
     {
         dropt_fputs(helpText, f);
@@ -935,6 +953,30 @@ dropt_free_context(dropt_context_t* context)
 {
     dropt_clear_error(context);
     free(context);
+}
+
+
+/** dropt_init_help_params
+  *
+  *     Initializes a dropt_help_params_t structure with the default
+  *     values.
+  *
+  * PARAMETERS:
+  *     OUT helpParams : On output, set to the default help parameters.
+  *                      Must not be NULL.
+  */
+void
+dropt_init_help_params(dropt_help_params_t* helpParams)
+{
+    if (helpParams == NULL)
+    {
+        DROPT_PANIC("No dropt help parameters specified.");
+        return;
+    }
+
+    helpParams->indent = 2;
+    helpParams->description_start_column = 6;
+    helpParams->blank_lines_between_options = true;
 }
 
 

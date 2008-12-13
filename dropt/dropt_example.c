@@ -38,7 +38,7 @@ main(int argc, char** argv)
         {
             printf("Usage: dropt_example [options] [operands] [--] [arguments]\n\n"
                    "Options:\n");
-            dropt_print_help(stdout, options, 0);
+            dropt_print_help(stdout, options, NULL);
         }
         else if (showVersion)
         {

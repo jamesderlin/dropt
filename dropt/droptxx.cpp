@@ -155,20 +155,19 @@ context::clear_error()
   *     A wrapper around dropt_get_help.
   *
   * PARAMETERS:
-  *     compact : Pass false to include blank lines between options.
-  *               (Default: false)
+  *     IN help_params : The help parameters.
   *
   * RETURNS:
   *     A string for the available options.
   *     Returns an empty string on error.
   */
 string
-context::get_help(bool compact) const
+context::get_help(const help_params& helpParams) const
 {
     dropt_char_t* s = NULL;
     try
     {
-        s = dropt_get_help(mOptions, compact);
+        s = dropt_get_help(mOptions, &helpParams);
         return (s == NULL)
                ? string()
                : string(s);

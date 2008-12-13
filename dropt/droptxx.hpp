@@ -42,6 +42,35 @@ typedef std::basic_string<dropt_char_t> string;
 typedef std::basic_ostream<dropt_char_t> ostream;
 
 
+class help_params
+: public dropt_help_params_t
+{
+public:
+    inline help_params()
+    {
+        dropt_init_help_params(this);
+    }
+
+    inline help_params& set_indent(unsigned int numSpaces)
+    {
+        indent = numSpaces;
+        return *this;
+    }
+
+    inline help_params& set_description_start_column(unsigned int col)
+    {
+        description_start_column = col;
+        return *this;
+    }
+
+    inline help_params& set_blank_lines_between_options(bool enable)
+    {
+        blank_lines_between_options = enable;
+        return *this;
+    }
+};
+
+
 class context
 {
 public:
@@ -61,7 +90,7 @@ public:
     void clear_error();
 
 #ifndef DROPT_NO_STRING_BUFFERS
-    string get_help(bool compact = false) const;
+    string get_help(const help_params& helpParams = help_params()) const;
 #endif
 
 private:
