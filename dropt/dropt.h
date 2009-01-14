@@ -63,11 +63,12 @@ typedef enum
 } dropt_error_t;
 
 
+/* Bitwise flags for option attributes. */
 enum
 {
-    dropt_attr_halt = (1 << 0),
-    dropt_attr_hidden = (1 << 1),
-    dropt_attr_optional_val = (1 << 2),
+    dropt_attr_halt = (1 << 0),         /* Stop processing. */
+    dropt_attr_hidden = (1 << 1),       /* Don't show in help. */
+    dropt_attr_optional_val = (1 << 2), /* The option's argument is optional. */
 };
 
 
@@ -115,7 +116,7 @@ void dropt_set_error_handler(dropt_context_t* context,
                              dropt_error_handler_t handler, void* handlerData);
 void dropt_set_strncmp(dropt_context_t* context, dropt_strncmp_t cmp);
 
-dropt_char_t** dropt_parse(dropt_context_t* context, dropt_char_t** argv);
+dropt_char_t** dropt_parse(dropt_context_t* context, int argc, dropt_char_t** argv);
 
 dropt_error_t dropt_get_error(const dropt_context_t* context);
 void dropt_get_error_details(const dropt_context_t* context,

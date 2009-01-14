@@ -29,7 +29,7 @@ main(int argc, char** argv)
     dropt_context_t* droptContext = dropt_new_context(options);
     if (droptContext != NULL)
     {
-        dropt_char_t** rest = dropt_parse(droptContext, &argv[1]);
+        dropt_char_t** rest = dropt_parse(droptContext, -1, &argv[1]);
         if (dropt_get_error(droptContext) != dropt_error_none)
         {
             fprintf(stderr, "dropt_example: %s\n", dropt_get_error_message(droptContext));

@@ -82,6 +82,7 @@ public:
     void set_error_handler(dropt_error_handler_t handler, void* handlerData);
     void set_strncmp(dropt_strncmp_t cmp);
 
+    dropt_char_t** parse(int argc, dropt_char_t** argv);
     dropt_char_t** parse(dropt_char_t** argv);
 
     dropt_error_t get_error() const;

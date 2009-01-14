@@ -96,12 +96,19 @@ void context::set_strncmp(dropt_strncmp_t cmp)
 
 /** dropt::context::parse
   *
-  *     A wrapper around dropt_parse.
+  *     Wrappers around dropt_parse.
   */
+dropt_char_t**
+context::parse(int argc, dropt_char_t** argv)
+{
+    return dropt_parse(mContext, argc, argv);
+}
+
+
 dropt_char_t**
 context::parse(dropt_char_t** argv)
 {
-    return dropt_parse(mContext, argv);
+    return dropt_parse(mContext, -1, argv);
 }
 
 

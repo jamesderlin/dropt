@@ -698,16 +698,18 @@ exit:
   * PARAMETERS:
   *     IN context : The options context.
   *                  Must not be NULL.
+  *     argc       : The maximum number of arguments to parse from argv.
+  *                  Pass -1 to parse all arguments up to a NULL sentinel
+  *                    value.
   *     IN argv    : The list of command-line arguments, not including the
-  *                    initial program name.  Must be terminated with a
-  *                    NULL sentinel value.
+  *                    initial program name.
   *
   * RETURNS:
   *     A pointer to the first unprocessed element in argv.
   */
 dropt_char_t**
 dropt_parse(dropt_context_t* context,
-            dropt_char_t** argv)
+            int argc, dropt_char_t** argv)
 {
     dropt_error_t err = dropt_error_none;
 
@@ -739,7 +741,14 @@ dropt_parse(dropt_context_t* context,
     }
 #endif
 
-    while (   (arg = *ps.argNext) != NULL
+    if (argc == -1)
+    {
+        argc = 0;
+        while (argv[argc] != NULL) { argc++; }
+    }
+
+    while (   argc-- > 0
+           && (arg = *ps.argNext) != NULL
            && arg[0] == T('-'))
     {
         assert(err == dropt_error_none);
