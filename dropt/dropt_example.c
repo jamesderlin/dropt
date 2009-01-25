@@ -9,7 +9,53 @@
   */
 
 #include <stdio.h>
+#include <assert.h>
 #include "dropt.h"
+
+
+typedef enum { UNKNOWN, HEADS, TAILS } face_t;
+static face_t face = UNKNOWN;
+
+
+/** handle_face
+  *
+  *     An example of a custom option handler.  Usually the stock callbacks
+  *     (e.g. dropt_handle_bool, dropt_handle_int, dropt_handle_string,
+  *     etc.) should be sufficient for most purposes.
+  */
+static dropt_error_t
+handle_face(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
+{
+    dropt_error_t err = dropt_error_none;
+    face_t* face = handlerData;
+    assert(face != NULL);
+
+    /*
+     * Option handlers should handle 'valueString' being NULL or the empty
+     * string.  This can happen if the option's argument is optional or
+     * if a user explicitly passed an empty string (e.g. --face="").
+     */
+    if (valueString == NULL || valueString[0] == '\0')
+    {
+        err = dropt_error_insufficient_args;
+    }
+    else if (strcmp(valueString, "heads") == 0)
+    {
+        *face = HEADS;
+    }
+    else if (strcmp(valueString, "tails") == 0)
+    {
+        *face = TAILS;
+    }
+    else
+    {
+        /* Reject the argument as being inappropriate for this handler. */
+        err = dropt_error_mismatch;
+    }
+
+    return err;
+}
+
 
 int
 main(int argc, char** argv)
@@ -22,7 +68,8 @@ main(int argc, char** argv)
         { 'h',  "help", "Shows help.", NULL, dropt_handle_bool, &showHelp, dropt_attr_halt },
         { '?', NULL, NULL, NULL, dropt_handle_bool, &showHelp, dropt_attr_halt | dropt_attr_hidden },
         { '\0', "version", "Shows version information.", NULL, dropt_handle_bool, &showVersion, dropt_attr_halt },
-        { 'i',  "int", "Test integer value.", "value", dropt_handle_int, &i },
+        { 'i',  "int", "Sample integer option.", "value", dropt_handle_int, &i },
+        { 'f',  "face", "Sample custom option.", "{heads, tails}", handle_face, &face },
         { 0 } /* Sentinel value. */
     };
 
@@ -47,6 +94,7 @@ main(int argc, char** argv)
         else
         {
             printf("int value: %d\n", i);
+            printf("face value: %d\n", face);
 
             printf("Arguments: ");
             while (*rest != NULL)
