@@ -1,0 +1,56 @@
+dropt (deliberately rudimentary options)
+
+Copyright (c) 2006-2009 James D. Lin <jameslin@csua.berkeley.edu>
+
+
+dropt is a library for parsing command-line options.  Its primary design
+goal is to have minimal barriers to entry.  Specifically, this includes:
+
+* High portability.  dropt is written entirely in standard C99 with
+  compatibility code for most C89 compilers.
+
+* Straightforward usage.
+
+* No global variables.
+
+* Easy integration.  dropt has no dependencies other than the standard C
+  library.  Furthermore, dropt uses the zlib/libpng license, an
+  unrestrictive license that allows the code to be freely, statically
+  linked with existing code.  This avoids some of the hassles that
+  sometimes come with dynamically-linked libraries (such as making sure
+  that the compiler options used to build the library and the main binary
+  match).
+
+* Flexibility.  dropt is designed to be entirely callback-based.  This
+  allows it to handle arbitrary arguments to command-line options.  Even
+  common argument types such as integers or strings are handled by
+  callbacks; dropt provides standard handlers for them.  Exposing the
+  handlers for standard types also allows programs to extend them by
+  building wrappers around them.
+
+
+dropt provides basic option-parsing features:
+
+* GNU-style long options (e.g. "--option").
+
+* Grouping for short options (e.g. "-a -b -c" is equivalent to "-abc").
+
+* Automatically stops parsing when encountering "--".  This allows programs
+  to take normal arguments that start with "-" and not have them treated as
+  options.
+
+* Overridable option values.  For example, "--option=1 --option=2" will use
+  the value "2".  This is useful to override options specified by shell
+  aliases.
+
+
+What dropt doesn't do:
+
+* Localization.  dropt doesn't provide localization facilities, but it does
+  try not to stand in the way of programs that want to localize their help
+  text however they choose.
+
+* Tokenizing a single command-line string into an argv array.  This is the
+  shell's responsibility. (On Windows, where WinMain() does not receive a
+  tokenized argv array, developers should use CommandLineToArgvW or should
+  use the __argv global from Microsoft's C runtime library.)

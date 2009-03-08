@@ -2,7 +2,7 @@
   *
   *     A deliberately rudimentary command-line option parser.
   *
-  * Copyright (c) 2006-2008 James D. Lin <jameslin@csua.berkeley.edu>
+  * Copyright (c) 2006-2009 James D. Lin <jameslin@csua.berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>
@@ -63,15 +63,6 @@ typedef enum
 } dropt_error_t;
 
 
-/* Bitwise flags for option attributes. */
-enum
-{
-    dropt_attr_halt = (1 << 0),         /* Stop processing. */
-    dropt_attr_hidden = (1 << 1),       /* Don't show in help. */
-    dropt_attr_optional_val = (1 << 2), /* The option's argument is optional. */
-};
-
-
 typedef unsigned char dropt_bool_t;
 
 /* Opaque. */
@@ -88,16 +79,68 @@ typedef dropt_char_t* (*dropt_error_handler_t)(dropt_error_t error,
 typedef int (*dropt_strncmp_t)(const dropt_char_t* s, const dropt_char_t* t, size_t n);
 
 
+/** Properties defining each option:
+  *
+  * short_name:
+  *     The option's short name (e.g. the 'h' in -h).
+  *     Use '\0' if the option has no short name.
+  *
+  * long_name:
+  *     The option's long name (e.g. "help" in --help).
+  *     Use NULL if the option has no long name.
+  *
+  * description:
+  *     The description shown when generating help.
+  *
+  * arg_description:
+  *     The description for the option's argument (e.g. --option=argument
+  *     or --option argument), printed when generating help.  If NULL, the
+  *     option does not take an argument.
+  *
+  * handler:
+  *     The handler callback and data invoked in response to encountering
+  *     the option.
+  *
+  * handler_data:
+  *     Callback data for the handler.  For typical handlers, this is
+  *     usually the address of a variable for the handler to modify.
+  *
+  * attr:
+  *     Miscellaneous attributes.  See below.
+  */
 typedef struct dropt_option_t
 {
-    dropt_char_t short_name;             /* May be '\0'. */
-    const dropt_char_t* long_name;       /* May be NULL. */
-    const dropt_char_t* description;     /* May be NULL. */
-    const dropt_char_t* arg_description; /* If non-NULL, the option takes an argument. */
+    dropt_char_t short_name;
+    const dropt_char_t* long_name;
+    const dropt_char_t* description;
+    const dropt_char_t* arg_description;
     dropt_option_handler_t handler;
     void* handler_data;
     unsigned int attr;
 } dropt_option_t;
+
+
+/** Bitwise flags for option attributes:
+  *
+  * dropt_attr_halt:
+  *     Stop processing when this option is encountered.
+  *
+  * dropt_attr_hidden:
+  *     Don't list the option when generating help.  Use this for
+  *     undocumented options.
+  *
+  * dropt_attr_optional_val:
+  *     The option's argument is optional.  If an option has this
+  *     attribute, the handler callback may be invoked twice (once with a
+  *     potential argument, and if that fails, again with a NULL argument).
+  */
+enum
+{
+    dropt_attr_halt = (1 << 0),
+    dropt_attr_hidden = (1 << 1),
+    dropt_attr_optional_val = (1 << 2),
+};
+
 
 typedef struct dropt_help_params_t
 {
@@ -109,8 +152,6 @@ typedef struct dropt_help_params_t
 
 dropt_context_t* dropt_new_context(const dropt_option_t* options);
 void dropt_free_context(dropt_context_t* context);
-
-void dropt_init_help_params(dropt_help_params_t* helpParams);
 
 void dropt_set_error_handler(dropt_context_t* context,
                              dropt_error_handler_t handler, void* handlerData);
@@ -130,6 +171,7 @@ dropt_char_t* dropt_default_error_handler(dropt_error_t error,
                                           const dropt_char_t* optionName,
                                           const dropt_char_t* valueString);
 
+void dropt_init_help_params(dropt_help_params_t* helpParams);
 dropt_char_t* dropt_get_help(const dropt_option_t* options,
                              const dropt_help_params_t* helpParams);
 void dropt_print_help(FILE* f, const dropt_option_t* options,

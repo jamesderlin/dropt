@@ -2,7 +2,7 @@
   *
   *     A deliberately rudimentary command-line option parser.
   *
-  * Copyright (c) 2006-2008 James D. Lin <jameslin@csua.berkeley.edu>
+  * Copyright (c) 2006-2009 James D. Lin <jameslin@csua.berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>
@@ -759,7 +759,7 @@ dropt_parse(dropt_context_t* context,
 
             /* This intentionally leaves "-" unprocessed for the caller to
              * deal with.  This allows construction of programs that treat
-             * "-" to mean "stdin". (See the documentation.)
+             * "-" to mean "stdin".
              */
             goto exit;
         }
@@ -775,7 +775,7 @@ dropt_parse(dropt_context_t* context,
 
                 /* This is used to mark the end of the option processing
                  * to prevent some arguments with leading '-' characters
-                 * from being treated as options. (See the documentation.)
+                 * from being treated as options.
                  *
                  * Don't pass this back to the caller.
                  */

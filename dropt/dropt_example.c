@@ -31,8 +31,7 @@ handle_face(dropt_context_t* context, const dropt_char_t* valueString, void* han
     face_t* face = handlerData;
     assert(face != NULL);
 
-    /*
-     * Option handlers should handle 'valueString' being NULL or the empty
+    /* Option handlers should handle 'valueString' being NULL or the empty
      * string.  This can happen if the option's argument is optional or
      * if a user explicitly passed an empty string (e.g. --face="").
      */
@@ -65,6 +64,15 @@ main(int argc, char** argv)
     dropt_bool_t showVersion = 0;
     int i = 0;
 
+    /* Each option is defined by a row in a table, containing properties
+     * such as the option's short name (e.g. -h), its long name (e.g.
+     * --help), its help text, its handler callback, and its callback data
+     * (for typical handlers, the data is usually the address of a variable
+     * for the handler to modify).
+     *
+     * See the dropt_option_t documentation in dropt.h for a complete list
+     * of option properties.
+     */
     dropt_option_t options[] = {
         { 'h',  "help", "Shows help.", NULL, dropt_handle_bool, &showHelp, dropt_attr_halt },
         { '?', NULL, NULL, NULL, dropt_handle_bool, &showHelp, dropt_attr_halt | dropt_attr_hidden },
