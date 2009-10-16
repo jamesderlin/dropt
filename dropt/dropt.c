@@ -489,7 +489,7 @@ dropt_get_help(const dropt_option_t* options, const dropt_help_params_t* helpPar
             bool hasShortName = option->short_name != DROPT_TEXT_LITERAL('\0');
 
             /* The number of characters printed on the current line so far. */
-            int n = 0;
+            int n;
 
             if (option->description == NULL || (option->attr & dropt_attr_hidden))
             {
@@ -629,7 +629,7 @@ static dropt_error_t
 set_option_value(dropt_context_t* context,
                  const dropt_option_t* option, const dropt_char_t* optionArgument)
 {
-    dropt_error_t err = dropt_error_none;
+    dropt_error_t err;
 
     assert(option != NULL);
 
@@ -661,7 +661,7 @@ set_option_value(dropt_context_t* context,
 static dropt_error_t
 parse_option_arg(dropt_context_t* context, parseState_t* ps)
 {
-    dropt_error_t err = dropt_error_none;
+    dropt_error_t err;
 
     bool consumeNextArg = false;
 

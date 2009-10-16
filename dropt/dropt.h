@@ -38,7 +38,7 @@ extern "C" {
 
 
 #ifndef DROPT_USE_WCHAR
-#if defined _UNICODE && (defined _WIN32 || defined DROPT_NO_STRING_BUFFERS)
+#if defined _UNICODE && (defined _MSC_VER || defined DROPT_NO_STRING_BUFFERS)
 #define DROPT_USE_WCHAR 1
 #endif
 #endif
@@ -158,7 +158,7 @@ enum
 {
     dropt_attr_halt = (1 << 0),
     dropt_attr_hidden = (1 << 1),
-    dropt_attr_optional_val = (1 << 2),
+    dropt_attr_optional_val = (1 << 2)
 };
 
 

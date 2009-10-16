@@ -59,10 +59,10 @@ handle_face(dropt_context_t* context, const dropt_char_t* optionArgument, void* 
 int
 main(int argc, char** argv)
 {
-    dropt_bool_t showHelp = 0;
-    dropt_bool_t showVersion = 0;
-    int i = 0;
-    face_t face = unknown;
+    static dropt_bool_t showHelp = 0;
+    static dropt_bool_t showVersion = 0;
+    static int i = 0;
+    static face_t face = unknown;
 
     /* Each option is defined by a row in a table, containing properties
      * such as the option's short name (e.g. -h), its long name (e.g.

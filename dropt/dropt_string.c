@@ -26,7 +26,7 @@
   * 3. This notice may not be removed or altered from any source distribution.
   */
 
-#ifdef _WIN32
+#ifdef _MSC_VER
     #include <tchar.h>
 #endif
 
@@ -52,7 +52,7 @@
 
 /* Compatibility junk for things that don't yet support ISO C99. */
 #if __STDC_VERSION__ < 199901L
-    #ifdef _WIN32
+    #if defined _MSC_VER || defined __BORLANDC__
         #ifndef va_copy
             #define va_copy(dest, src) (dest = (src))
         #endif
@@ -296,7 +296,14 @@ dropt_vsnprintf(dropt_char_t* s, size_t n, const dropt_char_t* format, va_list a
      */
     assert(format != NULL);
     return vsnprintf(s, n, format, args);
-#elif defined _WIN32
+#elif defined __BORLANDC__
+    /* Borland's compiler neglects to NUL-terminate. */
+    int ret;
+    assert(format != NULL);
+    ret = vsnprintf(s, n, format, args);
+    if (n != 0) { s[n - 1] = DROPT_TEXT_LITERAL('\0'); }
+    return ret;
+#elif defined _MSC_VER
     /* _vsntprintf and _vsnprintf_s on Windows don't have C99 semantics;
      * they return -1 if truncation occurs.
      */
@@ -318,7 +325,7 @@ dropt_vsnprintf(dropt_char_t* s, size_t n, const dropt_char_t* format, va_list a
     #else
         /* This version doesn't necessarily NUL-terminate.  Sigh. */
         (void) _vsnprintf(s, n, format, args);
-        s[n - 1] = '\0';
+        s[n - 1] = DROPT_TEXT_LITERAL('\0');;
     #endif
     }
 

@@ -21,7 +21,7 @@
   * 3. This notice may not be removed or altered from any source distribution.
   */
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 #define _CRT_SECURE_NO_DEPRECATE
 #endif
 
@@ -59,10 +59,6 @@
 
 /* For convenience. */
 #define T(s) DROPT_TEXT_LITERAL(s)
-
-#ifdef _WIN32
-    #define snprintf _snprintf
-#endif
 
 
 #define ARRAY_LENGTH(array) (sizeof (array) / sizeof (array)[0])
@@ -279,7 +275,7 @@ test_strings(void)
 #ifdef DROPT_NO_STRING_BUFFERS
     return true;
 #else
-    bool success = true;
+    bool success;
 
     {
         const dropt_char_t* s = T("foo bar");
@@ -579,7 +575,7 @@ static bool
 test_dropt_parse(dropt_context_t* context)
 {
     bool success = true;
-    dropt_char_t** rest = NULL;
+    dropt_char_t** rest;
 
     /* Basic test for boolean options. */
     {
@@ -1100,12 +1096,10 @@ int
 main(int argc, char** argv)
 #endif
 {
-    bool success = false;
-
-    dropt_char_t** rest = NULL;
+    dropt_char_t** rest;
     dropt_context_t* droptContext = NULL;
 
-    success = test_strings();
+    bool success = test_strings();
     if (!success) { goto exit; }
 
     droptContext = dropt_new_context(options);
