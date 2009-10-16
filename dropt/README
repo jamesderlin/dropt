@@ -30,7 +30,8 @@ goal is to have minimal barriers to entry.  Specifically, this includes:
   breaking their command-line interface. (A notable difference is that
   dropt by default does not allow options to be concatenated with their
   arguments (e.g. -oARGUMENT).  POSIX also discourages this but makes
-  exceptions for backwards compatibility reasons.
+  exceptions for backwards compatibility reasons.  dropt requires that
+  applications opt-in to this behavior.)
 
 * Flexibility.  dropt is designed to be entirely callback-based.  This
   allows it to handle arbitrary arguments to command-line options.  Even

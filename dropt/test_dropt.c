@@ -80,6 +80,7 @@ typedef enum { false, true } bool;
 
 static dropt_bool_t showHelp;
 static dropt_bool_t quiet;
+static dropt_bool_t allowConcatenatedArgs;
 static dropt_bool_t normalFlag;
 static dropt_bool_t requiredArgFlag;
 static dropt_bool_t hiddenFlag;
@@ -101,6 +102,7 @@ init_option_defaults(void)
 {
     showHelp = false;
     quiet = false;
+    allowConcatenatedArgs = false;
     normalFlag = false;
     requiredArgFlag = false;
     hiddenFlag = false;
@@ -224,6 +226,7 @@ dropt_option_t options[] = {
     { T('h'),  T("help"), T("Shows help."), NULL, dropt_handle_bool, &showHelp, dropt_attr_halt },
     { T('?'),  NULL, NULL, NULL, dropt_handle_bool, &showHelp, dropt_attr_halt },
     { T('q'),  T("quiet"), T("Quiet mode."), NULL, dropt_handle_bool, &quiet },
+    { T('c'),  T("concatenated"), T("Allow concatenated arguments."), NULL, dropt_handle_bool, &allowConcatenatedArgs },
     { T('n'),  T("normalFlag"), T("A normal flag."), NULL, dropt_handle_bool, &normalFlag },
     { T('r'),  T("requiredArgFlag"), T("A flag with a required argument."), T("bool"), dropt_handle_verbose_bool, &requiredArgFlag },
     { T('H'),  T("hiddenFlag"), T("This is hidden."), NULL, dropt_handle_bool, &hiddenFlag, dropt_attr_hidden },
@@ -1009,6 +1012,22 @@ test_dropt_parse(dropt_context_t* context)
         dropt_clear_error(context);
     }
 
+    /* Test concatenated arguments. */
+    {
+        dropt_allow_concatenated_arguments(context, 1);
+
+        {
+            dropt_char_t* args[] = { T("-sfoo"), NULL };
+            stringVal = NULL;
+            rest = dropt_parse(context, -1, args);
+            success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
+            success &= VERIFY(string_equal(stringVal, T("foo")));
+            success &= VERIFY(*rest == NULL);
+        }
+
+        dropt_allow_concatenated_arguments(context, 0);
+    }
+
     /* Test some pathological cases. */
     {
         dropt_char_t* args[] = { T("-="), NULL };
@@ -1107,6 +1126,7 @@ main(int argc, char** argv)
     if (!success) { goto exit; }
 
     init_option_defaults();
+    dropt_allow_concatenated_arguments(droptContext, allowConcatenatedArgs);
     rest = dropt_parse(droptContext, -1, &argv[1]);
 
     /* Most programs normally should abort if given invalid arguments, but

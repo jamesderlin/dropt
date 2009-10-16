@@ -45,6 +45,8 @@ struct dropt_context_t
 {
     const dropt_option_t* options;
 
+    bool allowConcatenatedArgs;
+
     dropt_error_handler_t errorHandler;
     void* errorHandlerData;
 
@@ -899,6 +901,27 @@ dropt_parse(dropt_context_t* context,
                         goto exit;
                     }
                 }
+                else if (   context->allowConcatenatedArgs
+                         && OPTION_TAKES_ARG(ps.option)
+                         && j == 1)
+                {
+                    err = set_option_value(context, ps.option, &arg[j + 1]);
+
+                    if (   err != dropt_error_none
+                        && (ps.option->attr & dropt_attr_optional_val))
+                    {
+                        err = set_option_value(context, ps.option, NULL);
+                    }
+
+                    if (err != dropt_error_none)
+                    {
+                        set_short_option_error_details(context, err, arg[j], &arg[j + 1]);
+                        goto exit;
+                    }
+
+                    /* Skip to the next argument. */
+                    break;
+                }
                 else if (   OPTION_TAKES_ARG(ps.option)
                          && !(ps.option->attr & dropt_attr_optional_val))
                 {
@@ -963,6 +986,7 @@ dropt_new_context(const dropt_option_t* options)
     if (context == NULL) { goto exit; }
 
     context->options = options;
+    context->allowConcatenatedArgs = false;
     context->errorHandler = NULL;
     context->errorHandlerData = NULL;
     context->errorDetails.err = dropt_error_none;
@@ -1107,4 +1131,29 @@ dropt_panic(const char* message, const char* filename, int line)
     fprintf(stderr, "dropt: %s (%s: %d)\n", message, filename, line);
     abort();
 #endif
+}
+
+
+/** dropt_allow_concatenated_arguments
+  *
+  *     Specifies whether "short" options are allowed to have concatenated
+  *     arguments (i.e. without space or '=' separators, such as -oARGUMENT).
+  *
+  *     (Concatenated arguments are disallowed by default.)
+  *
+  * PARAMETERS:
+  *     IN/OUT context : The options context.
+  *     allow           : Pass 1 if concatenated arguments should be allowed,
+  *                        0 otherwise.
+  */
+void
+dropt_allow_concatenated_arguments(dropt_context_t* context, dropt_bool_t allow)
+{
+    if (context == NULL)
+    {
+        assert(!"No dropt context specified.");
+        return;
+    }
+
+    context->allowConcatenatedArgs = (allow != 0);
 }

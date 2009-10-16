@@ -177,6 +177,9 @@ void dropt_set_error_handler(dropt_context_t* context,
                              dropt_error_handler_t handler, void* handlerData);
 void dropt_set_strncmp(dropt_context_t* context, dropt_strncmp_t cmp);
 
+/* Use this only for backward compatibility purposes. */
+void dropt_allow_concatenated_arguments(dropt_context_t* context, dropt_bool_t allow);
+
 dropt_char_t** dropt_parse(dropt_context_t* context, int argc, dropt_char_t** argv);
 
 dropt_error_t dropt_get_error(const dropt_context_t* context);
