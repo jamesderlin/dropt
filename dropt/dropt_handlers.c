@@ -358,7 +358,7 @@ dropt_handle_double(dropt_context_t* context, const dropt_char_t* optionArgument
                 /* Note that setting errno to ERANGE for underflow errors
                  * is implementation-defined behavior, but glibc, BSD's
                  * libc, and Microsoft's CRT all have implementations of
-                 * strtod documented to return 0 and set errno to ERANGE
+                 * strtod documented to return 0 and to set errno to ERANGE
                  * for such cases.
                  */
                 err = (ABS(val) <= DBL_MIN)

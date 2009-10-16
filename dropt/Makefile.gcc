@@ -38,8 +38,13 @@ NO_STRING_SUFFIX := -nostring
 CFLAGS := -DDROPT_NO_STRING_BUFFERS $(CFLAGS)
 endif
 
-OUTDIR := $(BUILD_ROOT)/lib$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)
-OBJDIR := $(BUILD_ROOT)/tmp$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)
+ifdef _UNICODE
+UNICODE_SUFFIX := -w
+CFLAGS := -D_UNICODE $(CFLAGS)
+endif
+
+OUTDIR := $(BUILD_ROOT)/lib$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)$(UNICODE_SUFFIX)
+OBJDIR := $(BUILD_ROOT)/tmp$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)$(UNICODE_SUFFIX)
 
 GLOBAL_DEP := $(SRC_DIR)/dropt.h $(SRC_DIR)/dropt_string.h
 LIB_OBJ_FILES := $(OBJDIR)/dropt.o $(OBJDIR)/dropt_handlers.o $(OBJDIR)/dropt_string.o
@@ -63,23 +68,29 @@ libxx: $(DROPTXX_LIB)
 .PHONY: example skip_example
 ifdef DROPT_NO_STRING_BUFFERS
 example: skip_example
-else ifdef _UNICODE
+else
+ifdef _UNICODE
 example: skip_example
 else
 example: $(EXAMPLE_EXE)
 endif
+endif
 
 skip_example:
-	@echo.(Skipping dropt_example because either DROPT_NO_STRING_BUFFERS or _UNICODE was specified.)
+	@echo "(Skipping dropt_example because either DROPT_NO_STRING_BUFFERS or _UNICODE was specified.)"
 
 
 .PHONY: check test
 check: test
+ifdef _UNICODE
+test:
+	@echo "(Skipping tests because _UNICODE was specified for gcc.)"
+else
 test: $(TEST_EXE)
 	@echo "Running tests..."
 	$(TEST_EXE) $(TEST_DROPT_ARGS)
 	@echo "Tests passed."
-
+endif
 
 $(DROPT_LIB) $(DROPTXX_LIB): $(LIB_OBJ_FILES)
 	-mkdir -p $(@D)

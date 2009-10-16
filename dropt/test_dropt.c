@@ -176,7 +176,7 @@ exit:
 }
 
 
-static dropt_char_t*
+dropt_char_t*
 safe_strncat(dropt_char_t* dest, size_t destSize, const dropt_char_t* s)
 {
     assert(dest != NULL);
@@ -516,7 +516,29 @@ test_dropt_handlers(dropt_context_t* context)
     success &= test_dropt_handle_double(context, T("a"), dropt_error_mismatch, d, d);
     success &= test_dropt_handle_double(context, T("123a"), dropt_error_mismatch, d, d);
     success &= test_dropt_handle_double(context, T("1e1024"), dropt_error_overflow, d, d);
-    success &= test_dropt_handle_double(context, T("1e-1024"), dropt_error_underflow, d, d);
+
+    /*
+     * This test depends on implementation-dependent behavior of strtod, so
+     * we're less strict.
+     */
+    {
+        const dropt_char_t* s = T("1e-1024");
+        double value = d;
+        dropt_error_t error = dropt_handle_double(context, s, &value);
+        if (!(   (error == dropt_error_underflow && value == d)
+              || (error == dropt_error_none && value == 0)))
+        {
+            ftprintf(stderr,
+                     T("FAILED: dropt_handle_double(\"%s\") ")
+                     T("returned %d and output %g.  ")
+                     T("Expected (%d, %g) or (%d, %g).\n"),
+                     s,
+                     error, value,
+                     dropt_error_underflow, d,
+                     dropt_error_none, 0.0);
+            success = false;
+        }
+    }
 
     success &= test_dropt_handle_string(context, NULL, dropt_error_insufficient_arguments, T("qux"), T("qux"));
     success &= test_dropt_handle_string(context, T(""), dropt_error_none, T(""), NULL);
