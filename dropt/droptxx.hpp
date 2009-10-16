@@ -42,6 +42,7 @@ typedef std::basic_string<dropt_char_t> string;
 typedef std::basic_ostream<dropt_char_t> ostream;
 
 
+#ifndef DROPT_NO_STRING_BUFFERS
 class help_params
 : public dropt_help_params_t
 {
@@ -69,6 +70,7 @@ public:
         return *this;
     }
 };
+#endif
 
 
 class context
@@ -86,7 +88,7 @@ public:
     dropt_char_t** parse(dropt_char_t** argv);
 
     dropt_error_t get_error() const;
-    void get_error_details(dropt_char_t** optionName, dropt_char_t** valueString) const;
+    void get_error_details(dropt_char_t** optionName, dropt_char_t** optionArgument) const;
     const dropt_char_t* get_error_message();
     void clear_error();
 

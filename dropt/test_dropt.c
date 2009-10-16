@@ -2,7 +2,7 @@
   *
   *     Unit tests for dropt.
   *
-  * Copyright (c) 2007-2008 James D. Lin <jameslin@csua.berkeley.edu>
+  * Copyright (c) 2007-2009 James D. Lin <jameslin@csua.berkeley.edu>
   *
   * This software is provided 'as-is', without any express or implied
   * warranty.  In no event will the authors be held liable for any damages
@@ -37,32 +37,28 @@
 #include "dropt_string.h"
 
 /* Compatibility junk. */
-#if defined _UNICODE && defined _WIN32
-    #define T(s) L ## s
-
+#ifdef DROPT_USE_WCHAR
     #define ftprintf fwprintf
     #define fputts fputws
     #define fputtc fputwc
 
-    /* swprintf isn't quite equivalent to snprintf, but it's good enough
-     * for our purposes.
-     */
-    #define sntprintf swprintf
+    #define tcsncat wcsncat
     #define stscanf swscanf
 
     #define istdigit iswdigit
 #else
-    #define T(s) s
-
     #define ftprintf fprintf
     #define fputts fputs
     #define fputtc fputc
 
-    #define sntprintf snprintf
+    #define tcsncat strncat
     #define stscanf sscanf
 
     #define istdigit isdigit
 #endif
+
+/* For convenience. */
+#define T(s) DROPT_TEXT_LITERAL(s)
 
 #ifdef _WIN32
     #define snprintf _snprintf
@@ -120,17 +116,17 @@ init_option_defaults(void)
 
 
 static dropt_error_t
-handle_unified(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
+handle_unified(dropt_context_t* context, const dropt_char_t* optionArgument, void* handlerData)
 {
     dropt_error_t err = dropt_error_none;
-    if (valueString != NULL) { err = dropt_handle_uint(context, valueString, &unified.lines); }
+    if (optionArgument != NULL) { err = dropt_handle_uint(context, optionArgument, &unified.lines); }
     if (err == dropt_error_none) { unified.enabled = true; }
     return err;
 }
 
 
 static dropt_error_t
-handle_ip_address(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
+handle_ip_address(dropt_context_t* context, const dropt_char_t* optionArgument, void* handlerData)
 {
     dropt_error_t err = dropt_error_none;
     unsigned int octet[4];
@@ -138,14 +134,14 @@ handle_ip_address(dropt_context_t* context, const dropt_char_t* valueString, voi
 
     assert(handlerData != NULL);
 
-    if (valueString == NULL || valueString[0] == T('\0'))
+    if (optionArgument == NULL || optionArgument[0] == T('\0'))
     {
-        err = dropt_error_insufficient_args;
+        err = dropt_error_insufficient_arguments;
         goto exit;
     }
 
     {
-        const dropt_char_t* p = valueString;
+        const dropt_char_t* p = optionArgument;
         while (*p != T('\0'))
         {
             if (!istdigit(*p) && *p != T('.'))
@@ -157,7 +153,7 @@ handle_ip_address(dropt_context_t* context, const dropt_char_t* valueString, voi
         }
     }
 
-    if (stscanf(valueString, T("%u.%u.%u.%u"), &octet[0], &octet[1], &octet[2], &octet[3])
+    if (stscanf(optionArgument, T("%u.%u.%u.%u"), &octet[0], &octet[1], &octet[2], &octet[3])
         != ARRAY_LENGTH(octet))
     {
         err = my_dropt_error_bad_ip_address;
@@ -181,8 +177,19 @@ exit:
 
 
 static dropt_char_t*
+safe_strncat(dropt_char_t* dest, size_t destSize, const dropt_char_t* s)
+{
+    assert(dest != NULL);
+    assert(s != NULL);
+    return (destSize == 0)
+           ? dest
+           : tcsncat(dest, s, destSize - dropt_strlen(dest) - 1);
+}
+
+
+static dropt_char_t*
 my_dropt_error_handler(dropt_error_t error, const dropt_char_t* optionName,
-                       const dropt_char_t* valueString, void* handlerData)
+                       const dropt_char_t* optionArgument, void* handlerData)
 {
 #ifdef DROPT_NO_STRING_BUFFERS
     if (error == my_dropt_error_bad_ip_address)
@@ -191,20 +198,22 @@ my_dropt_error_handler(dropt_error_t error, const dropt_char_t* optionName,
     }
     else
     {
-        dropt_char_t buf[256];
-        sntprintf(buf, ARRAY_LENGTH(buf), T("Failed on: %s=%s"),
-                  optionName, valueString ? valueString : T("(null)"));
-        buf[ARRAY_LENGTH(buf) - 1] = T('\0');
+        /* This is inefficient, but it's not important here. */
+        dropt_char_t buf[256] = T("Failed on: ");
+        safe_strncat(buf, ARRAY_LENGTH(buf), optionName);
+        safe_strncat(buf, ARRAY_LENGTH(buf), T("="));
+        safe_strncat(buf, ARRAY_LENGTH(buf), optionArgument ? optionArgument
+                                                            : T("(null)"));
         return dropt_strdup(buf);
     }
 #else
     if (error == my_dropt_error_bad_ip_address)
     {
-        return dropt_asprintf(T("Invalid IP address for option %s: %s"), optionName, valueString);
+        return dropt_asprintf(T("Invalid IP address for option %s: %s"), optionName, optionArgument);
     }
     else
     {
-        return dropt_default_error_handler(error, optionName, valueString);
+        return dropt_default_error_handler(error, optionName, optionArgument);
     }
 #endif
 }
@@ -392,12 +401,12 @@ exit:
 
 #define MAKE_TEST_FOR_HANDLER(handler, type, valueEqualityFunc, formatSpecifier) \
 static bool \
-test_ ## handler(dropt_context_t* context, const dropt_char_t* valueString, \
+test_ ## handler(dropt_context_t* context, const dropt_char_t* optionArgument, \
                  dropt_error_t expectedError, type expectedValue, type initValue) \
 { \
     bool success = false; \
     type value = initValue; \
-    dropt_error_t error = handler(context, valueString, &value); \
+    dropt_error_t error = handler(context, optionArgument, &value); \
     if (error == expectedError && valueEqualityFunc(value, expectedValue)) \
     { \
         success = true; \
@@ -408,7 +417,7 @@ test_ ## handler(dropt_context_t* context, const dropt_char_t* valueString, \
                  T("FAILED: %s(\"%s\") ") \
                  T("returned %d, expected %d.  ") \
                  T("Output ") formatSpecifier T(", expected ") formatSpecifier T(".\n"), \
-                 T(#handler), valueString ? valueString : T("(null)"), \
+                 T(#handler), optionArgument ? optionArgument : T("(null)"), \
                  error, expectedError, \
                  value, expectedValue); \
     } \
@@ -434,7 +443,7 @@ test_dropt_handlers(dropt_context_t* context)
     const double d = 2.71828;
 
     success &= test_dropt_handle_bool(context, NULL, dropt_error_none, 1, 0);
-    success &= test_dropt_handle_bool(context, T(""), dropt_error_insufficient_args, 0, 0);
+    success &= test_dropt_handle_bool(context, T(""), dropt_error_insufficient_arguments, 0, 0);
     success &= test_dropt_handle_bool(context, T(" "), dropt_error_mismatch, 0, 0);
     success &= test_dropt_handle_bool(context, T("1"), dropt_error_none, 1, 0);
     success &= test_dropt_handle_bool(context, T("0"), dropt_error_none, 0, 0);
@@ -448,7 +457,7 @@ test_dropt_handlers(dropt_context_t* context)
     success &= test_dropt_handle_bool(context, T("false"), dropt_error_mismatch, 0, 0);
 
     success &= test_dropt_handle_verbose_bool(context, NULL, dropt_error_none, 1, 0);
-    success &= test_dropt_handle_verbose_bool(context, T(""), dropt_error_insufficient_args, 0, 0);
+    success &= test_dropt_handle_verbose_bool(context, T(""), dropt_error_insufficient_arguments, 0, 0);
     success &= test_dropt_handle_verbose_bool(context, T(" "), dropt_error_mismatch, 0, 0);
     success &= test_dropt_handle_verbose_bool(context, T("1"), dropt_error_none, 1, 0);
     success &= test_dropt_handle_verbose_bool(context, T("0"), dropt_error_none, 0, 0);
@@ -461,8 +470,8 @@ test_dropt_handlers(dropt_context_t* context)
     success &= test_dropt_handle_verbose_bool(context, T("true"), dropt_error_none, 1, 0);
     success &= test_dropt_handle_verbose_bool(context, T("false"), dropt_error_none, 0, 0);
 
-    success &= test_dropt_handle_int(context, NULL, dropt_error_insufficient_args, i, i);
-    success &= test_dropt_handle_int(context, T(""), dropt_error_insufficient_args, i, i);
+    success &= test_dropt_handle_int(context, NULL, dropt_error_insufficient_arguments, i, i);
+    success &= test_dropt_handle_int(context, T(""), dropt_error_insufficient_arguments, i, i);
     success &= test_dropt_handle_int(context, T(" "), dropt_error_mismatch, i, i);
     success &= test_dropt_handle_int(context, T("0"), dropt_error_none, 0, 0);
     success &= test_dropt_handle_int(context, T("-0"), dropt_error_none, 0, 0);
@@ -476,8 +485,8 @@ test_dropt_handlers(dropt_context_t* context)
     success &= test_dropt_handle_int(context, T("3000000000"), dropt_error_overflow, i, i);
     success &= test_dropt_handle_int(context, T("-3000000000"), dropt_error_overflow, i, i);
 
-    success &= test_dropt_handle_uint(context, NULL, dropt_error_insufficient_args, u, u);
-    success &= test_dropt_handle_uint(context, T(""), dropt_error_insufficient_args, u, u);
+    success &= test_dropt_handle_uint(context, NULL, dropt_error_insufficient_arguments, u, u);
+    success &= test_dropt_handle_uint(context, T(""), dropt_error_insufficient_arguments, u, u);
     success &= test_dropt_handle_uint(context, T(" "), dropt_error_mismatch, u, u);
     success &= test_dropt_handle_uint(context, T("0"), dropt_error_none, 0, 0);
     success &= test_dropt_handle_uint(context, T("-0"), dropt_error_mismatch, u, u);
@@ -493,8 +502,8 @@ test_dropt_handlers(dropt_context_t* context)
     success &= test_dropt_handle_uint(context, T("-3000000000"), dropt_error_mismatch, u, u);
     success &= test_dropt_handle_uint(context, T("5000000000"), dropt_error_overflow, u, u);
 
-    success &= test_dropt_handle_double(context, NULL, dropt_error_insufficient_args, d, d);
-    success &= test_dropt_handle_double(context, T(""), dropt_error_insufficient_args, d, d);
+    success &= test_dropt_handle_double(context, NULL, dropt_error_insufficient_arguments, d, d);
+    success &= test_dropt_handle_double(context, T(""), dropt_error_insufficient_arguments, d, d);
     success &= test_dropt_handle_double(context, T(" "), dropt_error_mismatch, d, d);
     success &= test_dropt_handle_double(context, T("123"), dropt_error_none, 123, 0);
     success &= test_dropt_handle_double(context, T("0123"), dropt_error_none, 123, 0);
@@ -509,7 +518,7 @@ test_dropt_handlers(dropt_context_t* context)
     success &= test_dropt_handle_double(context, T("1e1024"), dropt_error_overflow, d, d);
     success &= test_dropt_handle_double(context, T("1e-1024"), dropt_error_underflow, d, d);
 
-    success &= test_dropt_handle_string(context, NULL, dropt_error_insufficient_args, T("qux"), T("qux"));
+    success &= test_dropt_handle_string(context, NULL, dropt_error_insufficient_arguments, T("qux"), T("qux"));
     success &= test_dropt_handle_string(context, T(""), dropt_error_none, T(""), NULL);
     success &= test_dropt_handle_string(context, T(" "), dropt_error_none, T(" "), NULL);
     success &= test_dropt_handle_string(context, T("foo"), dropt_error_none, T("foo"), NULL);
@@ -724,7 +733,7 @@ test_dropt_parse(dropt_context_t* context)
         dropt_char_t* args[] = { T("-s"), NULL };
         stringVal = NULL;
         rest = dropt_parse(context, -1, args);
-        success &= VERIFY(dropt_get_error(context) == dropt_error_insufficient_args);
+        success &= VERIFY(dropt_get_error(context) == dropt_error_insufficient_arguments);
         success &= VERIFY(*rest == NULL);
         dropt_clear_error(context);
     }
@@ -733,7 +742,7 @@ test_dropt_parse(dropt_context_t* context)
         dropt_char_t* args[] = { T("--string"), NULL };
         stringVal = NULL;
         rest = dropt_parse(context, -1, args);
-        success &= VERIFY(dropt_get_error(context) == dropt_error_insufficient_args);
+        success &= VERIFY(dropt_get_error(context) == dropt_error_insufficient_arguments);
         success &= VERIFY(*rest == NULL);
         dropt_clear_error(context);
     }
@@ -743,7 +752,7 @@ test_dropt_parse(dropt_context_t* context)
         dropt_char_t* args[] = { T("-r"), NULL };
         requiredArgFlag = false;
         rest = dropt_parse(context, -1, args);
-        success &= VERIFY(dropt_get_error(context) == dropt_error_insufficient_args);
+        success &= VERIFY(dropt_get_error(context) == dropt_error_insufficient_arguments);
         success &= VERIFY(*rest == NULL);
         dropt_clear_error(context);
     }
@@ -752,7 +761,7 @@ test_dropt_parse(dropt_context_t* context)
         dropt_char_t* args[] = { T("--requiredArgFlag"), NULL };
         requiredArgFlag = false;
         rest = dropt_parse(context, -1, args);
-        success &= VERIFY(dropt_get_error(context) == dropt_error_insufficient_args);
+        success &= VERIFY(dropt_get_error(context) == dropt_error_insufficient_arguments);
         success &= VERIFY(*rest == NULL);
         dropt_clear_error(context);
     }
@@ -763,7 +772,7 @@ test_dropt_parse(dropt_context_t* context)
         normalFlag = false;
         stringVal = NULL;
         rest = dropt_parse(context, -1, args);
-        success &= VERIFY(dropt_get_error(context) == dropt_error_insufficient_args);
+        success &= VERIFY(dropt_get_error(context) == dropt_error_insufficient_arguments);
         success &= VERIFY(normalFlag == false);
         success &= VERIFY(*rest == NULL);
         dropt_clear_error(context);
@@ -774,7 +783,7 @@ test_dropt_parse(dropt_context_t* context)
         normalFlag = false;
         stringVal = NULL;
         rest = dropt_parse(context, -1, args);
-        success &= VERIFY(dropt_get_error(context) == dropt_error_insufficient_args);
+        success &= VERIFY(dropt_get_error(context) == dropt_error_insufficient_arguments);
         success &= VERIFY(normalFlag == true);
         success &= VERIFY(*rest == NULL);
         dropt_clear_error(context);
@@ -1042,7 +1051,7 @@ test_dropt_parse(dropt_context_t* context)
 }
 
 
-#if defined _UNICODE && defined _WIN32
+#ifdef DROPT_USE_WCHAR
 int
 wmain(int argc, wchar_t** argv)
 #else
@@ -1078,14 +1087,14 @@ main(int argc, char** argv)
     init_option_defaults();
     rest = dropt_parse(droptContext, -1, &argv[1]);
 
-    /* Most programs normally should abort if given invalid arguments; for
-     * diagnostic purposes, the test program presses on anyway.
+    /* Most programs normally should abort if given invalid arguments, but
+     * for diagnostic purposes, this test program presses on anyway.
      */
     if (get_and_print_dropt_error(droptContext) != dropt_error_none) { fputtc(T('\n'), stdout); }
 
     if (showHelp)
     {
-        fputts(T("Usage: test_dropt [options] [operands] [--] [arguments]\n\n"), stdout);
+        fputts(T("Usage: test_dropt [options] [--] [operands]\n\n"), stdout);
 #ifndef DROPT_NO_STRING_BUFFERS
         {
             dropt_help_params_t helpParams;
@@ -1102,7 +1111,7 @@ main(int argc, char** argv)
     {
         dropt_char_t** arg;
 
-        ftprintf(stdout, T("Compilation flags: %s%s\n")
+        ftprintf(stdout, T("Compilation flags: %s%s%s\n")
                          T("normalFlag: %u\n")
                          T("requiredArgFlag: %u\n")
                          T("hiddenFlag: %u\n")
@@ -1111,13 +1120,18 @@ main(int argc, char** argv)
                          T("unified: %u, lines: %u\n")
                          T("ipAddress: %u.%u.%u.%u (%u)\n")
                          T("\n"),
+#ifdef NDEBUG
+                 T("NDEBUG "),
+#else
+                 T(""),
+#endif
 #ifdef DROPT_NO_STRING_BUFFERS
                  T("DROPT_NO_STRING_BUFFERS "),
 #else
                  T(""),
 #endif
-#if defined _UNICODE && defined _WIN32
-                 T("_UNICODE "),
+#ifdef DROPT_USE_WCHAR
+                 T("DROPT_USE_WCHAR "),
 #else
                  T(""),
 #endif

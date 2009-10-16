@@ -35,12 +35,6 @@
 #include "dropt.h"
 #include "dropt_string.h"
 
-#if defined _UNICODE && defined _WIN32
-    #define T(s) L ## s
-#else
-    #define T(s) s
-#endif
-
 #define ABS(x) (((x) < 0) ? -(x) : (x))
 
 typedef enum { false, true } bool;
@@ -50,25 +44,26 @@ typedef enum { false, true } bool;
   *     Parses a boolean value from the given string if possible.
   *
   * PARAMETERS:
-  *     IN/OUT context  : The options context.
-  *     IN valueString  : A string representing a boolean value (0 or 1).
-  *                       If NULL, the boolean value is assumed to be
-  *                         true.
-  *     OUT handlerData : A pointer to a dropt_bool_t.
-  *                       On success, set to the interpreted boolean
-  *                         value.
-  *                       On error, left untouched.
+  *     IN/OUT context    : The options context.
+  *     IN optionArgument : A string representing a boolean value (0 or 1).
+  *                         If NULL, the boolean value is assumed to be
+  *                           true.
+  *     OUT handlerData   : A dropt_bool_t*.
+  *                         On success, set to the interpreted boolean
+  *                           value.
+  *                         On error, left untouched.
   *
   * RETURNS:
   *     dropt_error_none
   *     dropt_error_unknown
   *     dropt_error_bad_configuration
-  *     dropt_error_insufficient_args
+  *     dropt_error_insufficient_arguments
   *     dropt_error_mismatch
   *     dropt_error_overflow
   */
 dropt_error_t
-dropt_handle_bool(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
+dropt_handle_bool(dropt_context_t* context, const dropt_char_t* optionArgument,
+                  void* handlerData)
 {
     dropt_error_t err = dropt_error_none;
     bool val = false;
@@ -78,19 +73,19 @@ dropt_handle_bool(dropt_context_t* context, const dropt_char_t* valueString, voi
         DROPT_PANIC("No handler data specified.");
         err = dropt_error_bad_configuration;
     }
-    else if (valueString == NULL)
+    else if (optionArgument == NULL)
     {
         /* No explicit argument implies that the option is being turned on. */
         val = true;
     }
-    else if (valueString[0] == T('\0'))
+    else if (optionArgument[0] == DROPT_TEXT_LITERAL('\0'))
     {
-        err = dropt_error_insufficient_args;
+        err = dropt_error_insufficient_arguments;
     }
     else
     {
         unsigned int i = 0;
-        err = dropt_handle_uint(context, valueString, &i);
+        err = dropt_handle_uint(context, optionArgument, &i);
         if (err == dropt_error_none)
         {
             switch (i)
@@ -119,31 +114,32 @@ dropt_handle_bool(dropt_context_t* context, const dropt_char_t* valueString, voi
   *     values.
   *
   * PARAMETERS:
-  *     IN/OUT context  : The options context.
-  *     IN valueString  : A string representing a boolean value.
-  *                       If NULL, the boolean value is assumed to be
-  *                         true.
-  *     OUT handlerData : A pointer to a dropt_bool_t.
-  *                       On success, set to the interpreted boolean
-  *                         value.
-  *                       On error, left untouched.
+  *     IN/OUT context    : The options context.
+  *     IN optionArgument : A string representing a boolean value.
+  *                         If NULL, the boolean value is assumed to be
+  *                           true.
+  *     OUT handlerData   : A dropt_bool_t*.
+  *                         On success, set to the interpreted boolean
+  *                           value.
+  *                         On error, left untouched.
   *
   * RETURNS:
   *     See dropt_handle_bool.
   */
 dropt_error_t
-dropt_handle_verbose_bool(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
+dropt_handle_verbose_bool(dropt_context_t* context, const dropt_char_t* optionArgument,
+                          void* handlerData)
 {
-    dropt_error_t err = dropt_handle_bool(context, valueString, handlerData);
+    dropt_error_t err = dropt_handle_bool(context, optionArgument, handlerData);
     if (err != dropt_error_none)
     {
         bool val = false;
-        if (dropt_stricmp(valueString, T("false")) == 0)
+        if (dropt_stricmp(optionArgument, DROPT_TEXT_LITERAL("false")) == 0)
         {
             val = false;
             err = dropt_error_none;
         }
-        else if (dropt_stricmp(valueString, T("true")) == 0)
+        else if (dropt_stricmp(optionArgument, DROPT_TEXT_LITERAL("true")) == 0)
         {
             val = true;
             err = dropt_error_none;
@@ -160,23 +156,24 @@ dropt_handle_verbose_bool(dropt_context_t* context, const dropt_char_t* valueStr
   *     Parses an integer from the given string.
   *
   * PARAMETERS:
-  *     IN/OUT context  : The options context.
-  *     IN valueString  : A string representing a base-10 integer.
-  *                       If NULL, returns dropt_error_insufficient_args.
-  *     OUT handlerData : A pointer to an int.
-  *                       On success, set to the interpreted integer.
-  *                       On error, left untouched.
+  *     IN/OUT context    : The options context.
+  *     IN optionArgument : A string representing a base-10 integer.
+  *                         If NULL, returns dropt_error_insufficient_arguments.
+  *     OUT handlerData   : An int*.
+  *                         On success, set to the interpreted integer.
+  *                         On error, left untouched.
   *
   * RETURNS:
   *     dropt_error_none
   *     dropt_error_unknown
   *     dropt_error_bad_configuration
-  *     dropt_error_insufficient_args
+  *     dropt_error_insufficient_arguments
   *     dropt_error_mismatch
   *     dropt_error_overflow
   */
 dropt_error_t
-dropt_handle_int(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
+dropt_handle_int(dropt_context_t* context, const dropt_char_t* optionArgument,
+                 void* handlerData)
 {
     dropt_error_t err = dropt_error_none;
     int val = 0;
@@ -186,21 +183,21 @@ dropt_handle_int(dropt_context_t* context, const dropt_char_t* valueString, void
         DROPT_PANIC("No handler data specified.");
         err = dropt_error_bad_configuration;
     }
-    else if (valueString == NULL || valueString[0] == T('\0'))
+    else if (optionArgument == NULL || optionArgument[0] == DROPT_TEXT_LITERAL('\0'))
     {
-        err = dropt_error_insufficient_args;
+        err = dropt_error_insufficient_arguments;
     }
     else
     {
         dropt_char_t* end;
         long n;
         errno = 0;
-        n = dropt_strtol(valueString, &end, 10);
+        n = dropt_strtol(optionArgument, &end, 10);
 
         /* Check that we matched at least one digit.
          * (strotl/strtoul will return 0 if fed a string with no digits.)
          */
-        if (*end == T('\0') && end > valueString)
+        if (*end == DROPT_TEXT_LITERAL('\0') && end > optionArgument)
         {
             if (errno == ERANGE || n < INT_MIN || n > INT_MAX)
             {
@@ -232,24 +229,25 @@ dropt_handle_int(dropt_context_t* context, const dropt_char_t* valueString, void
   *     Parses an unsigned integer from the given string.
   *
   * PARAMETERS:
-  *     IN/OUT context  : The options context.
-  *     IN valueString  : A string representing an unsigned base-10
-  *                         integer.
-  *                       If NULL, returns dropt_error_insufficient_args.
-  *     OUT handlerData : A pointer to an unsigned int.
-  *                       On success, set to the interpreted integer.
-  *                       On error, left untouched.
+  *     IN/OUT context    : The options context.
+  *     IN optionArgument : A string representing an unsigned base-10
+  *                           integer.
+  *                         If NULL, returns dropt_error_insufficient_arguments.
+  *     OUT handlerData   : An unsigned int*
+  *                         On success, set to the interpreted integer.
+  *                         On error, left untouched.
   *
   * RETURNS:
   *     dropt_error_none
   *     dropt_error_unknown
   *     dropt_error_bad_configuration
-  *     dropt_error_insufficient_args
+  *     dropt_error_insufficient_arguments
   *     dropt_error_mismatch
   *     dropt_error_overflow
   */
 dropt_error_t
-dropt_handle_uint(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
+dropt_handle_uint(dropt_context_t* context, const dropt_char_t* optionArgument,
+                  void* handlerData)
 {
     dropt_error_t err = dropt_error_none;
     int val = 0;
@@ -259,11 +257,12 @@ dropt_handle_uint(dropt_context_t* context, const dropt_char_t* valueString, voi
         DROPT_PANIC("No handler data specified.");
         err = dropt_error_bad_configuration;
     }
-    else if (valueString == NULL || valueString[0] == T('\0'))
+    else if (   optionArgument == NULL
+             || optionArgument[0] == DROPT_TEXT_LITERAL('\0'))
     {
-        err = dropt_error_insufficient_args;
+        err = dropt_error_insufficient_arguments;
     }
-    else if (valueString[0] == T('-'))
+    else if (optionArgument[0] == DROPT_TEXT_LITERAL('-'))
     {
         err = dropt_error_mismatch;
     }
@@ -272,12 +271,12 @@ dropt_handle_uint(dropt_context_t* context, const dropt_char_t* valueString, voi
         dropt_char_t* end;
         unsigned long n;
         errno = 0;
-        n = dropt_strtoul(valueString, &end, 10);
+        n = dropt_strtoul(optionArgument, &end, 10);
 
         /* Check that we matched at least one digit.
          * (strotl/strtoul will return 0 if fed a string with no digits.)
          */
-        if (*end == T('\0') && end > valueString)
+        if (*end == DROPT_TEXT_LITERAL('\0') && end > optionArgument)
         {
             if (errno == ERANGE || n > UINT_MAX)
             {
@@ -309,25 +308,26 @@ dropt_handle_uint(dropt_context_t* context, const dropt_char_t* valueString, voi
   *     Parses a double from the given string.
   *
   * PARAMETERS:
-  *     IN/OUT context  : The options context.
-  *     IN valueString  : A string representing a base-10 floating-point
-  *                         number.
-  *                       If NULL, returns dropt_error_insufficient_args.
-  *     OUT handlerData : A pointer to a double.
-  *                       On success, set to the interpreted double.
-  *                       On error, left untouched.
+  *     IN/OUT context    : The options context.
+  *     IN optionArgument : A string representing a base-10 floating-point
+  *                           number.
+  *                         If NULL, returns dropt_error_insufficient_arguments.
+  *     OUT handlerData   : A double*.
+  *                         On success, set to the interpreted double.
+  *                         On error, left untouched.
   *
   * RETURNS:
   *     dropt_error_none
   *     dropt_error_unknown
   *     dropt_error_bad_configuration
-  *     dropt_error_insufficient_args
+  *     dropt_error_insufficient_arguments
   *     dropt_error_mismatch
   *     dropt_error_overflow
   *     dropt_error_underflow
   */
 dropt_error_t
-dropt_handle_double(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
+dropt_handle_double(dropt_context_t* context, const dropt_char_t* optionArgument,
+                    void* handlerData)
 {
     dropt_error_t err = dropt_error_none;
     double val = 0.0;
@@ -337,20 +337,21 @@ dropt_handle_double(dropt_context_t* context, const dropt_char_t* valueString, v
         DROPT_PANIC("No handler data specified.");
         err = dropt_error_bad_configuration;
     }
-    else if (valueString == NULL || valueString[0] == T('\0'))
+    else if (   optionArgument == NULL
+             || optionArgument[0] == DROPT_TEXT_LITERAL('\0'))
     {
-        err = dropt_error_insufficient_args;
+        err = dropt_error_insufficient_arguments;
     }
     else
     {
         dropt_char_t* end;
         errno = 0;
-        val = dropt_strtod(valueString, &end);
+        val = dropt_strtod(optionArgument, &end);
 
         /* Check that we matched at least one digit.
          * (strtod will return 0 if fed a string with no digits.)
          */
-        if (*end == T('\0') && end > valueString)
+        if (*end == DROPT_TEXT_LITERAL('\0') && end > optionArgument)
         {
             if (errno == ERANGE)
             {
@@ -385,22 +386,23 @@ dropt_handle_double(dropt_context_t* context, const dropt_char_t* valueString, v
   *     Obtains a string.
   *
   * PARAMETERS:
-  *     IN/OUT context  : The options context.
-  *     IN valueString  : A string.
-  *                       If NULL, returns dropt_error_insufficient_args.
-  *     OUT handlerData : A pointer to pointer-to-char.
-  *                       On success, set to the input string.  The string
-  *                         is NOT copied from the original argv array, so
-  *                         do not free it.
-  *                       On error, left untouched.
+  *     IN/OUT context    : The options context.
+  *     IN optionArgument : A string.
+  *                         If NULL, returns dropt_error_insufficient_arguments.
+  *     OUT handlerData   : A dropt_char_t**.
+  *                         On success, set to the input string.  The
+  *                           string is NOT copied from the original argv
+  *                           array, so do not free it.
+  *                         On error, left untouched.
   *
   * RETURNS:
   *     dropt_error_none
   *     dropt_error_bad_configuration
-  *     dropt_error_insufficient_args
+  *     dropt_error_insufficient_arguments
   */
 dropt_error_t
-dropt_handle_string(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
+dropt_handle_string(dropt_context_t* context, const dropt_char_t* optionArgument,
+                    void* handlerData)
 {
     dropt_error_t err = dropt_error_none;
 
@@ -409,11 +411,11 @@ dropt_handle_string(dropt_context_t* context, const dropt_char_t* valueString, v
         DROPT_PANIC("No handler data specified.");
         err = dropt_error_bad_configuration;
     }
-    else if (valueString == NULL)
+    else if (optionArgument == NULL)
     {
-        err = dropt_error_insufficient_args;
+        err = dropt_error_insufficient_arguments;
     }
 
-    if (err == dropt_error_none) { *((const dropt_char_t**) handlerData) = valueString; }
+    if (err == dropt_error_none) { *((const dropt_char_t**) handlerData) = optionArgument; }
     return err;
 }

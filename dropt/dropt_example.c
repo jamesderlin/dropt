@@ -14,8 +14,7 @@
 #include "dropt.h"
 
 
-typedef enum { UNKNOWN, HEADS, TAILS } face_t;
-static face_t face = UNKNOWN;
+typedef enum { unknown, heads, tails } face_t;
 
 
 /** handle_face
@@ -25,31 +24,31 @@ static face_t face = UNKNOWN;
   *     etc.) should be sufficient for most purposes.
   */
 static dropt_error_t
-handle_face(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
+handle_face(dropt_context_t* context, const dropt_char_t* optionArgument, void* handlerData)
 {
     dropt_error_t err = dropt_error_none;
     face_t* face = handlerData;
     assert(face != NULL);
 
-    /* Option handlers should handle 'valueString' being NULL or the empty
-     * string.  This can happen if the option's argument is optional or
-     * if a user explicitly passed an empty string (e.g. --face="").
+    /* Option handlers should handle 'optionArgument' being NULL (if the
+     * option's argument is optional) or being the empty string (if a user
+     * explicitly passed an empty string (e.g. --face="").
      */
-    if (valueString == NULL || valueString[0] == '\0')
+    if (optionArgument == NULL || optionArgument[0] == '\0')
     {
-        err = dropt_error_insufficient_args;
+        err = dropt_error_insufficient_arguments;
     }
-    else if (strcmp(valueString, "heads") == 0)
+    else if (strcmp(optionArgument, "heads") == 0)
     {
-        *face = HEADS;
+        *face = heads;
     }
-    else if (strcmp(valueString, "tails") == 0)
+    else if (strcmp(optionArgument, "tails") == 0)
     {
-        *face = TAILS;
+        *face = tails;
     }
     else
     {
-        /* Reject the argument as being inappropriate for this handler. */
+        /* Reject the value as being inappropriate for this handler. */
         err = dropt_error_mismatch;
     }
 
@@ -63,6 +62,7 @@ main(int argc, char** argv)
     dropt_bool_t showHelp = 0;
     dropt_bool_t showVersion = 0;
     int i = 0;
+    face_t face = unknown;
 
     /* Each option is defined by a row in a table, containing properties
      * such as the option's short name (e.g. -h), its long name (e.g.
@@ -92,7 +92,7 @@ main(int argc, char** argv)
         }
         else if (showHelp)
         {
-            printf("Usage: dropt_example [options] [operands] [--] [arguments]\n\n"
+            printf("Usage: dropt_example [options] [--] [operands]\n\n"
                    "Options:\n");
             dropt_print_help(stdout, options, NULL);
         }
@@ -105,7 +105,7 @@ main(int argc, char** argv)
             printf("int value: %d\n", i);
             printf("face value: %d\n", face);
 
-            printf("Arguments: ");
+            printf("Operands: ");
             while (*rest != NULL)
             {
                 printf("%s ", *rest);

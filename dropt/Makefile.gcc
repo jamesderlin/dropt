@@ -59,13 +59,19 @@ all: default example test
 lib: $(DROPT_LIB)
 libxx: $(DROPTXX_LIB)
 
-.PHONY: example
+
+.PHONY: example skip_example
 ifdef DROPT_NO_STRING_BUFFERS
-example:
-	@echo "(Skipping dropt_example because of DROPT_NO_STRING_BUFFERS.)"
+example: skip_example
+else ifdef _UNICODE
+example: skip_example
 else
 example: $(EXAMPLE_EXE)
 endif
+
+skip_example:
+	@echo.(Skipping dropt_example because either DROPT_NO_STRING_BUFFERS or _UNICODE was specified.)
+
 
 .PHONY: check test
 check: test
@@ -73,6 +79,7 @@ test: $(TEST_EXE)
 	@echo "Running tests..."
 	$(TEST_EXE) $(TEST_DROPT_ARGS)
 	@echo "Tests passed."
+
 
 $(DROPT_LIB) $(DROPTXX_LIB): $(LIB_OBJ_FILES)
 	-mkdir -p $(@D)

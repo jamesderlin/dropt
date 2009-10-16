@@ -7,26 +7,37 @@ dropt is a library for parsing command-line options.  Its primary design
 goal is to have minimal barriers to entry.  Specifically, this includes:
 
 * High portability.  dropt is written entirely in standard C99 with
-  compatibility code for most C89 compilers.
+  compatibility code for most non-pathological C89 compilers. (wchar_t
+  support for the help facility is supported only on Windows platforms,
+  however.)
 
-* Straightforward usage.
+* (Hopefully) straightforward usage.
 
 * No global variables.
 
-* Easy integration.  dropt has no dependencies other than the standard C
-  library.  Furthermore, dropt uses the zlib/libpng license, an
-  unrestrictive license that allows the code to be freely, statically
-  linked with existing code.  This avoids some of the hassles that
-  sometimes come with dynamically-linked libraries (such as making sure
-  that the compiler options used to build the library and the main binary
-  match).
+* Minimal dependencies.  dropt has no dependencies other than the standard
+  C library.  dropt also lets clients opt-in to use only the specific
+  features they want.
+
+* An unrestrictive license.  dropt uses the zlib/libpng license and may be
+  statically linked with existing code freely.  This avoids some of the
+  hassles that sometimes come with dynamically-linked libraries (such as
+  ensuring that the compiler options used to build the library match those
+  used for the main binary).
+
+* (Approximate) POSIX compatibility.  Existing applications that use
+  POSIX-style options hopefully should be able to use dropt without
+  breaking their command-line interface. (A notable difference is that
+  dropt by default does not allow options to be concatenated with their
+  arguments (e.g. -oARGUMENT).  POSIX also discourages this but makes
+  exceptions for backwards compatibility reasons.
 
 * Flexibility.  dropt is designed to be entirely callback-based.  This
   allows it to handle arbitrary arguments to command-line options.  Even
-  common argument types such as integers or strings are handled by
-  callbacks; dropt provides standard handlers for them.  Exposing the
-  handlers for standard types also allows programs to extend them by
-  building wrappers around them.
+  common types such as integers or strings are handled by callbacks; dropt
+  provides standard handlers for them.  Exposing the handlers for standard
+  types also allows programs to extend them by building wrappers around
+  them.
 
 
 dropt provides basic option-parsing features:
@@ -36,15 +47,17 @@ dropt provides basic option-parsing features:
 * Grouping for short options (e.g. "-a -b -c" is equivalent to "-abc").
 
 * Automatically stops parsing when encountering "--".  This allows programs
-  to take normal arguments that start with "-" and not have them treated as
-  options.
+  to take normal arguments that start with "-" and not have them be treated
+  as options.
 
 * Overridable option values.  For example, "--option=1 --option=2" will use
-  the value "2".  This is useful to override options specified by shell
-  aliases.
+  the value "2".  Boolean flags can be disabled by using "--flag=0" (since
+  "--flag" by itself is syntactic sugar for "--flag=1").  This is useful to
+  override options specified by shell aliases.  Note that clients that
+  specify custom handlers can implement different behaviors if desired.
 
 
-What dropt doesn't do:
+The implementation is intended to be minimalistic.  What dropt doesn't do:
 
 * Localization.  dropt doesn't provide localization facilities, but it does
   try not to stand in the way of programs that want to localize their help
@@ -54,3 +67,11 @@ What dropt doesn't do:
   shell's responsibility. (On Windows, where WinMain() does not receive a
   tokenized argv array, developers should use CommandLineToArgvW or should
   use the __argv global from Microsoft's C runtime library.)
+
+* Command-line argument permutation.  dropt always expects options to come
+  before non-options.
+
+
+Usage:
+
+See dropt_example.c.

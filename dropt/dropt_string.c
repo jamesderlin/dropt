@@ -41,12 +41,13 @@
 
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
-#define ARRAY_LENGTH(array) (sizeof (array) / sizeof (array)[0])
 
 #ifdef DROPT_DEBUG_STRING_BUFFERS
     #define DEFAULT_STRINGSTREAM_BUFFER_SIZE 1
+    #define GROWN_STRINGSTREAM_BUFFER_SIZE(oldSize, amount) ((oldSize) + (amount))
 #else
     #define DEFAULT_STRINGSTREAM_BUFFER_SIZE 256
+    #define GROWN_STRINGSTREAM_BUFFER_SIZE(oldSize, amount) MAX((oldSize) * 2, (oldSize) + (amount))
 #endif
 
 /* Compatibility junk for things that don't yet support ISO C99. */
@@ -83,7 +84,8 @@ struct dropt_stringstream
   *     elementSize : The size of each of element, in bytes.
   *
   * RETURNS:
-  *     A pointer to the allocated memory, or NULL on failure.
+  *     A pointer to the allocated memory.
+  *     Returns NULL on error.
   */
 #define dropt_safe_malloc(numElements, elementSize) \
     dropt_safe_realloc(NULL, numElements, elementSize)
@@ -98,15 +100,31 @@ struct dropt_stringstream
   *                   If NULL, a new memory block of the specified size
   *                     will be allocated.
   *     numElements : The number of elements to allocate.
+  *                   If 0, frees p.
   *     elementSize : The size of each of element, in bytes.
   *
   * RETURNS:
-  *     A pointer to the allocated memory, or NULL on failure.
+  *     A pointer to the allocated memory.
+  *     Returns NULL if numElements is 0.
+  *     Returns NULL on error.
   */
 static void*
 dropt_safe_realloc(void* p, size_t numElements, size_t elementSize)
 {
-    size_t numBytes = numElements * elementSize;
+    size_t numBytes;
+
+    if (numElements == 0)
+    {
+        /* The behavior of realloc(p, 0) is implementation-defined.  Let's
+         * enforce a particular behavior.
+         */
+        free(p);
+        return NULL;
+    }
+
+    assert(elementSize != 0);
+
+    numBytes = numElements * elementSize;
     if (numBytes / elementSize != numElements)
     {
         /* Overflow. */
@@ -265,7 +283,16 @@ dropt_vsnprintf(dropt_char_t* s, size_t n, const dropt_char_t* format, va_list a
     /* ISO C99-compliant.
      *
      * As far as I can tell, gcc's implementation of vsnprintf has always
-     * matched the behavior required by the C99 standard.
+     * matched the behavior required by the C99 standard (which is to
+     * return the necessary buffer size).
+     *
+     * Note that this won't work with wchar_t because there is no true,
+     * standard wchar_t equivalent of snprintf.  swprintf comes close but
+     * doesn't return the necessary buffer size (and the standard does not
+     * provide a guaranteed way to test if truncation occurred), and its
+     * format string can't be used interchangeably with snprintf.
+     *
+     * It's simpler not to support wchar_t on non-Windows platforms.
      */
     assert(format != NULL);
     return vsnprintf(s, n, format, args);
@@ -571,11 +598,7 @@ dropt_vssprintf(dropt_stringstream* ss, const dropt_char_t* format, va_list args
         size_t available = dropt_ssgetfreespace(ss);
         if ((unsigned int) n + 1 > available)
         {
-#ifdef DROPT_DEBUG_STRING_BUFFERS
-            size_t newSize = ss->maxSize + n;
-#else
-            size_t newSize = MAX(ss->maxSize * 2, ss->maxSize + n);
-#endif
+            size_t newSize = GROWN_STRINGSTREAM_BUFFER_SIZE(ss->maxSize, n);
             dropt_ssresize(ss, newSize);
             available = dropt_ssgetfreespace(ss);
         }

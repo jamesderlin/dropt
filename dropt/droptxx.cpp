@@ -128,9 +128,9 @@ context::get_error() const
   *     A wrapper around dropt_get_error_details.
   */
 void
-context::get_error_details(dropt_char_t** optionName, dropt_char_t** valueString) const
+context::get_error_details(dropt_char_t** optionName, dropt_char_t** optionArgument) const
 {
-    dropt_get_error_details(mContext, optionName, valueString);
+    dropt_get_error_details(mContext, optionName, optionArgument);
 }
 
 
@@ -222,23 +222,23 @@ convert_exception()
   *     Parses a C++ bool value from the given string if possible.
   *
   * PARAMETERS:
-  *     IN/OUT context  : The options context.
-  *     IN valueString  : A string representing a boolean value (0 or 1).
-  *                       If NULL, the boolean value is assumed to be
-  *                         true.
-  *     OUT handlerData : A pointer to a C++ bool.
-  *                       On success, set to the interpreted boolean
-  *                         value.
-  *                       On error, left untouched.
+  *     IN/OUT context    : The options context.
+  *     IN optionArgument : A string representing a boolean value (0 or 1).
+  *                         If NULL, the boolean value is assumed to be
+  *                           true.
+  *     OUT handlerData   : A pointer to a C++ bool.
+  *                         On success, set to the interpreted boolean
+  *                           value.
+  *                         On error, left untouched.
   *
   * RETURNS:
   *     See dropt_handle_bool.
   */
 dropt_error_t
-handle_bool(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
+handle_bool(dropt_context_t* context, const dropt_char_t* optionArgument, void* handlerData)
 {
     dropt_bool_t b;
-    dropt_error_t err = dropt_handle_bool(context, valueString, &b);
+    dropt_error_t err = dropt_handle_bool(context, optionArgument, &b);
     if (err == dropt_error_none) { *static_cast<bool*>(handlerData) = (b != 0); }
     return err;
 }
@@ -250,23 +250,23 @@ handle_bool(dropt_context_t* context, const dropt_char_t* valueString, void* han
   *     values.
   *
   * PARAMETERS:
-  *     IN/OUT context  : The options context.
-  *     IN valueString  : A string representing a boolean value (0 or 1).
-  *                       If NULL, the boolean value is assumed to be
-  *                         true.
-  *     OUT handlerData : A pointer to a C++ bool.
-  *                       On success, set to the interpreted boolean
-  *                         value.
-  *                       On error, left untouched.
+  *     IN/OUT context    : The options context.
+  *     IN optionArgument : A string representing a boolean value (0 or 1).
+  *                         If NULL, the boolean value is assumed to be
+  *                           true.
+  *     OUT handlerData   : A pointer to a C++ bool.
+  *                         On success, set to the interpreted boolean
+  *                           value.
+  *                         On error, left untouched.
   *
   * RETURNS:
   *     See dropt_handle_bool.
   */
 dropt_error_t
-handle_verbose_bool(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
+handle_verbose_bool(dropt_context_t* context, const dropt_char_t* optionArgument, void* handlerData)
 {
     dropt_bool_t b;
-    dropt_error_t err = dropt_handle_verbose_bool(context, valueString, &b);
+    dropt_error_t err = dropt_handle_verbose_bool(context, optionArgument, &b);
     if (err == dropt_error_none) { *static_cast<bool*>(handlerData) = (b != 0); }
     return err;
 }
@@ -277,25 +277,25 @@ handle_verbose_bool(dropt_context_t* context, const dropt_char_t* valueString, v
   *     Obtains a C++ string.
   *
   * PARAMETERS:
-  *     IN/OUT context  : The options context.
-  *     IN valueString  : A string.
-  *                       If NULL, returns dropt_error_insufficient_args.
-  *     OUT handlerData : A pointer to a dropt::string.
-  *                       On success, set to the input string.
-  *                       On error, left untouched.
+  *     IN/OUT context    : The options context.
+  *     IN optionArgument : A string.
+  *                         If NULL, returns dropt_error_insufficient_arguments.
+  *     OUT handlerData   : A pointer to a dropt::string.
+  *                         On success, set to the input string.
+  *                         On error, left untouched.
   *
   * RETURNS:
   *     dropt_error_none
-  *     dropt_error_insufficient_args
+  *     dropt_error_insufficient_arguments
   *     dropt_error_insufficient_memory
   */
 dropt_error_t
-handle_string(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
+handle_string(dropt_context_t* context, const dropt_char_t* optionArgument, void* handlerData)
 {
     try
     {
         dropt_char_t* s;
-        dropt_error_t err = dropt_handle_string(context, valueString, &s);
+        dropt_error_t err = dropt_handle_string(context, optionArgument, &s);
         if (err == dropt_error_none) { *static_cast<string*>(handlerData) = s; }
         return err;
     }
@@ -311,9 +311,9 @@ handle_string(dropt_context_t* context, const dropt_char_t* valueString, void* h
   *     A wrapper around dropt_handle_int.
   */
 dropt_error_t
-handle_int(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
+handle_int(dropt_context_t* context, const dropt_char_t* optionArgument, void* handlerData)
 {
-    return dropt_handle_int(context, valueString, handlerData);
+    return dropt_handle_int(context, optionArgument, handlerData);
 }
 
 
@@ -322,9 +322,9 @@ handle_int(dropt_context_t* context, const dropt_char_t* valueString, void* hand
   *     A wrapper around dropt_handle_uint.
   */
 dropt_error_t
-handle_uint(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
+handle_uint(dropt_context_t* context, const dropt_char_t* optionArgument, void* handlerData)
 {
-    return dropt_handle_uint(context, valueString, handlerData);
+    return dropt_handle_uint(context, optionArgument, handlerData);
 }
 
 
@@ -333,9 +333,9 @@ handle_uint(dropt_context_t* context, const dropt_char_t* valueString, void* han
   *     A wrapper around dropt_handle_double.
   */
 dropt_error_t
-handle_double(dropt_context_t* context, const dropt_char_t* valueString, void* handlerData)
+handle_double(dropt_context_t* context, const dropt_char_t* optionArgument, void* handlerData)
 {
-    return dropt_handle_double(context, valueString, handlerData);
+    return dropt_handle_double(context, optionArgument, handlerData);
 }
 
 

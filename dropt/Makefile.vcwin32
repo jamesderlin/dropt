@@ -82,18 +82,27 @@ all: $(PHONY) default example test
 lib: $(PHONY) $(DROPT_LIB)
 libxx: $(PHONY) $(DROPTXX_LIB)
 
-!IF "$(DROPT_NO_STRING_BUFFERS)" != ""
+
 example: $(PHONY)
-    @echo.(Skipping dropt_example because of DROPT_NO_STRING_BUFFERS.)
+
+!IF "$(DROPT_NO_STRING_BUFFERS)" != ""
+example: skip_example
+!ELSEIF "$(_UNICODE)" != ""
+example: skip_example
 !ELSE
-example: $(PHONY) $(EXAMPLE_EXE)
+example: $(EXAMPLE_EXE)
 !ENDIF
+
+skip_example: $(PHONY)
+    @echo.(Skipping dropt_example because either DROPT_NO_STRING_BUFFERS or _UNICODE was specified.)
+
 
 check: $(PHONY) test
 test: $(PHONY) $(TEST_EXE)
     @echo.Running tests...
     $(TEST_EXE) $(TEST_DROPT_ARGS)
     @echo.Tests passed.
+
 
 $(DROPT_LIB): $(LIB_OBJ_FILES)
 $(DROPTXX_LIB): $(DROPT_LIB) "$(OBJDIR)\droptxx.obj"
@@ -118,5 +127,5 @@ $(OBJ_FILES) "$(OBJDIR)\droptxx.obj":
 
 .phony:
 
-clean:
+clean: $(PHONY)
     -if exist "$(BUILD_ROOT)\$(NULL)" rd /s /q "$(BUILD_ROOT)"
