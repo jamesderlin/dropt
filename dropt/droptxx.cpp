@@ -88,10 +88,23 @@ context::set_error_handler(dropt_error_handler_t handler, void* handlerData)
   *
   *     A wrapper around dropt_set_strncmp.
   */
-void context::set_strncmp(dropt_strncmp_t cmp)
+void
+context::set_strncmp(dropt_strncmp_t cmp)
 {
     dropt_set_strncmp(mContext, cmp);
 }
+
+
+/** dropt::allow_concatenated_arguments
+  *
+  *     A wrapper around dropt_allow_concatenated_arguments.
+  */
+void
+context::allow_concatenated_arguments(bool allow)
+{
+    dropt_allow_concatenated_arguments(mContext, allow);
+}
+
 
 
 /** dropt::context::parse

@@ -59,6 +59,11 @@ handle_face(dropt_context_t* context, const dropt_char_t* optionArgument, void* 
 int
 main(int argc, char** argv)
 {
+    /*
+     * C89 requires that array initializers have static storage duration.
+     * This restriction is relaxed in C99 (some compilers ignore it
+     * anyway).
+     */
     static dropt_bool_t showHelp = 0;
     static dropt_bool_t showVersion = 0;
     static int i = 0;

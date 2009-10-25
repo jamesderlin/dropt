@@ -76,13 +76,16 @@ public:
 class context
 {
 public:
-    context(const dropt_option_t* options);
+    explicit context(const dropt_option_t* options);
     ~context();
 
     dropt_context_t* raw();
 
     void set_error_handler(dropt_error_handler_t handler, void* handlerData);
     void set_strncmp(dropt_strncmp_t cmp);
+
+    // Use this only for backward compatibility purposes.
+    void allow_concatenated_arguments(bool allow = true);
 
     dropt_char_t** parse(int argc, dropt_char_t** argv);
     dropt_char_t** parse(dropt_char_t** argv);
@@ -109,6 +112,7 @@ private:
 
 dropt_error_t convert_exception();
 
+// These use C++ bool and std::basic_string types.
 DROPT_HANDLER_DECL(handle_bool);
 DROPT_HANDLER_DECL(handle_verbose_bool);
 DROPT_HANDLER_DECL(handle_string);
