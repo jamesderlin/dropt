@@ -2,7 +2,7 @@
   *
   *     Default type handlers for dropt.
   *
-  * Copyright (c) 2006-2008 James D. Lin <jameslin@csua.berkeley.edu>
+  * Copyright (c) 2006-2009 James D. Lin <jameslin@csua.berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>
@@ -70,7 +70,7 @@ dropt_handle_bool(dropt_context_t* context, const dropt_char_t* optionArgument,
 
     if (handlerData == NULL)
     {
-        DROPT_PANIC("No handler data specified.");
+        DROPT_MISUSE_PANIC("No handler data specified.");
         err = dropt_error_bad_configuration;
     }
     else if (optionArgument == NULL)
@@ -180,7 +180,7 @@ dropt_handle_int(dropt_context_t* context, const dropt_char_t* optionArgument,
 
     if (handlerData == NULL)
     {
-        DROPT_PANIC("No handler data specified.");
+        DROPT_MISUSE_PANIC("No handler data specified.");
         err = dropt_error_bad_configuration;
     }
     else if (optionArgument == NULL || optionArgument[0] == DROPT_TEXT_LITERAL('\0'))
@@ -254,7 +254,7 @@ dropt_handle_uint(dropt_context_t* context, const dropt_char_t* optionArgument,
 
     if (handlerData == NULL)
     {
-        DROPT_PANIC("No handler data specified.");
+        DROPT_MISUSE_PANIC("No handler data specified.");
         err = dropt_error_bad_configuration;
     }
     else if (   optionArgument == NULL
@@ -334,7 +334,7 @@ dropt_handle_double(dropt_context_t* context, const dropt_char_t* optionArgument
 
     if (handlerData == NULL)
     {
-        DROPT_PANIC("No handler data specified.");
+        DROPT_MISUSE_PANIC("No handler data specified.");
         err = dropt_error_bad_configuration;
     }
     else if (   optionArgument == NULL
@@ -408,7 +408,7 @@ dropt_handle_string(dropt_context_t* context, const dropt_char_t* optionArgument
 
     if (handlerData == NULL)
     {
-        DROPT_PANIC("No handler data specified.");
+        DROPT_MISUSE_PANIC("No handler data specified.");
         err = dropt_error_bad_configuration;
     }
     else if (optionArgument == NULL)

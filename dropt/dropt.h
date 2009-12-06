@@ -173,6 +173,8 @@ typedef struct dropt_help_params_t
 dropt_context_t* dropt_new_context(const dropt_option_t* options);
 void dropt_free_context(dropt_context_t* context);
 
+const dropt_option_t* dropt_get_options(const dropt_context_t* context);
+
 void dropt_set_error_handler(dropt_context_t* context,
                              dropt_error_handler_t handler, void* handlerData);
 void dropt_set_strncmp(dropt_context_t* context, dropt_strncmp_t cmp);
@@ -195,9 +197,9 @@ dropt_char_t* dropt_default_error_handler(dropt_error_t error,
                                           const dropt_char_t* optionArgument);
 
 void dropt_init_help_params(dropt_help_params_t* helpParams);
-dropt_char_t* dropt_get_help(const dropt_option_t* options,
+dropt_char_t* dropt_get_help(const dropt_context_t* context,
                              const dropt_help_params_t* helpParams);
-void dropt_print_help(FILE* f, const dropt_option_t* options,
+void dropt_print_help(FILE* f, const dropt_context_t* context,
                       const dropt_help_params_t* helpParams);
 #endif
 
@@ -211,8 +213,8 @@ DROPT_HANDLER_DECL(dropt_handle_uint);
 DROPT_HANDLER_DECL(dropt_handle_double);
 DROPT_HANDLER_DECL(dropt_handle_string);
 
-#define DROPT_PANIC(message) dropt_panic(message, __FILE__, __LINE__)
-void dropt_panic(const char* message, const char* filename, int line);
+#define DROPT_MISUSE_PANIC(message) dropt_misuse_panic(message, __FILE__, __LINE__)
+void dropt_misuse_panic(const char* message, const char* filename, int line);
 
 #ifdef __cplusplus
 } /* extern "C" */

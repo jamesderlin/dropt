@@ -47,9 +47,9 @@ dropt provides basic option-parsing features:
 
 * Grouping for short options (e.g. "-a -b -c" is equivalent to "-abc").
 
-* Automatically stops parsing when encountering "--".  This allows programs
-  to take normal arguments that start with "-" and not have them be treated
-  as options.
+* Automatically stops parsing when encountering a "--" token.  This allows
+  programs to take arguments that start with "-" and not have them be
+  treated as options (e.g. "rm -- -rf", "some_numeric_program -- -123").
 
 * Overridable option values.  For example, "--option=1 --option=2" will use
   the value "2".  Boolean flags can be disabled by using "--flag=0" (since

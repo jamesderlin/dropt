@@ -66,6 +66,7 @@ typedef struct
     const dropt_option_t* option;
     const dropt_char_t* optionArgument;
     dropt_char_t** argNext;
+    int argsLeft;
 } parseState_t;
 
 
@@ -98,11 +99,12 @@ is_valid_option(const dropt_option_t* option)
   *     of the form "--option").
   *
   * PARAMETERS:
-  *     IN context  : The options context.
-  *     IN longName : The "long" option to search for (excluding leading
-  *                     dashes).
-  *     longNameLen : The length of the longName string, excluding the
-  *                     NUL-terminator.
+  *     IN context     : The options context.
+  *     IN longName    : The "long" option to search for (excluding leading
+  *                        dashes).
+  *                      This might not be NUL-terminated.
+  *     IN longNameLen : The length of the longName string, excluding a
+  *                        NUL-terminator.
   *
   * RETURNS:
   *     A pointer to the corresponding option specification or NULL if not
@@ -141,8 +143,8 @@ find_long_option(const dropt_context_t* context,
   *     option of the form "-o").
   *
   * PARAMETERS:
-  *     IN context : The options context.
-  *     shortName  : The "short" option to search for.
+  *     IN context   : The options context.
+  *     IN shortName : The "short" option to search for.
   *
   * RETURNS:
   *     A pointer to the corresponding option specification or NULL if not
@@ -176,10 +178,12 @@ find_short_option(const dropt_context_t* context, dropt_char_t shortName)
   * PARAMETERS:
   *     IN/OUT context    : The options context.
   *                         Must not be NULL.
-  *     err               : The error code.
+  *     IN err            : The error code.
   *     IN optionName     : The name of the option we failed on.
-  *     optionNameLen     : The length of the optionName string, excluding
-  *                           the NUL-terminator.
+  *                         This might not be NUL-terminated.
+  *                         Must not be NULL.
+  *     IN optionNameLen  : The length of the optionName string, excluding
+  *                           a NUL-terminator.
   *     IN optionArgument : The value of the option we failed on.
   *                         Pass NULL if unwanted.
   */
@@ -188,17 +192,8 @@ set_error_details(dropt_context_t* context, dropt_error_t err,
                   const dropt_char_t* optionName, size_t optionNameLen,
                   const dropt_char_t* optionArgument)
 {
-    if (context == NULL)
-    {
-        DROPT_PANIC("No dropt context specified.");
-        return;
-    }
-
-    if (optionName == NULL)
-    {
-        DROPT_PANIC("No option specified.");
-        return;
-    }
+    assert(context != NULL);
+    assert(optionName != NULL);
 
     context->errorDetails.err = err;
 
@@ -222,8 +217,8 @@ set_error_details(dropt_context_t* context, dropt_error_t err,
   *
   * PARAMETERS:
   *     IN/OUT context    : The options context.
-  *     err               : The error code.
-  *     shortName         : the "short" name of the option we failed on.
+  *     IN err            : The error code.
+  *     IN shortName      : the "short" name of the option we failed on.
   *     IN optionArgument : The value of the option we failed on.
   *                         Pass NULL if unwanted.
   */
@@ -233,6 +228,7 @@ set_short_option_error_details(dropt_context_t* context, dropt_error_t err,
 {
     dropt_char_t shortNameBuf[] = DROPT_TEXT_LITERAL("-?");
 
+    assert(context != NULL);
     assert(shortName != DROPT_TEXT_LITERAL('\0'));
 
     shortNameBuf[1] = shortName;
@@ -257,7 +253,7 @@ dropt_get_error(const dropt_context_t* context)
 {
     if (context == NULL)
     {
-        DROPT_PANIC("No dropt context specified.");
+        DROPT_MISUSE_PANIC("No dropt context specified.");
         return dropt_error_bad_configuration;
     }
     return context->errorDetails.err;
@@ -305,7 +301,7 @@ dropt_get_error_message(dropt_context_t* context)
 {
     if (context == NULL)
     {
-        DROPT_PANIC("No dropt context specified.");
+        DROPT_MISUSE_PANIC("No dropt context specified.");
         return DROPT_TEXT_LITERAL("");
     }
 
@@ -374,7 +370,7 @@ dropt_clear_error(dropt_context_t* context)
   *     Default error handler.
   *
   * PARAMETERS:
-  *     error             : The error code.
+  *     IN error          : The error code.
   *     IN optionName     : The name of the option we failed on.
   *     IN optionArgument : The value of the option we failed on.
   *                         Pass NULL if unwanted.
@@ -449,7 +445,8 @@ dropt_default_error_handler(dropt_error_t error,
 /** dropt_get_help
   *
   * PARAMETERS:
-  *     IN options    : The list of option specifications.
+  *     IN context    : The options context.
+  *                     Must not be NULL.
   *     IN helpParams : The help parameters.
   *                     Pass NULL to use the default help parameters.
   *
@@ -459,14 +456,14 @@ dropt_default_error_handler(dropt_error_t error,
   *     Returns NULL on error.
   */
 dropt_char_t*
-dropt_get_help(const dropt_option_t* options, const dropt_help_params_t* helpParams)
+dropt_get_help(const dropt_context_t* context, const dropt_help_params_t* helpParams)
 {
     dropt_char_t* helpText = NULL;
     dropt_stringstream* ss = dropt_ssopen();
 
-    if (options == NULL)
+    if (context == NULL)
     {
-        DROPT_PANIC("No option list specified.");
+        DROPT_MISUSE_PANIC("No dropt context specified.");
     }
     else if (ss != NULL)
     {
@@ -482,7 +479,7 @@ dropt_get_help(const dropt_option_t* options, const dropt_help_params_t* helpPar
             hp = *helpParams;
         }
 
-        for (option = options; is_valid_option(option); option++)
+        for (option = context->options; is_valid_option(option); option++)
         {
             bool hasLongName =    option->long_name != NULL
                                && option->long_name[0] != DROPT_TEXT_LITERAL('\0');
@@ -522,7 +519,7 @@ dropt_get_help(const dropt_option_t* options, const dropt_help_params_t* helpPar
             }
             else
             {
-                DROPT_PANIC("No option name specified.");
+                DROPT_MISUSE_PANIC("No option name specified.");
                 break;
             }
 
@@ -594,15 +591,16 @@ dropt_get_help(const dropt_option_t* options, const dropt_help_params_t* helpPar
   *
   * PARAMETERS:
   *     IN/OUT f      : The file stream to print to.
-  *     IN options    : The list of option specifications.
+  *     IN context    : The options context.
+  *                     Must not be NULL.
   *     IN helpParams : The help parameters.
   *                     Pass NULL to use the default help parameters.
   */
 void
-dropt_print_help(FILE* f, const dropt_option_t* options,
+dropt_print_help(FILE* f, const dropt_context_t* context,
                  const dropt_help_params_t* helpParams)
 {
-    dropt_char_t* helpText = dropt_get_help(options, helpParams);
+    dropt_char_t* helpText = dropt_get_help(context, helpParams);
     if (helpText != NULL)
     {
         dropt_fputs(helpText, f);
@@ -629,20 +627,15 @@ static dropt_error_t
 set_option_value(dropt_context_t* context,
                  const dropt_option_t* option, const dropt_char_t* optionArgument)
 {
-    dropt_error_t err;
-
     assert(option != NULL);
 
-    if (option->handler != NULL)
+    if (option->handler == NULL)
     {
-        err = option->handler(context, optionArgument, option->handler_data);
+        DROPT_MISUSE_PANIC("No option handler specified.");
+        return dropt_error_bad_configuration;
     }
-    else
-    {
-        DROPT_PANIC("No option handler specified.");
-        err = dropt_error_bad_configuration;
-    }
-    return err;
+
+    return option->handler(context, optionArgument, option->handler_data);
 }
 
 
@@ -667,7 +660,7 @@ parse_option_arg(dropt_context_t* context, parseState_t* ps)
 
     if (OPTION_TAKES_ARG(ps->option) && ps->optionArgument == NULL)
     {
-        if (*(ps->argNext) != NULL)
+        if (ps->argsLeft > 0 && *(ps->argNext) != NULL)
         {
             /* The option expects an argument, but none was specified with '='.
              * Try using the next item from the command-line.
@@ -701,7 +694,11 @@ parse_option_arg(dropt_context_t* context, parseState_t* ps)
     }
 
 exit:
-    if (err == dropt_error_none && consumeNextArg) { ps->argNext++; }
+    if (err == dropt_error_none && consumeNextArg)
+    {
+        ps->argNext++;
+        ps->argsLeft--;
+    }
     return err;
 }
 
@@ -713,7 +710,7 @@ exit:
   * PARAMETERS:
   *     IN/OUT context : The options context.
   *                      Must not be NULL.
-  *     argc           : The maximum number of arguments to parse from
+  *     IN argc        : The maximum number of arguments to parse from
   *                        argv.
   *                      Pass -1 to parse all arguments up to a NULL
   *                        sentinel value.
@@ -744,14 +741,14 @@ dropt_parse(dropt_context_t* context,
 
     if (context == NULL)
     {
-        DROPT_PANIC("No dropt context specified.");
+        DROPT_MISUSE_PANIC("No dropt context specified.");
         goto exit;
     }
 
 #ifdef DROPT_NO_STRING_BUFFERS
     if (context->errorHandler == NULL)
     {
-        DROPT_PANIC("No error handler specified.");
+        DROPT_MISUSE_PANIC("No error handler specified.");
         set_error_details(context, dropt_error_bad_configuration,
                           DROPT_TEXT_LITERAL(""), 0, NULL);
         goto exit;
@@ -764,7 +761,9 @@ dropt_parse(dropt_context_t* context,
         while (argv[argc] != NULL) { argc++; }
     }
 
-    while (   argc-- > 0
+    ps.argsLeft = argc;
+
+    while (   ps.argsLeft-- > 0
            && (arg = *ps.argNext) != NULL
            && arg[0] == DROPT_TEXT_LITERAL('-'))
     {
@@ -814,12 +813,14 @@ dropt_parse(dropt_context_t* context,
                 const dropt_char_t* longNameEnd;
                 if (p != NULL)
                 {
+                    /* --longName=arg */
                     longNameEnd = p;
                     ps.optionArgument = p + 1;
                 }
                 else
                 {
                     longNameEnd = longName + dropt_strlen(longName);
+                    // XXX: Is ps.optionArgument = NULL needed here?  Why do I do it for short args?
                 }
 
                 /* Pass the length of the option name so that we don't need
@@ -851,7 +852,7 @@ dropt_parse(dropt_context_t* context,
         }
         else
         {
-            /* Short name. */
+            /* Short name. (-x) */
             size_t len;
             size_t j;
 
@@ -867,15 +868,16 @@ dropt_parse(dropt_context_t* context,
             else
             {
                 const dropt_char_t* p = dropt_strchr(arg, DROPT_TEXT_LITERAL('='));
-                if (p == NULL)
+                if (p != NULL)
                 {
-                    len = dropt_strlen(arg);
-                    ps.optionArgument = NULL;
+                    /* -x=arg */
+                    len = p - arg;
+                    ps.optionArgument = p + 1;
                 }
                 else
                 {
-                    len = p - arg;
-                    ps.optionArgument = p + 1;
+                    len = dropt_strlen(arg);
+                    ps.optionArgument = NULL;
                 }
             }
 
@@ -978,7 +980,7 @@ dropt_new_context(const dropt_option_t* options)
 
     if (options == NULL)
     {
-        DROPT_PANIC("No option list specified.");
+        DROPT_MISUSE_PANIC("No option list specified.");
         goto exit;
     }
 
@@ -1004,7 +1006,7 @@ dropt_new_context(const dropt_option_t* options)
                 || (   option->long_name != NULL
                     && dropt_strchr(option->long_name, DROPT_TEXT_LITERAL('=')) != NULL))
             {
-                DROPT_PANIC("Invalid option list. '=' may not be used in an option name.");
+                DROPT_MISUSE_PANIC("Invalid option list. '=' may not be used in an option name.");
                 free(context);
                 context = NULL;
                 goto exit;
@@ -1033,6 +1035,28 @@ dropt_free_context(dropt_context_t* context)
 }
 
 
+/** dropt_get_options
+  *
+  * PARAMETERS:
+  *     IN context : The options context.
+  *                  Must not be NULL.
+  *
+  * RETURNS:
+  *     The context's list of option specifications.
+  */
+const dropt_option_t*
+dropt_get_options(const dropt_context_t* context)
+{
+    if (context == NULL)
+    {
+        DROPT_MISUSE_PANIC("No dropt context specified.");
+        return NULL;
+    }
+
+    return context->options;
+}
+
+
 /** dropt_init_help_params
   *
   *     Initializes a dropt_help_params_t structure with the default
@@ -1047,10 +1071,11 @@ dropt_init_help_params(dropt_help_params_t* helpParams)
 {
     if (helpParams == NULL)
     {
-        DROPT_PANIC("No dropt help parameters specified.");
+        DROPT_MISUSE_PANIC("No dropt help parameters specified.");
         return;
     }
 
+    // XXX: Add symbolic names for the integer literals.
     helpParams->indent = 2;
     helpParams->description_start_column = 6;
     helpParams->blank_lines_between_options = true;
@@ -1065,16 +1090,16 @@ dropt_init_help_params(dropt_help_params_t* helpParams)
   * PARAMETERS:
   *     IN/OUT context : The options context.
   *                      Must not be NULL.
-  *     handler        : The error handler callback.
+  *     IN handler     : The error handler callback.
   *                      Pass NULL to use the default error handler.
-  *     handlerData    : Caller-defined callback data.
+  *     IN handlerData : Caller-defined callback data.
   */
 void
 dropt_set_error_handler(dropt_context_t* context, dropt_error_handler_t handler, void* handlerData)
 {
     if (context == NULL)
     {
-        DROPT_PANIC("No dropt context specified.");
+        DROPT_MISUSE_PANIC("No dropt context specified.");
         return;
     }
 
@@ -1090,7 +1115,7 @@ dropt_set_error_handler(dropt_context_t* context, dropt_error_handler_t handler,
   * PARAMETERS:
   *     IN/OUT context : The options context.
   *                      Must not be NULL.
-  *     cmp            : The string comparison function.
+  *     IN cmp         : The string comparison function.
   *                      Pass NULL to use the default string comparison
   *                        function.
   */
@@ -1099,7 +1124,7 @@ dropt_set_strncmp(dropt_context_t* context, dropt_strncmp_t cmp)
 {
     if (context == NULL)
     {
-        DROPT_PANIC("No dropt context specified.");
+        DROPT_MISUSE_PANIC("No dropt context specified.");
         return;
     }
 
@@ -1107,12 +1132,16 @@ dropt_set_strncmp(dropt_context_t* context, dropt_strncmp_t cmp)
 }
 
 
-/** dropt_panic
+/** dropt_misuse_panic
   *
-  *     Prints an error diagnostic for logical errors.
+  *     Prints a diagnostic for logical errors caused by external clients
+  *     calling into dropt improperly.
   *
   *     In debug builds, terminates the program and prints the filename and
   *     line number of the failure.
+  *
+  *     For logical errors entirely internal to dropt, use assert()
+  *     instead.
   *
   * PARAMETERS:
   *     IN message  : The error message.
@@ -1120,10 +1149,10 @@ dropt_set_strncmp(dropt_context_t* context, dropt_strncmp_t cmp)
   *     IN filename : The name of the file where the logical error
   *                     occurred.
   *                   Must not be NULL.
-  *     line        : The line number where the logical error occurred.
+  *     IN line     : The line number where the logical error occurred.
   */
 void
-dropt_panic(const char* message, const char* filename, int line)
+dropt_misuse_panic(const char* message, const char* filename, int line)
 {
 #ifdef NDEBUG
     fprintf(stderr, "dropt: %s\n", message);
@@ -1143,7 +1172,7 @@ dropt_panic(const char* message, const char* filename, int line)
   *
   * PARAMETERS:
   *     IN/OUT context : The options context.
-  *     allow           : Pass 1 if concatenated arguments should be allowed,
+  *     IN allow       : Pass 1 if concatenated arguments should be allowed,
   *                        0 otherwise.
   */
 void
@@ -1151,7 +1180,7 @@ dropt_allow_concatenated_arguments(dropt_context_t* context, dropt_bool_t allow)
 {
     if (context == NULL)
     {
-        assert(!"No dropt context specified.");
+        DROPT_MISUSE_PANIC("No dropt context specified.");
         return;
     }
 

@@ -2,7 +2,7 @@
   *
   *     String routines for dropt.
   *
-  * Copyright (c) 2006-2008 James D. Lin <jameslin@csua.berkeley.edu>
+  * Copyright (c) 2006-2009 James D. Lin <jameslin@csua.berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>
@@ -80,8 +80,8 @@ struct dropt_stringstream
   *     A version of malloc that checks for integer overflow.
   *
   * PARAMETERS:
-  *     numElements : The number of elements to allocate.
-  *     elementSize : The size of each of element, in bytes.
+  *     IN numElements : The number of elements to allocate.
+  *     IN elementSize : The size of each of element, in bytes.
   *
   * RETURNS:
   *     A pointer to the allocated memory.
@@ -96,12 +96,12 @@ struct dropt_stringstream
   *     Wrapper around realloc to check for integer overflow.
   *
   * PARAMETERS:
-  *     IN/OUT p    : A pointer to the memory block to resize.
-  *                   If NULL, a new memory block of the specified size
-  *                     will be allocated.
-  *     numElements : The number of elements to allocate.
-  *                   If 0, frees p.
-  *     elementSize : The size of each of element, in bytes.
+  *     IN/OUT p       : A pointer to the memory block to resize.
+  *                      If NULL, a new memory block of the specified size
+  *                        will be allocated.
+  *     IN numElements : The number of elements to allocate.
+  *                      If 0, frees p.
+  *     IN elementSize : The size of each of element, in bytes.
   *
   * RETURNS:
   *     A pointer to the allocated memory.
@@ -160,7 +160,7 @@ dropt_strdup(const dropt_char_t* s)
   *
   * PARAMETERS:
   *     IN s : The string to duplicate.
-  *     n    : The number of dropt_char_t-s to copy, excluding the
+  *     IN n : The number of dropt_char_t-s to copy, excluding the
   *              NUL-terminator.
   *            Pass -1 to copy the entire string.
   *
@@ -220,7 +220,7 @@ dropt_stricmp(const dropt_char_t* s, const dropt_char_t* t)
   *
   * PARAMETERS:
   *     IN s, t : The strings to compare.
-  *     n       : The maximum number of dropt_char_t-s to compare.
+  *     IN n    : The maximum number of dropt_char_t-s to compare.
   *
   * RETURNS:
   *     0 if the strings are equivalent,
@@ -266,7 +266,7 @@ dropt_strnicmp(const dropt_char_t* s, const dropt_char_t* t, size_t n)
   * PARAMETERS:
   *     OUT s     : The destination buffer.  May be NULL if n is 0.
   *                 If non-NULL, always NUL-terminated.
-  *     n         : The size of the destination buffer, measured in
+  *     IN n      : The size of the destination buffer, measured in
   *                   dropt_char_t-s.
   *     IN format : printf-style format specifier.  Must not be NULL.
   *     IN args   : Arguments to insert into the formatted string.
@@ -325,7 +325,7 @@ dropt_vsnprintf(dropt_char_t* s, size_t n, const dropt_char_t* format, va_list a
     #else
         /* This version doesn't necessarily NUL-terminate.  Sigh. */
         (void) _vsnprintf(s, n, format, args);
-        s[n - 1] = DROPT_TEXT_LITERAL('\0');;
+        s[n - 1] = DROPT_TEXT_LITERAL('\0');
     #endif
     }
 
@@ -478,7 +478,7 @@ dropt_ssgetfreespace(const dropt_stringstream* ss)
   *
   * PARAMETERS:
   *     IN/OUT ss : The dropt_stringstream.
-  *     n         : The desired buffer size, in dropt_char_t-s.
+  *     IN n      : The desired buffer size, in dropt_char_t-s.
   *
   * RETURNS:
   *     The new size of the dropt_stringstream's buffer in dropt_char_t-s,

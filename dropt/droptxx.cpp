@@ -2,7 +2,7 @@
   *
   *     A C++ wrapper for dropt.
   *
-  * Copyright (c) 2008 James D. Lin <jameslin@csua.berkeley.edu>
+  * Copyright (c) 2008-2009 James D. Lin <jameslin@csua.berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>
@@ -35,6 +35,173 @@ namespace dropt
 {
 
 
+/** dropt::context_ref::context_ref
+  *
+  *     dropt::context_ref constructor.
+  *
+  * PARAMETERS:
+  *     IN context : The options context.
+  *                  Must not be NULL.
+  *                  Does not take ownership of the context.
+  */
+context_ref::context_ref(dropt_context_t* context)
+: mContext(context)
+{
+}
+
+
+/** dropt::context_ref::raw
+  *
+  * RETURNS:
+  *     The raw dropt_context_t for this dropt::context_ref.
+  */
+dropt_context_t*
+context_ref::raw()
+{
+    return mContext;
+}
+
+
+/** dropt::context_ref::get_options
+  *
+  *     A wrapper around dropt_get_options.
+  */
+const dropt_option_t*
+context_ref::get_options()
+   const
+{
+   return dropt_get_options(mContext);
+}
+
+
+/** dropt::context_ref::set_error_handler
+  *
+  *     A wrapper around dropt_set_error_handler.
+  */
+void
+context_ref::set_error_handler(dropt_error_handler_t handler, void* handlerData)
+{
+    dropt_set_error_handler(mContext, handler, handlerData);
+}
+
+
+/** dropt::context_ref::set_strncmp
+  *
+  *     A wrapper around dropt_set_strncmp.
+  */
+void
+context_ref::set_strncmp(dropt_strncmp_t cmp)
+{
+    dropt_set_strncmp(mContext, cmp);
+}
+
+
+/** dropt::allow_concatenated_arguments
+  *
+  *     A wrapper around dropt_allow_concatenated_arguments.
+  */
+void
+context_ref::allow_concatenated_arguments(bool allow)
+{
+    dropt_allow_concatenated_arguments(mContext, allow);
+}
+
+
+
+/** dropt::context_ref::parse
+  *
+  *     Wrappers around dropt_parse.
+  */
+dropt_char_t**
+context_ref::parse(int argc, dropt_char_t** argv)
+{
+    return dropt_parse(mContext, argc, argv);
+}
+
+
+dropt_char_t**
+context_ref::parse(dropt_char_t** argv)
+{
+    return dropt_parse(mContext, -1, argv);
+}
+
+
+/** dropt::context_ref::get_error
+  *
+  *     A wrapper around dropt_get_error.
+  */
+dropt_error_t
+context_ref::get_error() const
+{
+    return dropt_get_error(mContext);
+}
+
+
+/** dropt::context_ref::get_error_details
+  *
+  *     A wrapper around dropt_get_error_details.
+  */
+void
+context_ref::get_error_details(dropt_char_t** optionName, dropt_char_t** optionArgument) const
+{
+    dropt_get_error_details(mContext, optionName, optionArgument);
+}
+
+
+/** dropt::context_ref::get_error_message
+  *
+  *     A wrapper around dropt_get_error_message.
+  */
+const dropt_char_t*
+context_ref::get_error_message()
+{
+    return dropt_get_error_message(mContext);
+}
+
+
+/** dropt::context_ref::clear_error
+  *
+  *     A wrapper around dropt_clear_error.
+  */
+void
+context_ref::clear_error()
+{
+    dropt_clear_error(mContext);
+}
+
+
+#ifndef DROPT_NO_STRING_BUFFERS
+/** dropt::context_ref::get_help
+  *
+  *     A wrapper around dropt_get_help.
+  *
+  * PARAMETERS:
+  *     IN help_params : The help parameters.
+  *
+  * RETURNS:
+  *     A string for the available options.
+  *     Returns an empty string on error.
+  */
+string
+context_ref::get_help(const help_params& helpParams) const
+{
+    string s;
+    dropt_char_t* p = NULL;
+    try
+    {
+        p = dropt_get_help(mContext, &helpParams);
+        if (p != NULL) { s = p; }
+    }
+    catch (...)
+    {
+    }
+
+    free(p);
+    return s;
+}
+#endif
+
+
 /** dropt::context::context
   *
   *     dropt::context constructor.
@@ -44,8 +211,7 @@ namespace dropt
   *                  Must not be NULL.
   */
 context::context(const dropt_option_t* options)
-: mContext(dropt_new_context(options)),
-  mOptions(options)
+: context_ref(dropt_new_context(options))
 {
     if (mContext == NULL) { throw std::bad_alloc(); }
 }
@@ -58,147 +224,8 @@ context::context(const dropt_option_t* options)
 context::~context()
 {
     dropt_free_context(mContext);
+    mContext = NULL;
 }
-
-
-/** dropt::context::raw
-  *
-  * RETURNS:
-  *     The raw dropt_context_t for this dropt::context.
-  */
-dropt_context_t*
-context::raw()
-{
-    return mContext;
-}
-
-
-/** dropt::context::set_error_handler
-  *
-  *     A wrapper around dropt_set_error_handler.
-  */
-void
-context::set_error_handler(dropt_error_handler_t handler, void* handlerData)
-{
-    dropt_set_error_handler(mContext, handler, handlerData);
-}
-
-
-/** dropt::context::set_strncmp
-  *
-  *     A wrapper around dropt_set_strncmp.
-  */
-void
-context::set_strncmp(dropt_strncmp_t cmp)
-{
-    dropt_set_strncmp(mContext, cmp);
-}
-
-
-/** dropt::allow_concatenated_arguments
-  *
-  *     A wrapper around dropt_allow_concatenated_arguments.
-  */
-void
-context::allow_concatenated_arguments(bool allow)
-{
-    dropt_allow_concatenated_arguments(mContext, allow);
-}
-
-
-
-/** dropt::context::parse
-  *
-  *     Wrappers around dropt_parse.
-  */
-dropt_char_t**
-context::parse(int argc, dropt_char_t** argv)
-{
-    return dropt_parse(mContext, argc, argv);
-}
-
-
-dropt_char_t**
-context::parse(dropt_char_t** argv)
-{
-    return dropt_parse(mContext, -1, argv);
-}
-
-
-/** dropt::context::get_error
-  *
-  *     A wrapper around dropt_get_error.
-  */
-dropt_error_t
-context::get_error() const
-{
-    return dropt_get_error(mContext);
-}
-
-
-/** dropt::context::get_error_details
-  *
-  *     A wrapper around dropt_get_error_details.
-  */
-void
-context::get_error_details(dropt_char_t** optionName, dropt_char_t** optionArgument) const
-{
-    dropt_get_error_details(mContext, optionName, optionArgument);
-}
-
-
-/** dropt::context::get_error_message
-  *
-  *     A wrapper around dropt_get_error_message.
-  */
-const dropt_char_t*
-context::get_error_message()
-{
-    return dropt_get_error_message(mContext);
-}
-
-
-/** dropt::context::clear_error
-  *
-  *     A wrapper around dropt_clear_error.
-  */
-void
-context::clear_error()
-{
-    dropt_clear_error(mContext);
-}
-
-
-#ifndef DROPT_NO_STRING_BUFFERS
-/** dropt::context::get_help
-  *
-  *     A wrapper around dropt_get_help.
-  *
-  * PARAMETERS:
-  *     IN help_params : The help parameters.
-  *
-  * RETURNS:
-  *     A string for the available options.
-  *     Returns an empty string on error.
-  */
-string
-context::get_help(const help_params& helpParams) const
-{
-    dropt_char_t* s = NULL;
-    try
-    {
-        s = dropt_get_help(mOptions, &helpParams);
-        return (s == NULL)
-               ? string()
-               : string(s);
-    }
-    catch (...)
-    {
-        free(s);
-        throw;
-    }
-}
-#endif
 
 
 /** dropt::convert_exception
@@ -238,7 +265,7 @@ convert_exception()
   *     IN/OUT context    : The options context.
   *     IN optionArgument : A string representing a boolean value (0 or 1).
   *                         If NULL, the boolean value is assumed to be
-  *                           true.
+  *                         true.
   *     OUT handlerData   : A pointer to a C++ bool.
   *                         On success, set to the interpreted boolean
   *                           value.

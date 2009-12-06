@@ -589,6 +589,18 @@ test_dropt_parse(dropt_context_t* context)
         success &= VERIFY(*rest == NULL);
     }
 
+    /* Verify that we're well-behaved if argc is too big. */
+    {
+        dropt_char_t* args[] = { T("-n"), T("--hiddenFlag"), NULL };
+        normalFlag = false;
+        hiddenFlag = false;
+        rest = dropt_parse(context, 100, args);
+        success &= VERIFY(dropt_get_error(context) == dropt_error_none);
+        success &= VERIFY(normalFlag == true);
+        success &= VERIFY(hiddenFlag == true);
+        success &= VERIFY(*rest == NULL);
+    }
+
     /* Test that boolean options can be turned on with "=1" also. */
     {
         dropt_char_t* args[] = { T("-n=1"), T("--hiddenFlag=1"), NULL };
@@ -765,6 +777,16 @@ test_dropt_parse(dropt_context_t* context)
         rest = dropt_parse(context, -1, args);
         success &= VERIFY(dropt_get_error(context) == dropt_error_insufficient_arguments);
         success &= VERIFY(*rest == NULL);
+        dropt_clear_error(context);
+    }
+
+    {
+        dropt_char_t* args[] = { T("--int"), "42", NULL };
+        intVal = 0;
+        rest = dropt_parse(context, 1, args);
+        success &= VERIFY(dropt_get_error(context) == dropt_error_insufficient_arguments);
+        success &= VERIFY(intVal == 0);
+        success &= VERIFY(rest == &args[1]);
         dropt_clear_error(context);
     }
 
@@ -1137,7 +1159,7 @@ main(int argc, char** argv)
             dropt_init_help_params(&helpParams);
             helpParams.description_start_column = 30;
             helpParams.blank_lines_between_options = false;
-            dropt_print_help(stdout, options, &helpParams);
+            dropt_print_help(stdout, droptContext, &helpParams);
         }
 #endif
         goto exit;

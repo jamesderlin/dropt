@@ -2,7 +2,7 @@
   *
   *     A C++ wrapper for dropt.
   *
-  * Copyright (c) 2008 James D. Lin <jameslin@csua.berkeley.edu>
+  * Copyright (c) 2008-2009 James D. Lin <jameslin@csua.berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>
@@ -73,13 +73,17 @@ public:
 #endif
 
 
-class context
+/** dropt::context_ref is a simple C++ wrapper around dropt_context_t
+  * functions.  It does not do any management of a dropt_context_t.
+  */
+class context_ref
 {
 public:
-    explicit context(const dropt_option_t* options);
-    ~context();
+    context_ref(dropt_context_t* context);
 
     dropt_context_t* raw();
+
+    const dropt_option_t* get_options() const;
 
     void set_error_handler(dropt_error_handler_t handler, void* handlerData);
     void set_strncmp(dropt_strncmp_t cmp);
@@ -99,9 +103,20 @@ public:
     string get_help(const help_params& helpParams = help_params()) const;
 #endif
 
-private:
+protected:
     dropt_context_t* mContext;
-    const dropt_option_t* mOptions;
+};
+
+
+/** dropt::context is equivalent to dropt::context_ref but uses an
+  * internally managed dropt_context_t instance.
+  */
+class context
+: public context_ref
+{
+public:
+    explicit context(const dropt_option_t* options);
+    ~context();
 
 private:
     // Intentionally unimplemented to be non-copyable.
