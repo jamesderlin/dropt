@@ -1,8 +1,8 @@
 /** dropt.cpp
   *
-  *     A C++ wrapper for dropt.
+  * A C++ wrapper for dropt.
   *
-  * Copyright (c) 2008-2009 James D. Lin <jameslin@csua.berkeley.edu>
+  * Copyright (c) 2008-2010 James D. Lin <jameslin@cal.berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>

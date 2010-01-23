@@ -1,0 +1,238 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<title>dropt (deliberately rudimentary options)</title>
+</head>
+<style type="text/css">
+<!--
+/* general typeface stuff */
+
+	h1, h2, h3, h4, h5, h6, th, .heading, .caption { font-family: Verdana, Arial, Helvetica, sans-serif; }
+	body, p, td, ul, ol, address, cite, blockquote, .text { font-family: Georgia, "Times New Roman", Times, serif; }
+
+	tt, pre, code, kbd, samp, .fixed { font-family: "Consolas", "Andale Mono", Andale, "Monotype.com", "Lucida Console", "Courier New", Courier, monospace; font-size: smaller; }
+
+	code, kbd { white-space: nowrap; }
+
+	address, cite, var, em, i { font-style: italic; }
+	th, strong, b { font-weight: bold; }
+
+	acronym, abbr, .slang { text-decoration: none; border-bottom: #00CC00 dotted 1px; cursor: help; }
+
+/* link stuff */
+
+	a:link { color: #0000FF; background: transparent; }
+	a:visited { color: #9966FF; background: transparent; }
+	a:hover { color: #6666FF; background: transparent; }
+	a:active { color: #FF0000; background: transparent; }
+	a.unemphasized { text-decoration: none; }	/* not underlined */
+	a:hover.unemphasized { text-decoration: underline; }
+
+	a.unemphasized img { border-style: none; }
+
+/* margin stuff */
+
+	ul, ol { margin-top: 0; margin-bottom: 0; }
+
+/* miscellaneous stuff */
+
+	.date { white-space: nowrap; }
+	hr { border: 0; border-top: black solid thin; margin: 0; clear: both; height: 1px;  }
+
+/* document-specific stuff */
+
+	body
+	{
+		background: #FFFFFF;
+		color: #000000;
+	}
+
+	#header { border-bottom: black solid 1px; padding-bottom: 0.5em; }
+
+	#header h1 { margin: 0; }
+	#header p, #footer p { font-family: Arial, Helvetica, sans-serif; }
+
+ 	#description
+	{
+		font-weight: bold;
+		margin: 0;
+	}
+
+	#author { margin: 1em 0 0 0; }
+	#content .subBody { margin-left: 2em; }
+
+	.syntax { margin-bottom: 0; }
+	.syntaxAnnotation { margin-left: 2em; margin-top: 0; }
+
+	pre.example
+	{
+		border-left: 5px solid #CCC;
+		margin-left: 1.5em;
+		padding-left: 5px;
+		font-size: 90%;
+		line-height: 110%;
+	}
+
+	#historylist
+	{
+		/*
+		height: 15em;
+		overflow: auto;
+		margin: 0em 2em 0em 2em;
+		border: black solid 1px;
+		*/
+	}
+
+	#footer
+	{
+		padding-top: 0;
+		padding-bottom: 0;
+		margin-top: 1em;
+		margin-bottom: 1em;
+		border-top: black solid 1px;
+	}
+-->
+</style>
+<body>
+
+<div id="header">
+<h1>dropt (deliberately rudimentary options)</h1>
+
+<p>
+dropt is yet another library for parsing command-line options.
+</p>
+</div><!-- header -->
+
+<div id="content">
+
+<h2>Goals</h2>
+
+<p>
+Aren't there plenty of existing option-parsing libraries already?  Yes,
+there are, but none of the ones that I had seen had the right combination
+of having an unrestrictive license and being easy to use.  The primary
+design goal for dropt is to have <strong>minimal barriers to
+entry</strong>.  Specifically, this includes:
+</p>
+
+<ul>
+	<li>
+		<strong>High portability.</strong>  dropt is written entirely in standard C99 with
+		compatibility code for most non-pathological C89 compilers. (<code>wchar_t</code>
+		support for the help facility is supported only on Windows platforms,
+		however.)
+	</li>
+	<li>(Hopefully) straightforward usage.</li>
+	<li>No global variables.</li>
+	<li>
+		<strong>Minimal dependencies.</strong>  dropt has no dependencies other than the standard
+		C library.  dropt also lets clients opt-in to use only the specific
+		features they want.
+	</li>
+	<li>
+		<strong>An unrestrictive license.</strong>  dropt uses the zlib/libpng license and may be
+		statically linked with existing code freely.  This avoids some of the
+		hassles that sometimes come with dynamically-linked libraries (such as
+		ensuring that the compiler options used to build the library match those
+		used for the main binary).
+	</li>
+	<li>
+		<strong>(Approximate) POSIX compatibility.</strong>  Existing applications that use
+		POSIX-style options hopefully should be able to use dropt without
+		breaking their command-line interface. (A notable difference is that
+		dropt by default does not allow options to be concatenated with their
+		arguments (e.g. <kbd>-oARGUMENT</kbd>).  POSIX also discourages this but makes
+		exceptions for backwards compatibility reasons.  dropt requires that
+		applications opt-in to this behavior.)
+	</li>
+	<li>
+		<strong>Flexibility.</strong>  dropt is designed to be entirely callback-based.  This
+		allows it to handle arbitrary arguments to command-line options.  Even
+		common types such as integers or strings are handled by callbacks; dropt
+		provides standard handlers for them.  Exposing the handlers for standard
+		types also allows programs to extend them by building wrappers around
+		them.
+	</li>
+</ul>
+
+<h2>Features</h2>
+
+<p>
+dropt provides basic option-parsing features:
+</p>
+
+<ul>
+	<li>GNU-style long options (e.g. <kbd>--option</kbd>).</li>
+
+	<li>Grouping for short options (e.g. &quot;<kbd>-abc</kbd>&quot; is equivalent to &quot;<kbd>-a -b -c</kbd>&quot;).</li>
+	<li>
+		Automatically stops parsing when encountering a &quot;<kbd>--</kbd>&quot; token.  This allows
+		programs to take arguments that start with &quot;<kbd>-</kbd>&quot; and not have them be
+		treated as options.  Examples:
+
+		<ul>
+			<li><kbd>rm -- -rf</kbd></li>
+			<li><kbd>some_numeric_program -- -123</kbd></li>
+		</ul>
+	</li>
+	<li>
+		Overridable option values.  For example, &quot;<kbd>--option=1 --option=2</kbd>&quot; will use
+		the value 2.  Boolean flags can be disabled by using <kbd>--flag=0</kbd> (since
+		<kbd>--flag</kbd> by itself is syntactic sugar for <kbd>--flag=1</kbd>).  This is useful to
+		override options specified by shell aliases.  Note that clients that
+		specify custom handlers can implement different behaviors if desired.
+	</li>
+</ul>
+
+<p>
+The implementation is intended to be minimalistic.  What dropt does <em>not</em> do:
+</p>
+
+<ul>
+	<li>
+		Localization.  dropt doesn't provide localization facilities, but it does
+		try not to stand in the way of programs that want to localize their help
+		text however they choose.
+	</li>
+	<li>
+		Tokenizing a single command-line string into an <code>argv</code> array.  This is the
+		shell's responsibility. (On Windows, where <code>WinMain()</code> does not receive a
+		tokenized <kbd>argv</kbd> array, developers should use <code>CommandLineToArgvW</code> or
+		should use the <code>__argv</code> global from Microsoft's C runtime library.)
+	</li>
+	<li>
+		Command-line argument permutation.  dropt always expects options to come
+		before non-options.
+	</li>
+</ul>
+
+<h2>Usage</h2>
+
+<p>
+There's no formal documentation yet, but for now, see
+<a href="http://www.taenarum.com/software/dropt/dropt_example.c"><kbd>dropt_example.c</kbd></a>.
+</p>
+
+<h2 id="history">Version History</h2>
+<div id="historylist">
+<ul>
+	<li>
+		1.0 (2010-01-24)
+		<ul><li>Initial release.</li></ul>
+	</li>
+</ul>
+</div><!-- historylist -->
+
+</div><!-- content -->
+
+<div id="footer">
+<p>
+Copyright &copy; 2006&ndash;2010 James D. Lin<br>
+<a href="http://www.taenarum.com/software/dropt/">http://www.taenarum.com/software/dropt/</a>
+</p>
+</div>
+
+</body>
+</html>

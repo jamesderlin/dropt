@@ -1,8 +1,10 @@
 /** dropt.h
   *
-  *     A deliberately rudimentary command-line option parser.
+  * A deliberately rudimentary command-line option parser.
   *
-  * Copyright (c) 2006-2009 James D. Lin <jameslin@csua.berkeley.edu>
+  * Version 1.0
+  *
+  * Copyright (c) 2006-2010 James D. Lin <jameslin@cal.berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>

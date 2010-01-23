@@ -1,8 +1,8 @@
 /** dropt_string.h
   *
-  *     String routines for dropt.
+  * String routines for dropt.
   *
-  * Copyright (c) 2006-2009 James D. Lin <jameslin@csua.berkeley.edu>
+  * Copyright (c) 2006-2010 James D. Lin <jameslin@cal.berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>

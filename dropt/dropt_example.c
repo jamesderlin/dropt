@@ -1,6 +1,6 @@
 /** dropt_example.c
   *
-  *     A simple dropt example.
+  * A simple dropt example.
   *
   * Written by James D. Lin and assigned to the public domain.
   *
@@ -35,7 +35,7 @@ main(int argc, char** argv)
     /* Each option is defined by a row in a table, containing properties
      * such as the option's short name (e.g. -h), its long name (e.g.
      * --help), its help text, its handler callback, and its callback data
-     * (for typical handlers, the data is usually the address of a variable
+     * (for typical handlers, this data is usually the address of a variable
      * for the handler to modify).
      *
      * See the dropt_option_t documentation in dropt.h for a complete list
@@ -47,16 +47,19 @@ main(int argc, char** argv)
         { '\0', "version", "Shows version information.", NULL, dropt_handle_bool, &showVersion, dropt_attr_halt },
         { 'i',  "int", "Sample integer option.", "value", dropt_handle_int, &i },
         { 'f',  "face", "Sample custom option.", "{heads, tails}", handle_face, &face },
-        { 0 } /* Sentinel value. */
+        { 0 } /* Required sentinel value. */
     };
 
     dropt_context_t* droptContext = dropt_new_context(options);
     if (droptContext == NULL)
     {
         /* We failed to create the dropt context, possibly due to a memory
-         * allocation failure or due to misconfiguration (e.g. an improper
-         * options array).  Misconfigurations are logical errors that will
-         * trigger DROPT_PANIC().
+         * allocation failure.
+         *
+         * This also can happen due to logical errors (e.g. if the options
+         * array is malformed).  Logical errors will trigger
+         * DROPT_MIUSE_PANIC() and will terminate the program in debug
+         * builds.
          */
     }
     else if (argc == 0)
@@ -122,8 +125,9 @@ handle_face(dropt_context_t* context, const dropt_char_t* optionArgument, void* 
     assert(face != NULL);
 
     /* Option handlers should handle 'optionArgument' being NULL (if the
-     * option's argument is optional) or being the empty string (if a user
-     * explicitly passed an empty string (e.g. --face="").
+     * option's argument is optional and wasn't supplied) or being the
+     * empty string (if a user explicitly passed an empty string (e.g.
+     * --face="").
      */
     if (optionArgument == NULL || optionArgument[0] == '\0')
     {

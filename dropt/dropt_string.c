@@ -1,8 +1,8 @@
 /** dropt_string.c
   *
-  *     String routines for dropt.
+  * String routines for dropt.
   *
-  * Copyright (c) 2006-2009 James D. Lin <jameslin@csua.berkeley.edu>
+  * Copyright (c) 2006-2010 James D. Lin <jameslin@cal.berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>
@@ -44,10 +44,10 @@
 
 #ifdef DROPT_DEBUG_STRING_BUFFERS
     #define DEFAULT_STRINGSTREAM_BUFFER_SIZE 1
-    #define GROWN_STRINGSTREAM_BUFFER_SIZE(oldSize, amount) ((oldSize) + (amount))
+    #define GROWN_STRINGSTREAM_BUFFER_SIZE(oldSize, minAmount) ((oldSize) + (minAmount))
 #else
     #define DEFAULT_STRINGSTREAM_BUFFER_SIZE 256
-    #define GROWN_STRINGSTREAM_BUFFER_SIZE(oldSize, amount) MAX((oldSize) * 2, (oldSize) + (amount))
+    #define GROWN_STRINGSTREAM_BUFFER_SIZE(oldSize, minAmount) MAX((oldSize) * 2, (oldSize) + (minAmount))
 #endif
 
 /* Compatibility junk for things that don't yet support ISO C99. */
@@ -81,10 +81,11 @@ struct dropt_stringstream
   *
   * PARAMETERS:
   *     IN numElements : The number of elements to allocate.
-  *     IN elementSize : The size of each of element, in bytes.
+  *     IN elementSize : The size of each element, in bytes.
   *
   * RETURNS:
   *     A pointer to the allocated memory.
+  *     Returns NULL if numElements is 0.
   *     Returns NULL on error.
   */
 #define dropt_safe_malloc(numElements, elementSize) \
@@ -101,7 +102,7 @@ struct dropt_stringstream
   *                        will be allocated.
   *     IN numElements : The number of elements to allocate.
   *                      If 0, frees p.
-  *     IN elementSize : The size of each of element, in bytes.
+  *     IN elementSize : The size of each element, in bytes.
   *
   * RETURNS:
   *     A pointer to the allocated memory.

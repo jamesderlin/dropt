@@ -1,8 +1,8 @@
 /** dropt_handlers.c
   *
-  *     Default type handlers for dropt.
+  * Default type handlers for dropt.
   *
-  * Copyright (c) 2006-2009 James D. Lin <jameslin@csua.berkeley.edu>
+  * Copyright (c) 2006-2010 James D. Lin <jameslin@cal.berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>

@@ -1,8 +1,8 @@
 /** dropt.c
   *
-  *     A deliberately rudimentary command-line option parser.
+  * A deliberately rudimentary command-line option parser.
   *
-  * Copyright (c) 2006-2010 James D. Lin <jameslin@csua.berkeley.edu>
+  * Copyright (c) 2006-2010 James D. Lin <jameslin@cal.berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>
@@ -748,6 +748,8 @@ dropt_parse(dropt_context_t* context,
     if (context == NULL)
     {
         DROPT_MISUSE_PANIC("No dropt context specified.");
+        set_error_details(context, dropt_error_bad_configuration,
+                          DROPT_TEXT_LITERAL(""), 0, NULL);
         goto exit;
     }
 
