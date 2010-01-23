@@ -2,7 +2,7 @@
   *
   *     A deliberately rudimentary command-line option parser.
   *
-  * Copyright (c) 2006-2009 James D. Lin <jameslin@csua.berkeley.edu>
+  * Copyright (c) 2006-2010 James D. Lin <jameslin@csua.berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>
@@ -40,6 +40,12 @@
 #define OPTION_TAKES_ARG(option) ((option)->arg_description != NULL)
 
 typedef enum { false, true } bool;
+
+enum
+{
+    default_help_indent = 2,
+    default_description_start_column = 6
+};
 
 struct dropt_context_t
 {
@@ -660,11 +666,11 @@ parse_option_arg(dropt_context_t* context, parseState_t* ps)
 
     if (OPTION_TAKES_ARG(ps->option) && ps->optionArgument == NULL)
     {
+        /* The option expects an argument, but none was specified with '='.
+         * Try using the next item from the command-line.
+         */
         if (ps->argsLeft > 0 && *(ps->argNext) != NULL)
         {
-            /* The option expects an argument, but none was specified with '='.
-             * Try using the next item from the command-line.
-             */
             consumeNextArg = true;
             ps->optionArgument = *(ps->argNext);
         }
@@ -820,7 +826,7 @@ dropt_parse(dropt_context_t* context,
                 else
                 {
                     longNameEnd = longName + dropt_strlen(longName);
-                    // XXX: Is ps.optionArgument = NULL needed here?  Why do I do it for short args?
+                    assert(ps.optionArgument == NULL);
                 }
 
                 /* Pass the length of the option name so that we don't need
@@ -877,7 +883,7 @@ dropt_parse(dropt_context_t* context,
                 else
                 {
                     len = dropt_strlen(arg);
-                    ps.optionArgument = NULL;
+                    assert(ps.optionArgument == NULL);
                 }
             }
 
@@ -1075,9 +1081,8 @@ dropt_init_help_params(dropt_help_params_t* helpParams)
         return;
     }
 
-    // XXX: Add symbolic names for the integer literals.
-    helpParams->indent = 2;
-    helpParams->description_start_column = 6;
+    helpParams->indent = default_help_indent;
+    helpParams->description_start_column = default_description_start_column;
     helpParams->blank_lines_between_options = true;
 }
 
