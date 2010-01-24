@@ -9,6 +9,7 @@
   */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include "dropt.h"
@@ -31,6 +32,8 @@ main(int argc, char** argv)
     static dropt_bool_t showVersion = 0;
     static int i = 0;
     static face_t face = unknown;
+
+    int exitCode = EXIT_SUCCESS;
 
     /* Each option is defined by a row in a table, containing properties
      * such as the option's short name (e.g. -h), its long name (e.g.
@@ -61,6 +64,7 @@ main(int argc, char** argv)
          * DROPT_MIUSE_PANIC() and will terminate the program in debug
          * builds.
          */
+        exitCode = EXIT_FAILURE;
     }
     else if (argc == 0)
     {
@@ -79,6 +83,7 @@ main(int argc, char** argv)
         if (dropt_get_error(droptContext) != dropt_error_none)
         {
             fprintf(stderr, "dropt_example: %s\n", dropt_get_error_message(droptContext));
+            exitCode = EXIT_FAILURE;
         }
         else if (showHelp)
         {
@@ -107,7 +112,7 @@ main(int argc, char** argv)
 
     dropt_free_context(droptContext);
 
-    return 0;
+    return exitCode;
 }
 
 
