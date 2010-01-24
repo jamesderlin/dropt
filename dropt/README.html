@@ -65,10 +65,9 @@ dropt is yet another library for parsing command-line options.
 
 <p>
 Aren't there plenty of existing option-parsing libraries already?  Yes,
-there are, but none of the ones that I had seen had the right combination
-of portability, having an unrestrictive license, and ease of use.  The
-primary design goal for dropt is to have <strong>minimal barriers to entry
-</strong>.  Specifically, this includes:
+there are, but none of the ones that I had seen had the ease of use I
+wanted. The primary design goal for dropt is to have <strong>minimal
+barriers to entry</strong>. Specifically, this includes:
 </p>
 
 <ul>
@@ -95,7 +94,7 @@ primary design goal for dropt is to have <strong>minimal barriers to entry
 	<li>
 		<strong>(Approximate) POSIX compatibility.</strong>  Existing applications that use
 		POSIX-style options hopefully should be able to use dropt without
-		breaking their command-line interface. (A notable difference is that
+		breaking their command-line interface. (The notable difference is that
 		dropt by default does not allow options to be concatenated with their
 		arguments (e.g. <kbd>-oARGUMENT</kbd>).  POSIX also discourages this but makes
 		exceptions for backwards compatibility reasons.  dropt requires that
@@ -130,6 +129,11 @@ dropt provides basic option-parsing features:
 			<li><kbd>rm -- -rf</kbd></li>
 			<li><kbd>some_numeric_program -- -123</kbd></li>
 		</ul>
+	</li>
+	<li>
+		Unambiguous syntax for arguments to options.  Arguments can always
+		be specified with &quot;<kbd>=</kbd>&quot; (e.g. <kbd>--option=1</kbd>,
+		<kbd>-x=1</kbd>).
 	</li>
 	<li>
 		Overridable option values.  For example, &quot;<kbd>--option=1 --option=2</kbd>&quot; will use
