@@ -781,7 +781,7 @@ test_dropt_parse(dropt_context_t* context)
     }
 
     {
-        dropt_char_t* args[] = { T("--int"), "42", NULL };
+        dropt_char_t* args[] = { T("--int"), T("42"), NULL };
         intVal = 0;
         rest = dropt_parse(context, 1, args);
         success &= VERIFY(dropt_get_error(context) == dropt_error_insufficient_arguments);

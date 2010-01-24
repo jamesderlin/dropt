@@ -79,7 +79,7 @@ main(int argc, char** argv)
         /* argv[1] is safe since argv[argc] is guaranteed to be NULL and
          * since argc > 0.
          */
-        dropt_char_t** rest = dropt_parse(droptContext, -1, &argv[1]);
+        char** rest = dropt_parse(droptContext, -1, &argv[1]);
         if (dropt_get_error(droptContext) != dropt_error_none)
         {
             fprintf(stderr, "dropt_example: %s\n", dropt_get_error_message(droptContext));
@@ -123,7 +123,7 @@ main(int argc, char** argv)
   *     etc.) should be sufficient for most purposes.
   */
 static dropt_error_t
-handle_face(dropt_context_t* context, const dropt_char_t* optionArgument, void* handlerData)
+handle_face(dropt_context_t* context, const char* optionArgument, void* handlerData)
 {
     dropt_error_t err = dropt_error_none;
     face_t* face = handlerData;
