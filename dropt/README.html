@@ -4,12 +4,9 @@
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
 <meta http-equiv="Content-Style-Type" content="text/css">
 <title>dropt (deliberately rudimentary options)</title>
-</head>
 <style type="text/css">
 <!--
-/* general typeface stuff */
-
-	h1, h2, h3, h4, h5, h6, th, .heading, .caption { font-family: Verdana, Arial, Helvetica, sans-serif; }
+	h1, h2, h3, h4, h5, h6, th, .heading, .caption, #header p, #footer p { font-family: Verdana, Arial, Helvetica, sans-serif; }
 	body, p, td, ul, ol, address, cite, blockquote, .text { font-family: Georgia, "Times New Roman", Times, serif; }
 
 	tt, pre, code, kbd, samp, .fixed { font-family: "Consolas", "Andale Mono", Andale, "Monotype.com", "Lucida Console", "Courier New", Courier, monospace; font-size: smaller; }
@@ -21,8 +18,6 @@
 
 	acronym, abbr, .slang { text-decoration: none; border-bottom: #00CC00 dotted 1px; cursor: help; }
 
-/* link stuff */
-
 	a:link { color: #0000FF; background: transparent; }
 	a:visited { color: #9966FF; background: transparent; }
 	a:hover { color: #6666FF; background: transparent; }
@@ -32,57 +27,14 @@
 
 	a.unemphasized img { border-style: none; }
 
-/* margin stuff */
+	#header { border-bottom: black solid 1px; padding-bottom: 0.5em; }
 
-	ul, ol { margin-top: 0; margin-bottom: 0; }
-
-/* miscellaneous stuff */
-
-	.date { white-space: nowrap; }
-	hr { border: 0; border-top: black solid thin; margin: 0; clear: both; height: 1px;  }
-
-/* document-specific stuff */
+	#header h1 { margin: 0; }
 
 	body
 	{
 		background: #FFFFFF;
 		color: #000000;
-	}
-
-	#header { border-bottom: black solid 1px; padding-bottom: 0.5em; }
-
-	#header h1 { margin: 0; }
-	#header p, #footer p { font-family: Arial, Helvetica, sans-serif; }
-
- 	#description
-	{
-		font-weight: bold;
-		margin: 0;
-	}
-
-	#author { margin: 1em 0 0 0; }
-	#content .subBody { margin-left: 2em; }
-
-	.syntax { margin-bottom: 0; }
-	.syntaxAnnotation { margin-left: 2em; margin-top: 0; }
-
-	pre.example
-	{
-		border-left: 5px solid #CCC;
-		margin-left: 1.5em;
-		padding-left: 5px;
-		font-size: 90%;
-		line-height: 110%;
-	}
-
-	#historylist
-	{
-		/*
-		height: 15em;
-		overflow: auto;
-		margin: 0em 2em 0em 2em;
-		border: black solid 1px;
-		*/
 	}
 
 	#footer
@@ -95,6 +47,8 @@
 	}
 -->
 </style>
+</head>
+
 <body>
 
 <div id="header">
@@ -213,6 +167,12 @@ The implementation is intended to be minimalistic.  What dropt does <em>not</em>
 <p>
 There's no formal documentation yet, but for now, see
 <a href="http://www.taenarum.com/software/dropt/dropt_example.c"><kbd>dropt_example.c</kbd></a>.
+</p>
+
+<h2>Download</h2>
+
+<p>
+<a href="http://www.taenarum.com/software/dropt/dropt-1.0.zip"><kbd>dropt-1.0.zip</kbd></a>
 </p>
 
 <h2 id="history">Version History</h2>
