@@ -6,7 +6,7 @@
 <title>dropt (deliberately rudimentary options)</title>
 <style type="text/css">
 <!--
-	h1, h2, h3, h4, h5, h6, th, .heading, .caption, #header p, #footer p { font-family: Verdana, Arial, Helvetica, sans-serif; }
+	h1, h2, h3, h4, h5, h6, th, .heading, .caption, #header p { font-family: Verdana, Arial, Helvetica, sans-serif; }
 	body, p, td, ul, ol, address, cite, blockquote, .text { font-family: Georgia, "Times New Roman", Times, serif; }
 
 	tt, pre, code, kbd, samp, .fixed { font-family: "Consolas", "Andale Mono", Andale, "Monotype.com", "Lucida Console", "Courier New", Courier, monospace; font-size: smaller; }
@@ -27,8 +27,6 @@
 
 	a.unemphasized img { border-style: none; }
 
-	#header { border-bottom: black solid 1px; padding-bottom: 0.5em; }
-
 	#header h1 { margin: 0; }
 
 	body
@@ -37,14 +35,15 @@
 		color: #000000;
 	}
 
-	#footer
+	#content
 	{
-		padding-top: 0;
-		padding-bottom: 0;
 		margin-top: 1em;
 		margin-bottom: 1em;
 		border-top: black solid 1px;
+		border-bottom: black solid 1px;
 	}
+
+	#content li { margin-bottom: 0.5em; }
 -->
 </style>
 </head>
@@ -64,7 +63,7 @@ dropt is yet another library for parsing command-line options.
 <h2>Goals</h2>
 
 <p>
-Aren't there plenty of existing option-parsing libraries already?  Yes,
+Aren&rsquo;t there plenty of existing option-parsing libraries already?  Yes,
 there are, but none of the ones that I had seen had the ease of use I
 wanted. The primary design goal for dropt is to have <strong>minimal
 barriers to entry</strong>. Specifically, this includes:
@@ -119,10 +118,10 @@ dropt provides basic option-parsing features:
 <ul>
 	<li>GNU-style long options (e.g. <kbd>--option</kbd>).</li>
 
-	<li>Grouping for short options (e.g. &quot;<kbd>-abc</kbd>&quot; is equivalent to &quot;<kbd>-a -b -c</kbd>&quot;).</li>
+	<li>Grouping for short options (e.g. &ldquo;<kbd>-abc</kbd>&rdquo; is equivalent to &ldquo;<kbd>-a -b -c</kbd>&rdquo;).</li>
 	<li>
-		Automatically stops parsing when encountering a &quot;<kbd>--</kbd>&quot; token.  This allows
-		programs to take arguments that start with &quot;<kbd>-</kbd>&quot; and not have them be
+		Automatically stops parsing when encountering a &ldquo;<kbd>--</kbd>&rdquo; token.  This allows
+		programs to take arguments that start with &ldquo;<kbd>-</kbd>&rdquo; and not have them be
 		treated as options.  Examples:
 
 		<ul>
@@ -131,12 +130,12 @@ dropt provides basic option-parsing features:
 		</ul>
 	</li>
 	<li>
-		Unambiguous syntax for arguments to options.  Arguments can always
-		be specified with &quot;<kbd>=</kbd>&quot; (e.g. <kbd>--option=1</kbd>,
+		Unambiguous syntax for arguments to options.  Arguments may always
+		be specified with &ldquo;<kbd>=</kbd>&rdquo; (e.g. <kbd>--option=1</kbd>,
 		<kbd>-x=1</kbd>).
 	</li>
 	<li>
-		Overridable option values.  For example, &quot;<kbd>--option=1 --option=2</kbd>&quot; will use
+		Overridable option values.  For example, &ldquo;<kbd>--option=1 --option=2</kbd>&rdquo; will use
 		the value 2.  Boolean flags can be disabled by using <kbd>--flag=0</kbd> (since
 		<kbd>--flag</kbd> by itself is syntactic sugar for <kbd>--flag=1</kbd>).  This is useful to
 		override options specified by shell aliases.  Note that clients that
@@ -150,15 +149,15 @@ The implementation is intended to be minimalistic.  What dropt does <em>not</em>
 
 <ul>
 	<li>
-		Localization.  dropt doesn't provide localization facilities, but it does
+		Localization.  dropt doesn&rsquo;t provide localization facilities, but it does
 		try not to stand in the way of programs that want to localize their help
 		text however they choose.
 	</li>
 	<li>
 		Tokenizing a single command-line string into an <code>argv</code> array.  This is the
-		shell's responsibility. (On Windows, where <code>WinMain()</code> does not receive a
+		shell&rsquo;s responsibility. (On Windows, where <code>WinMain()</code> does not receive a
 		tokenized <kbd>argv</kbd> array, developers should use <code>CommandLineToArgvW</code> or
-		should use the <code>__argv</code> global from Microsoft's C runtime library.)
+		should use the <code>__argv</code> global from Microsoft&rsquo;s C runtime library.)
 	</li>
 	<li>
 		Command-line argument permutation.  dropt always expects options to come
@@ -180,23 +179,24 @@ There's no formal documentation yet, but for now, see
 </p>
 
 <h2 id="history">Version History</h2>
-<div id="historylist">
-<ul>
+
+<ul id="historylist">
 	<li>
 		1.0 (2010-01-24)
 		<ul><li>Initial release.</li></ul>
 	</li>
 </ul>
-</div><!-- historylist -->
 
 </div><!-- content -->
 
 <div id="footer">
+
+<address>Questions?  Comments?  Bugs?  I welcome feedback.  <a href="http://www.taenarum.com/contact.html">Contact me.</a></address>
+
 <p>
-Copyright &copy; 2006&ndash;2010 <a href="http://www.taenarum.com/contact.html">James D. Lin</a><br>
-<a href="http://www.taenarum.com/software/dropt/">http://www.taenarum.com/software/dropt/</a>
+Copyright &copy; 2006&ndash;2010 <a href="http://www.taenarum.com/software/">James D. Lin</a>.
 </p>
-</div>
+</div><!-- footer -->
 
 </body>
 </html>
