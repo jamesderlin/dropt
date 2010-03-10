@@ -38,13 +38,13 @@ namespace dropt
 {
 
 
-typedef std::basic_string<dropt_char_t> string;
-typedef std::basic_ostream<dropt_char_t> ostream;
+typedef std::basic_string<dropt_char> string;
+typedef std::basic_ostream<dropt_char> ostream;
 
 
 #ifndef DROPT_NO_STRING_BUFFERS
 class help_params
-: public dropt_help_params_t
+: public dropt_help_params
 {
 public:
     inline help_params()
@@ -73,30 +73,30 @@ public:
 #endif
 
 
-/** dropt::context_ref is a simple C++ wrapper around dropt_context_t
-  * functions.  It does not do any management of a dropt_context_t.
+/** dropt::context_ref is a simple C++ wrapper around dropt_context
+  * functions.  It does not do any management of a dropt_context.
   */
 class context_ref
 {
 public:
-    context_ref(dropt_context_t* context);
+    context_ref(dropt_context* context);
 
-    dropt_context_t* raw();
+    dropt_context* raw();
 
-    const dropt_option_t* get_options() const;
+    const dropt_option* get_options() const;
 
-    void set_error_handler(dropt_error_handler_t handler, void* handlerData);
-    void set_strncmp(dropt_strncmp_t cmp);
+    void set_error_handler(dropt_error_handler_func handler, void* handlerData);
+    void set_strncmp(dropt_strncmp_func cmp);
 
     // Use this only for backward compatibility purposes.
     void allow_concatenated_arguments(bool allow = true);
 
-    dropt_char_t** parse(int argc, dropt_char_t** argv);
-    dropt_char_t** parse(dropt_char_t** argv);
+    dropt_char** parse(int argc, dropt_char** argv);
+    dropt_char** parse(dropt_char** argv);
 
-    dropt_error_t get_error() const;
-    void get_error_details(dropt_char_t** optionName, dropt_char_t** optionArgument) const;
-    const dropt_char_t* get_error_message();
+    dropt_error get_error() const;
+    void get_error_details(dropt_char** optionName, dropt_char** optionArgument) const;
+    const dropt_char* get_error_message();
     void clear_error();
 
 #ifndef DROPT_NO_STRING_BUFFERS
@@ -104,18 +104,18 @@ public:
 #endif
 
 protected:
-    dropt_context_t* mContext;
+    dropt_context* mContext;
 };
 
 
 /** dropt::context is equivalent to dropt::context_ref but uses an
-  * internally managed dropt_context_t instance.
+  * internally managed dropt_context instance.
   */
 class context
 : public context_ref
 {
 public:
-    explicit context(const dropt_option_t* options);
+    explicit context(const dropt_option* options);
     ~context();
 
 private:
@@ -125,7 +125,7 @@ private:
 };
 
 
-dropt_error_t convert_exception();
+dropt_error convert_exception();
 
 // These use C++ bool and std::basic_string types.
 DROPT_HANDLER_DECL(handle_bool);

@@ -15,9 +15,9 @@
 #include "dropt.h"
 
 
-typedef enum { unknown, heads, tails } face_t;
+typedef enum { unknown, heads, tails } face_type;
 
-/* Function prototype for our custom function to parse a string to a face_t. */
+/* Function prototype for our custom function to parse a string to a face_type. */
 static DROPT_HANDLER_DECL(handle_face);
 
 
@@ -28,10 +28,10 @@ main(int argc, char** argv)
      * This restriction is relaxed in C99 (some compilers ignore it
      * anyway).
      */
-    static dropt_bool_t showHelp = 0;
-    static dropt_bool_t showVersion = 0;
+    static dropt_bool showHelp = 0;
+    static dropt_bool showVersion = 0;
     static int i = 0;
-    static face_t face = unknown;
+    static face_type face = unknown;
 
     int exitCode = EXIT_SUCCESS;
 
@@ -41,10 +41,10 @@ main(int argc, char** argv)
      * (for typical handlers, this data is usually the address of a variable
      * for the handler to modify).
      *
-     * See the dropt_option_t documentation in dropt.h for a complete list
+     * See the dropt_option documentation in dropt.h for a complete list
      * of option properties.
      */
-    dropt_option_t options[] = {
+    dropt_option options[] = {
         { 'h',  "help", "Shows help.", NULL, dropt_handle_bool, &showHelp, dropt_attr_halt },
         { '?', NULL, NULL, NULL, dropt_handle_bool, &showHelp, dropt_attr_halt | dropt_attr_hidden },
         { '\0', "version", "Shows version information.", NULL, dropt_handle_bool, &showVersion, dropt_attr_halt },
@@ -53,7 +53,7 @@ main(int argc, char** argv)
         { 0 } /* Required sentinel value. */
     };
 
-    dropt_context_t* droptContext = dropt_new_context(options);
+    dropt_context* droptContext = dropt_new_context(options);
     if (droptContext == NULL)
     {
         /* We failed to create the dropt context, possibly due to a memory
@@ -122,11 +122,11 @@ main(int argc, char** argv)
   *     (e.g. dropt_handle_bool, dropt_handle_int, dropt_handle_string,
   *     etc.) should be sufficient for most purposes.
   */
-static dropt_error_t
-handle_face(dropt_context_t* context, const char* optionArgument, void* handlerData)
+static dropt_error
+handle_face(dropt_context* context, const char* optionArgument, void* handlerData)
 {
-    dropt_error_t err = dropt_error_none;
-    face_t* face = handlerData;
+    dropt_error err = dropt_error_none;
+    face_type* face = handlerData;
     assert(face != NULL);
 
     /* Option handlers should handle 'optionArgument' being NULL (if the

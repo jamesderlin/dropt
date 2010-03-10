@@ -44,7 +44,7 @@ namespace dropt
   *                  Must not be NULL.
   *                  Does not take ownership of the context.
   */
-context_ref::context_ref(dropt_context_t* context)
+context_ref::context_ref(dropt_context* context)
 : mContext(context)
 {
 }
@@ -53,9 +53,9 @@ context_ref::context_ref(dropt_context_t* context)
 /** dropt::context_ref::raw
   *
   * RETURNS:
-  *     The raw dropt_context_t for this dropt::context_ref.
+  *     The raw dropt_context for this dropt::context_ref.
   */
-dropt_context_t*
+dropt_context*
 context_ref::raw()
 {
     return mContext;
@@ -66,7 +66,7 @@ context_ref::raw()
   *
   *     A wrapper around dropt_get_options.
   */
-const dropt_option_t*
+const dropt_option*
 context_ref::get_options()
    const
 {
@@ -79,7 +79,7 @@ context_ref::get_options()
   *     A wrapper around dropt_set_error_handler.
   */
 void
-context_ref::set_error_handler(dropt_error_handler_t handler, void* handlerData)
+context_ref::set_error_handler(dropt_error_handler_func handler, void* handlerData)
 {
     dropt_set_error_handler(mContext, handler, handlerData);
 }
@@ -90,7 +90,7 @@ context_ref::set_error_handler(dropt_error_handler_t handler, void* handlerData)
   *     A wrapper around dropt_set_strncmp.
   */
 void
-context_ref::set_strncmp(dropt_strncmp_t cmp)
+context_ref::set_strncmp(dropt_strncmp_func cmp)
 {
     dropt_set_strncmp(mContext, cmp);
 }
@@ -112,15 +112,15 @@ context_ref::allow_concatenated_arguments(bool allow)
   *
   *     Wrappers around dropt_parse.
   */
-dropt_char_t**
-context_ref::parse(int argc, dropt_char_t** argv)
+dropt_char**
+context_ref::parse(int argc, dropt_char** argv)
 {
     return dropt_parse(mContext, argc, argv);
 }
 
 
-dropt_char_t**
-context_ref::parse(dropt_char_t** argv)
+dropt_char**
+context_ref::parse(dropt_char** argv)
 {
     return dropt_parse(mContext, -1, argv);
 }
@@ -130,7 +130,7 @@ context_ref::parse(dropt_char_t** argv)
   *
   *     A wrapper around dropt_get_error.
   */
-dropt_error_t
+dropt_error
 context_ref::get_error() const
 {
     return dropt_get_error(mContext);
@@ -142,7 +142,7 @@ context_ref::get_error() const
   *     A wrapper around dropt_get_error_details.
   */
 void
-context_ref::get_error_details(dropt_char_t** optionName, dropt_char_t** optionArgument) const
+context_ref::get_error_details(dropt_char** optionName, dropt_char** optionArgument) const
 {
     dropt_get_error_details(mContext, optionName, optionArgument);
 }
@@ -152,7 +152,7 @@ context_ref::get_error_details(dropt_char_t** optionName, dropt_char_t** optionA
   *
   *     A wrapper around dropt_get_error_message.
   */
-const dropt_char_t*
+const dropt_char*
 context_ref::get_error_message()
 {
     return dropt_get_error_message(mContext);
@@ -186,7 +186,7 @@ string
 context_ref::get_help(const help_params& helpParams) const
 {
     string s;
-    dropt_char_t* p = NULL;
+    dropt_char* p = NULL;
     try
     {
         p = dropt_get_help(mContext, &helpParams);
@@ -210,7 +210,7 @@ context_ref::get_help(const help_params& helpParams) const
   *     IN options : The list of option specifications.
   *                  Must not be NULL.
   */
-context::context(const dropt_option_t* options)
+context::context(const dropt_option* options)
 : context_ref(dropt_new_context(options))
 {
     if (mContext == NULL) { throw std::bad_alloc(); }
@@ -230,12 +230,12 @@ context::~context()
 
 /** dropt::convert_exception
   *
-  *     Converts the last thrown C++ exception to a dropt_error_t.
+  *     Converts the last thrown C++ exception to a dropt_error.
   *
   * RETURNS:
   *     An error code.
   */
-dropt_error_t
+dropt_error
 convert_exception()
 {
     try
@@ -274,11 +274,11 @@ convert_exception()
   * RETURNS:
   *     See dropt_handle_bool.
   */
-dropt_error_t
-handle_bool(dropt_context_t* context, const dropt_char_t* optionArgument, void* handlerData)
+dropt_error
+handle_bool(dropt_context* context, const dropt_char* optionArgument, void* handlerData)
 {
-    dropt_bool_t b;
-    dropt_error_t err = dropt_handle_bool(context, optionArgument, &b);
+    dropt_bool b;
+    dropt_error err = dropt_handle_bool(context, optionArgument, &b);
     if (err == dropt_error_none) { *static_cast<bool*>(handlerData) = (b != 0); }
     return err;
 }
@@ -302,11 +302,11 @@ handle_bool(dropt_context_t* context, const dropt_char_t* optionArgument, void* 
   * RETURNS:
   *     See dropt_handle_bool.
   */
-dropt_error_t
-handle_verbose_bool(dropt_context_t* context, const dropt_char_t* optionArgument, void* handlerData)
+dropt_error
+handle_verbose_bool(dropt_context* context, const dropt_char* optionArgument, void* handlerData)
 {
-    dropt_bool_t b;
-    dropt_error_t err = dropt_handle_verbose_bool(context, optionArgument, &b);
+    dropt_bool b;
+    dropt_error err = dropt_handle_verbose_bool(context, optionArgument, &b);
     if (err == dropt_error_none) { *static_cast<bool*>(handlerData) = (b != 0); }
     return err;
 }
@@ -329,13 +329,13 @@ handle_verbose_bool(dropt_context_t* context, const dropt_char_t* optionArgument
   *     dropt_error_insufficient_arguments
   *     dropt_error_insufficient_memory
   */
-dropt_error_t
-handle_string(dropt_context_t* context, const dropt_char_t* optionArgument, void* handlerData)
+dropt_error
+handle_string(dropt_context* context, const dropt_char* optionArgument, void* handlerData)
 {
     try
     {
-        dropt_char_t* s;
-        dropt_error_t err = dropt_handle_string(context, optionArgument, &s);
+        dropt_char* s;
+        dropt_error err = dropt_handle_string(context, optionArgument, &s);
         if (err == dropt_error_none) { *static_cast<string*>(handlerData) = s; }
         return err;
     }
@@ -350,8 +350,8 @@ handle_string(dropt_context_t* context, const dropt_char_t* optionArgument, void
   *
   *     A wrapper around dropt_handle_int.
   */
-dropt_error_t
-handle_int(dropt_context_t* context, const dropt_char_t* optionArgument, void* handlerData)
+dropt_error
+handle_int(dropt_context* context, const dropt_char* optionArgument, void* handlerData)
 {
     return dropt_handle_int(context, optionArgument, handlerData);
 }
@@ -361,8 +361,8 @@ handle_int(dropt_context_t* context, const dropt_char_t* optionArgument, void* h
   *
   *     A wrapper around dropt_handle_uint.
   */
-dropt_error_t
-handle_uint(dropt_context_t* context, const dropt_char_t* optionArgument, void* handlerData)
+dropt_error
+handle_uint(dropt_context* context, const dropt_char* optionArgument, void* handlerData)
 {
     return dropt_handle_uint(context, optionArgument, handlerData);
 }
@@ -372,8 +372,8 @@ handle_uint(dropt_context_t* context, const dropt_char_t* optionArgument, void* 
   *
   *     A wrapper around dropt_handle_double.
   */
-dropt_error_t
-handle_double(dropt_context_t* context, const dropt_char_t* optionArgument, void* handlerData)
+dropt_error
+handle_double(dropt_context* context, const dropt_char* optionArgument, void* handlerData)
 {
     return dropt_handle_double(context, optionArgument, handlerData);
 }

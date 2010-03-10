@@ -49,11 +49,11 @@ extern "C" {
     /* This may be used for both char and string literals. */
     #define DROPT_TEXT_LITERAL(s) L ## s
 
-    typedef wchar_t dropt_char_t;
+    typedef wchar_t dropt_char;
 #else
     #define DROPT_TEXT_LITERAL(s) s
 
-    typedef char dropt_char_t;
+    typedef char dropt_char;
 #endif
 
 
@@ -73,32 +73,32 @@ typedef enum
     /* Errors in the range [0x80, 0xFFFF] are free for clients to use. */
     dropt_error_custom_start = 0x80,
     dropt_error_custom_last = 0xFFFF
-} dropt_error_t;
+} dropt_error;
 
 
-typedef unsigned char dropt_bool_t;
+typedef unsigned char dropt_bool;
 
 /* Opaque. */
-typedef struct dropt_context_t dropt_context_t;
+typedef struct dropt_context dropt_context;
 
 
-typedef dropt_error_t (*dropt_option_handler_t)(dropt_context_t* context,
-                                                const dropt_char_t* optionArgument,
-                                                void* handlerData);
+typedef dropt_error (*dropt_option_handler_func)(dropt_context* context,
+                                                 const dropt_char* optionArgument,
+                                                 void* handlerData);
 
-/** dropt_error_handler_t callbacks are responsible for generating error
+/** dropt_error_handler_func callbacks are responsible for generating error
   * messages.  The returned string must be allocated on the heap and must
   * be freeable with free().
   */
-typedef dropt_char_t* (*dropt_error_handler_t)(dropt_error_t error,
-                                               const dropt_char_t* optionName,
-                                               const dropt_char_t* optionArgument,
-                                               void* handlerData);
+typedef dropt_char* (*dropt_error_handler_func)(dropt_error error,
+                                                const dropt_char* optionName,
+                                                const dropt_char* optionArgument,
+                                                void* handlerData);
 
-/** dropt_strncmp_t callbacks allow callers to provide their own (possibly
+/** dropt_strncmp_func callbacks allow callers to provide their own (possibly
   * case-insensitive) string comparison function.
   */
-typedef int (*dropt_strncmp_t)(const dropt_char_t* s, const dropt_char_t* t, size_t n);
+typedef int (*dropt_strncmp_func)(const dropt_char* s, const dropt_char* t, size_t n);
 
 
 /** Properties defining each option:
@@ -130,16 +130,16 @@ typedef int (*dropt_strncmp_t)(const dropt_char_t* s, const dropt_char_t* t, siz
   * attr:
   *     Miscellaneous attributes.  See below.
   */
-typedef struct dropt_option_t
+typedef struct dropt_option
 {
-    dropt_char_t short_name;
-    const dropt_char_t* long_name;
-    const dropt_char_t* description;
-    const dropt_char_t* arg_description;
-    dropt_option_handler_t handler;
+    dropt_char short_name;
+    const dropt_char* long_name;
+    const dropt_char* description;
+    const dropt_char* arg_description;
+    dropt_option_handler_func handler;
     void* handler_data;
     unsigned int attr;
-} dropt_option_t;
+} dropt_option;
 
 
 /** Bitwise flags for option attributes:
@@ -164,50 +164,50 @@ enum
 };
 
 
-typedef struct dropt_help_params_t
+typedef struct dropt_help_params
 {
     unsigned int indent;
     unsigned int description_start_column;
-    dropt_bool_t blank_lines_between_options;
-} dropt_help_params_t;
+    dropt_bool blank_lines_between_options;
+} dropt_help_params;
 
 
-dropt_context_t* dropt_new_context(const dropt_option_t* options);
-void dropt_free_context(dropt_context_t* context);
+dropt_context* dropt_new_context(const dropt_option* options);
+void dropt_free_context(dropt_context* context);
 
-const dropt_option_t* dropt_get_options(const dropt_context_t* context);
+const dropt_option* dropt_get_options(const dropt_context* context);
 
-void dropt_set_error_handler(dropt_context_t* context,
-                             dropt_error_handler_t handler, void* handlerData);
-void dropt_set_strncmp(dropt_context_t* context, dropt_strncmp_t cmp);
+void dropt_set_error_handler(dropt_context* context,
+                             dropt_error_handler_func handler, void* handlerData);
+void dropt_set_strncmp(dropt_context* context, dropt_strncmp_func cmp);
 
 /* Use this only for backward compatibility purposes. */
-void dropt_allow_concatenated_arguments(dropt_context_t* context, dropt_bool_t allow);
+void dropt_allow_concatenated_arguments(dropt_context* context, dropt_bool allow);
 
-dropt_char_t** dropt_parse(dropt_context_t* context, int argc, dropt_char_t** argv);
+dropt_char** dropt_parse(dropt_context* context, int argc, dropt_char** argv);
 
-dropt_error_t dropt_get_error(const dropt_context_t* context);
-void dropt_get_error_details(const dropt_context_t* context,
-                             dropt_char_t** optionName,
-                             dropt_char_t** optionArgument);
-const dropt_char_t* dropt_get_error_message(dropt_context_t* context);
-void dropt_clear_error(dropt_context_t* context);
+dropt_error dropt_get_error(const dropt_context* context);
+void dropt_get_error_details(const dropt_context* context,
+                             dropt_char** optionName,
+                             dropt_char** optionArgument);
+const dropt_char* dropt_get_error_message(dropt_context* context);
+void dropt_clear_error(dropt_context* context);
 
 #ifndef DROPT_NO_STRING_BUFFERS
-dropt_char_t* dropt_default_error_handler(dropt_error_t error,
-                                          const dropt_char_t* optionName,
-                                          const dropt_char_t* optionArgument);
+dropt_char* dropt_default_error_handler(dropt_error error,
+                                        const dropt_char* optionName,
+                                        const dropt_char* optionArgument);
 
-void dropt_init_help_params(dropt_help_params_t* helpParams);
-dropt_char_t* dropt_get_help(const dropt_context_t* context,
-                             const dropt_help_params_t* helpParams);
-void dropt_print_help(FILE* f, const dropt_context_t* context,
-                      const dropt_help_params_t* helpParams);
+void dropt_init_help_params(dropt_help_params* helpParams);
+dropt_char* dropt_get_help(const dropt_context* context,
+                             const dropt_help_params* helpParams);
+void dropt_print_help(FILE* f, const dropt_context* context,
+                      const dropt_help_params* helpParams);
 #endif
 
 #define DROPT_HANDLER_DECL(func) \
-    dropt_error_t func(dropt_context_t* context, const dropt_char_t* optionArgument, \
-                       void* handlerData)
+    dropt_error func(dropt_context* context, const dropt_char* optionArgument, \
+                     void* handlerData)
 DROPT_HANDLER_DECL(dropt_handle_bool);
 DROPT_HANDLER_DECL(dropt_handle_verbose_bool);
 DROPT_HANDLER_DECL(dropt_handle_int);

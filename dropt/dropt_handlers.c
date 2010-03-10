@@ -48,7 +48,7 @@ typedef enum { false, true } bool;
   *     IN optionArgument : A string representing a boolean value (0 or 1).
   *                         If NULL, the boolean value is assumed to be
   *                           true.
-  *     OUT handlerData   : A dropt_bool_t*.
+  *     OUT handlerData   : A dropt_bool*.
   *                         On success, set to the interpreted boolean
   *                           value.
   *                         On error, left untouched.
@@ -61,11 +61,11 @@ typedef enum { false, true } bool;
   *     dropt_error_mismatch
   *     dropt_error_overflow
   */
-dropt_error_t
-dropt_handle_bool(dropt_context_t* context, const dropt_char_t* optionArgument,
+dropt_error
+dropt_handle_bool(dropt_context* context, const dropt_char* optionArgument,
                   void* handlerData)
 {
-    dropt_error_t err = dropt_error_none;
+    dropt_error err = dropt_error_none;
     bool val = false;
 
     if (handlerData == NULL)
@@ -103,7 +103,7 @@ dropt_handle_bool(dropt_context_t* context, const dropt_char_t* optionArgument,
         }
     }
 
-    if (err == dropt_error_none) { *((dropt_bool_t*) handlerData) = val; }
+    if (err == dropt_error_none) { *((dropt_bool*) handlerData) = val; }
     return err;
 }
 
@@ -118,7 +118,7 @@ dropt_handle_bool(dropt_context_t* context, const dropt_char_t* optionArgument,
   *     IN optionArgument : A string representing a boolean value.
   *                         If NULL, the boolean value is assumed to be
   *                           true.
-  *     OUT handlerData   : A dropt_bool_t*.
+  *     OUT handlerData   : A dropt_bool*.
   *                         On success, set to the interpreted boolean
   *                           value.
   *                         On error, left untouched.
@@ -126,11 +126,11 @@ dropt_handle_bool(dropt_context_t* context, const dropt_char_t* optionArgument,
   * RETURNS:
   *     See dropt_handle_bool.
   */
-dropt_error_t
-dropt_handle_verbose_bool(dropt_context_t* context, const dropt_char_t* optionArgument,
+dropt_error
+dropt_handle_verbose_bool(dropt_context* context, const dropt_char* optionArgument,
                           void* handlerData)
 {
-    dropt_error_t err = dropt_handle_bool(context, optionArgument, handlerData);
+    dropt_error err = dropt_handle_bool(context, optionArgument, handlerData);
     if (err != dropt_error_none)
     {
         bool val = false;
@@ -145,7 +145,7 @@ dropt_handle_verbose_bool(dropt_context_t* context, const dropt_char_t* optionAr
             err = dropt_error_none;
         }
 
-        if (err == dropt_error_none) { *((dropt_bool_t*) handlerData) = val; }
+        if (err == dropt_error_none) { *((dropt_bool*) handlerData) = val; }
     }
     return err;
 }
@@ -171,11 +171,11 @@ dropt_handle_verbose_bool(dropt_context_t* context, const dropt_char_t* optionAr
   *     dropt_error_mismatch
   *     dropt_error_overflow
   */
-dropt_error_t
-dropt_handle_int(dropt_context_t* context, const dropt_char_t* optionArgument,
+dropt_error
+dropt_handle_int(dropt_context* context, const dropt_char* optionArgument,
                  void* handlerData)
 {
-    dropt_error_t err = dropt_error_none;
+    dropt_error err = dropt_error_none;
     int val = 0;
 
     if (handlerData == NULL)
@@ -189,7 +189,7 @@ dropt_handle_int(dropt_context_t* context, const dropt_char_t* optionArgument,
     }
     else
     {
-        dropt_char_t* end;
+        dropt_char* end;
         long n;
         errno = 0;
         n = dropt_strtol(optionArgument, &end, 10);
@@ -245,11 +245,11 @@ dropt_handle_int(dropt_context_t* context, const dropt_char_t* optionArgument,
   *     dropt_error_mismatch
   *     dropt_error_overflow
   */
-dropt_error_t
-dropt_handle_uint(dropt_context_t* context, const dropt_char_t* optionArgument,
+dropt_error
+dropt_handle_uint(dropt_context* context, const dropt_char* optionArgument,
                   void* handlerData)
 {
-    dropt_error_t err = dropt_error_none;
+    dropt_error err = dropt_error_none;
     int val = 0;
 
     if (handlerData == NULL)
@@ -268,7 +268,7 @@ dropt_handle_uint(dropt_context_t* context, const dropt_char_t* optionArgument,
     }
     else
     {
-        dropt_char_t* end;
+        dropt_char* end;
         unsigned long n;
         errno = 0;
         n = dropt_strtoul(optionArgument, &end, 10);
@@ -325,11 +325,11 @@ dropt_handle_uint(dropt_context_t* context, const dropt_char_t* optionArgument,
   *     dropt_error_overflow
   *     dropt_error_underflow
   */
-dropt_error_t
-dropt_handle_double(dropt_context_t* context, const dropt_char_t* optionArgument,
+dropt_error
+dropt_handle_double(dropt_context* context, const dropt_char* optionArgument,
                     void* handlerData)
 {
-    dropt_error_t err = dropt_error_none;
+    dropt_error err = dropt_error_none;
     double val = 0.0;
 
     if (handlerData == NULL)
@@ -344,7 +344,7 @@ dropt_handle_double(dropt_context_t* context, const dropt_char_t* optionArgument
     }
     else
     {
-        dropt_char_t* end;
+        dropt_char* end;
         errno = 0;
         val = dropt_strtod(optionArgument, &end);
 
@@ -389,7 +389,7 @@ dropt_handle_double(dropt_context_t* context, const dropt_char_t* optionArgument
   *     IN/OUT context    : The options context.
   *     IN optionArgument : A string.
   *                         If NULL, returns dropt_error_insufficient_arguments.
-  *     OUT handlerData   : A dropt_char_t**.
+  *     OUT handlerData   : A dropt_char**.
   *                         On success, set to the input string.  The
   *                           string is NOT copied from the original argv
   *                           array, so do not free it.
@@ -400,11 +400,11 @@ dropt_handle_double(dropt_context_t* context, const dropt_char_t* optionArgument
   *     dropt_error_bad_configuration
   *     dropt_error_insufficient_arguments
   */
-dropt_error_t
-dropt_handle_string(dropt_context_t* context, const dropt_char_t* optionArgument,
+dropt_error
+dropt_handle_string(dropt_context* context, const dropt_char* optionArgument,
                     void* handlerData)
 {
-    dropt_error_t err = dropt_error_none;
+    dropt_error err = dropt_error_none;
 
     if (handlerData == NULL)
     {
@@ -416,6 +416,6 @@ dropt_handle_string(dropt_context_t* context, const dropt_char_t* optionArgument
         err = dropt_error_insufficient_arguments;
     }
 
-    if (err == dropt_error_none) { *((const dropt_char_t**) handlerData) = optionArgument; }
+    if (err == dropt_error_none) { *((const dropt_char**) handlerData) = optionArgument; }
     return err;
 }

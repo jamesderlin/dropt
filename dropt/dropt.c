@@ -47,33 +47,33 @@ enum
     default_description_start_column = 6
 };
 
-struct dropt_context_t
+struct dropt_context
 {
-    const dropt_option_t* options;
+    const dropt_option* options;
 
     bool allowConcatenatedArgs;
 
-    dropt_error_handler_t errorHandler;
+    dropt_error_handler_func errorHandler;
     void* errorHandlerData;
 
     struct
     {
-        dropt_error_t err;
-        dropt_char_t* optionName;
-        dropt_char_t* optionArgument;
-        dropt_char_t* message;
+        dropt_error err;
+        dropt_char* optionName;
+        dropt_char* optionArgument;
+        dropt_char* message;
     } errorDetails;
 
-    dropt_strncmp_t strncmp;
+    dropt_strncmp_func strncmp;
 };
 
 typedef struct
 {
-    const dropt_option_t* option;
-    const dropt_char_t* optionArgument;
-    dropt_char_t** argNext;
+    const dropt_option* option;
+    const dropt_char* optionArgument;
+    dropt_char** argNext;
     int argsLeft;
-} parseState_t;
+} parseState;
 
 
 /** is_valid_option
@@ -86,7 +86,7 @@ typedef struct
   *       value.
   */
 static bool
-is_valid_option(const dropt_option_t* option)
+is_valid_option(const dropt_option* option)
 {
     return    option != NULL
            && !(   option->long_name == NULL
@@ -116,12 +116,12 @@ is_valid_option(const dropt_option_t* option)
   *     A pointer to the corresponding option specification or NULL if not
   *       found.
   */
-static const dropt_option_t*
-find_long_option(const dropt_context_t* context,
-                 const dropt_char_t* longName, size_t longNameLen)
+static const dropt_option*
+find_long_option(const dropt_context* context,
+                 const dropt_char* longName, size_t longNameLen)
 {
-    dropt_strncmp_t cmp;
-    const dropt_option_t* option;
+    dropt_strncmp_func cmp;
+    const dropt_option* option;
 
     assert(context != NULL);
     assert(longName != NULL);
@@ -156,10 +156,10 @@ find_long_option(const dropt_context_t* context,
   *     A pointer to the corresponding option specification or NULL if not
   *       found.
   */
-static const dropt_option_t*
-find_short_option(const dropt_context_t* context, dropt_char_t shortName)
+static const dropt_option*
+find_short_option(const dropt_context* context, dropt_char shortName)
 {
-    const dropt_option_t* option;
+    const dropt_option* option;
 
     assert(context != NULL);
     assert(shortName != DROPT_TEXT_LITERAL('\0'));
@@ -194,9 +194,9 @@ find_short_option(const dropt_context_t* context, dropt_char_t shortName)
   *                         Pass NULL if unwanted.
   */
 static void
-set_error_details(dropt_context_t* context, dropt_error_t err,
-                  const dropt_char_t* optionName, size_t optionNameLen,
-                  const dropt_char_t* optionArgument)
+set_error_details(dropt_context* context, dropt_error err,
+                  const dropt_char* optionName, size_t optionNameLen,
+                  const dropt_char* optionArgument)
 {
     assert(context != NULL);
     assert(optionName != NULL);
@@ -229,10 +229,10 @@ set_error_details(dropt_context_t* context, dropt_error_t err,
   *                         Pass NULL if unwanted.
   */
 static void
-set_short_option_error_details(dropt_context_t* context, dropt_error_t err,
-                               dropt_char_t shortName, const dropt_char_t* optionArgument)
+set_short_option_error_details(dropt_context* context, dropt_error err,
+                               dropt_char shortName, const dropt_char* optionArgument)
 {
-    dropt_char_t shortNameBuf[] = DROPT_TEXT_LITERAL("-?");
+    dropt_char shortNameBuf[] = DROPT_TEXT_LITERAL("-?");
 
     assert(context != NULL);
     assert(shortName != DROPT_TEXT_LITERAL('\0'));
@@ -254,8 +254,8 @@ set_short_option_error_details(dropt_context_t* context, dropt_error_t err,
   * RETURNS:
   *     The current error code waiting in the options context.
   */
-dropt_error_t
-dropt_get_error(const dropt_context_t* context)
+dropt_error
+dropt_get_error(const dropt_context* context)
 {
     if (context == NULL)
     {
@@ -281,8 +281,8 @@ dropt_get_error(const dropt_context_t* context)
   *                          Pass NULL if unwanted.
   */
 void
-dropt_get_error_details(const dropt_context_t* context,
-                        dropt_char_t** optionName, dropt_char_t** optionArgument)
+dropt_get_error_details(const dropt_context* context,
+                        dropt_char** optionName, dropt_char** optionArgument)
 {
     if (optionName != NULL) { *optionName = context->errorDetails.optionName; }
     if (optionArgument != NULL) { *optionArgument = context->errorDetails.optionArgument; }
@@ -302,8 +302,8 @@ dropt_get_error_details(const dropt_context_t* context,
   *       dropt_get_error_message may invalidate a previously-returned
   *       string.
   */
-const dropt_char_t*
-dropt_get_error_message(dropt_context_t* context)
+const dropt_char*
+dropt_get_error_message(dropt_context* context)
 {
     if (context == NULL)
     {
@@ -352,7 +352,7 @@ dropt_get_error_message(dropt_context_t* context)
   *                      May be NULL.
   */
 void
-dropt_clear_error(dropt_context_t* context)
+dropt_clear_error(dropt_context* context)
 {
     if (context != NULL)
     {
@@ -386,12 +386,12 @@ dropt_clear_error(dropt_context_t* context)
   *       for calling free() on it when no longer needed.
   *     May return NULL.
   */
-dropt_char_t*
-dropt_default_error_handler(dropt_error_t error,
-                            const dropt_char_t* optionName,
-                            const dropt_char_t* optionArgument)
+dropt_char*
+dropt_default_error_handler(dropt_error error,
+                            const dropt_char* optionName,
+                            const dropt_char* optionArgument)
 {
-    dropt_char_t* s = NULL;
+    dropt_char* s = NULL;
     bool hasArgument = optionArgument != NULL;
 
     switch (error)
@@ -461,10 +461,10 @@ dropt_default_error_handler(dropt_error_t error,
   *       responsible for calling free() on it when no longer needed.
   *     Returns NULL on error.
   */
-dropt_char_t*
-dropt_get_help(const dropt_context_t* context, const dropt_help_params_t* helpParams)
+dropt_char*
+dropt_get_help(const dropt_context* context, const dropt_help_params* helpParams)
 {
-    dropt_char_t* helpText = NULL;
+    dropt_char* helpText = NULL;
     dropt_stringstream* ss = dropt_ssopen();
 
     if (context == NULL)
@@ -473,8 +473,8 @@ dropt_get_help(const dropt_context_t* context, const dropt_help_params_t* helpPa
     }
     else if (ss != NULL)
     {
-        const dropt_option_t* option;
-        dropt_help_params_t hp;
+        const dropt_option* option;
+        dropt_help_params hp;
 
         if (helpParams == NULL)
         {
@@ -551,12 +551,12 @@ dropt_get_help(const dropt_context_t* context, const dropt_help_params_t* helpPa
             }
 
             {
-                const dropt_char_t* line = option->description;
+                const dropt_char* line = option->description;
                 while (line != NULL)
                 {
                     int lineLen;
-                    const dropt_char_t* nextLine;
-                    const dropt_char_t* newline = dropt_strchr(line, DROPT_TEXT_LITERAL('\n'));
+                    const dropt_char* nextLine;
+                    const dropt_char* newline = dropt_strchr(line, DROPT_TEXT_LITERAL('\n'));
 
                     if (newline == NULL)
                     {
@@ -603,10 +603,10 @@ dropt_get_help(const dropt_context_t* context, const dropt_help_params_t* helpPa
   *                     Pass NULL to use the default help parameters.
   */
 void
-dropt_print_help(FILE* f, const dropt_context_t* context,
-                 const dropt_help_params_t* helpParams)
+dropt_print_help(FILE* f, const dropt_context* context,
+                 const dropt_help_params* helpParams)
 {
-    dropt_char_t* helpText = dropt_get_help(context, helpParams);
+    dropt_char* helpText = dropt_get_help(context, helpParams);
     if (helpText != NULL)
     {
         dropt_fputs(helpText, f);
@@ -629,9 +629,9 @@ dropt_print_help(FILE* f, const dropt_context_t* context,
   * RETURNS:
   *     An error code.
   */
-static dropt_error_t
-set_option_value(dropt_context_t* context,
-                 const dropt_option_t* option, const dropt_char_t* optionArgument)
+static dropt_error
+set_option_value(dropt_context* context,
+                 const dropt_option* option, const dropt_char* optionArgument)
 {
     assert(option != NULL);
 
@@ -657,10 +657,10 @@ set_option_value(dropt_context_t* context,
   * RETURNS:
   *     An error code.
   */
-static dropt_error_t
-parse_option_arg(dropt_context_t* context, parseState_t* ps)
+static dropt_error
+parse_option_arg(dropt_context* context, parseState* ps)
 {
-    dropt_error_t err;
+    dropt_error err;
 
     bool consumeNextArg = false;
 
@@ -726,14 +726,14 @@ exit:
   * RETURNS:
   *     A pointer to the first unprocessed element in argv.
   */
-dropt_char_t**
-dropt_parse(dropt_context_t* context,
-            int argc, dropt_char_t** argv)
+dropt_char**
+dropt_parse(dropt_context* context,
+            int argc, dropt_char** argv)
 {
-    dropt_error_t err = dropt_error_none;
+    dropt_error err = dropt_error_none;
 
-    dropt_char_t* arg;
-    parseState_t ps;
+    dropt_char* arg;
+    parseState ps;
 
     ps.option = NULL;
     ps.optionArgument = NULL;
@@ -792,7 +792,7 @@ dropt_parse(dropt_context_t* context,
 
         if (arg[1] == DROPT_TEXT_LITERAL('-'))
         {
-            dropt_char_t* longName = arg + 2;
+            dropt_char* longName = arg + 2;
             if (longName[0] == DROPT_TEXT_LITERAL('\0'))
             {
                 /* -- */
@@ -817,8 +817,8 @@ dropt_parse(dropt_context_t* context,
             else
             {
                 /* --longName */
-                const dropt_char_t* p = dropt_strchr(longName, DROPT_TEXT_LITERAL('='));
-                const dropt_char_t* longNameEnd;
+                const dropt_char* p = dropt_strchr(longName, DROPT_TEXT_LITERAL('='));
+                const dropt_char* longNameEnd;
                 if (p != NULL)
                 {
                     /* --longName=arg */
@@ -875,7 +875,7 @@ dropt_parse(dropt_context_t* context,
             }
             else
             {
-                const dropt_char_t* p = dropt_strchr(arg, DROPT_TEXT_LITERAL('='));
+                const dropt_char* p = dropt_strchr(arg, DROPT_TEXT_LITERAL('='));
                 if (p != NULL)
                 {
                     /* -x=arg */
@@ -981,10 +981,10 @@ exit:
   *       freeing it with dropt_free_context when no longer needed.
   *     Returns NULL on error.
   */
-dropt_context_t*
-dropt_new_context(const dropt_option_t* options)
+dropt_context*
+dropt_new_context(const dropt_option* options)
 {
-    dropt_context_t* context = NULL;
+    dropt_context* context = NULL;
 
     if (options == NULL)
     {
@@ -1007,7 +1007,7 @@ dropt_new_context(const dropt_option_t* options)
 
     /* Sanity-check the options. */
     {
-        const dropt_option_t* option;
+        const dropt_option* option;
         for (option = options; is_valid_option(option); option++)
         {
             if (   option->short_name == DROPT_TEXT_LITERAL('=')
@@ -1036,7 +1036,7 @@ exit:
   *                      May be NULL.
   */
 void
-dropt_free_context(dropt_context_t* context)
+dropt_free_context(dropt_context* context)
 {
     dropt_clear_error(context);
     free(context);
@@ -1052,8 +1052,8 @@ dropt_free_context(dropt_context_t* context)
   * RETURNS:
   *     The context's list of option specifications.
   */
-const dropt_option_t*
-dropt_get_options(const dropt_context_t* context)
+const dropt_option*
+dropt_get_options(const dropt_context* context)
 {
     if (context == NULL)
     {
@@ -1067,7 +1067,7 @@ dropt_get_options(const dropt_context_t* context)
 
 /** dropt_init_help_params
   *
-  *     Initializes a dropt_help_params_t structure with the default
+  *     Initializes a dropt_help_params structure with the default
   *     values.
   *
   * PARAMETERS:
@@ -1075,7 +1075,7 @@ dropt_get_options(const dropt_context_t* context)
   *                      Must not be NULL.
   */
 void
-dropt_init_help_params(dropt_help_params_t* helpParams)
+dropt_init_help_params(dropt_help_params* helpParams)
 {
     if (helpParams == NULL)
     {
@@ -1102,7 +1102,7 @@ dropt_init_help_params(dropt_help_params_t* helpParams)
   *     IN handlerData : Caller-defined callback data.
   */
 void
-dropt_set_error_handler(dropt_context_t* context, dropt_error_handler_t handler, void* handlerData)
+dropt_set_error_handler(dropt_context* context, dropt_error_handler_func handler, void* handlerData)
 {
     if (context == NULL)
     {
@@ -1127,7 +1127,7 @@ dropt_set_error_handler(dropt_context_t* context, dropt_error_handler_t handler,
   *                        function.
   */
 void
-dropt_set_strncmp(dropt_context_t* context, dropt_strncmp_t cmp)
+dropt_set_strncmp(dropt_context* context, dropt_strncmp_func cmp)
 {
     if (context == NULL)
     {
@@ -1183,7 +1183,7 @@ dropt_misuse_panic(const char* message, const char* filename, int line)
   *                        0 otherwise.
   */
 void
-dropt_allow_concatenated_arguments(dropt_context_t* context, dropt_bool_t allow)
+dropt_allow_concatenated_arguments(dropt_context* context, dropt_bool allow)
 {
     if (context == NULL)
     {
