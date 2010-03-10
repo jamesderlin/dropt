@@ -1,4 +1,4 @@
-/** dropt.hpp
+/** droptxx.hpp
   *
   * A C++ wrapper for dropt.
   *

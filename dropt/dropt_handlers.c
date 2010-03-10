@@ -195,7 +195,7 @@ dropt_handle_int(dropt_context_t* context, const dropt_char_t* optionArgument,
         n = dropt_strtol(optionArgument, &end, 10);
 
         /* Check that we matched at least one digit.
-         * (strotl/strtoul will return 0 if fed a string with no digits.)
+         * (strtol/strtoul will return 0 if fed a string with no digits.)
          */
         if (*end == DROPT_TEXT_LITERAL('\0') && end > optionArgument)
         {
@@ -274,7 +274,7 @@ dropt_handle_uint(dropt_context_t* context, const dropt_char_t* optionArgument,
         n = dropt_strtoul(optionArgument, &end, 10);
 
         /* Check that we matched at least one digit.
-         * (strotl/strtoul will return 0 if fed a string with no digits.)
+         * (strtol/strtoul will return 0 if fed a string with no digits.)
          */
         if (*end == DROPT_TEXT_LITERAL('\0') && end > optionArgument)
         {

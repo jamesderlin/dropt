@@ -293,6 +293,25 @@ test_strings(void)
 
         success = (dropt_strcmp(copy, T("foo")) == 0);
         free(copy);
+        copy = NULL;
+
+        if (!success)
+        {
+            fputts(T("FAILED: dropt_strndup\n"), stderr);
+            goto exit;
+        }
+
+        copy = dropt_strndup(s, 100);
+        if (copy == NULL)
+        {
+            fputts(T("Insufficient memory.\n"), stderr);
+            success = false;
+            goto exit;
+        }
+
+        success = (dropt_strcmp(copy, s) == 0);
+        free(copy);
+        copy = NULL;
 
         if (!success)
         {
@@ -310,6 +329,7 @@ test_strings(void)
 
         success = (dropt_strcmp(copy, s) == 0);
         free(copy);
+        copy = NULL;
 
         if (!success)
         {

@@ -31,11 +31,31 @@
 #endif
 
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
 #include <wctype.h>
 #include <stdio.h>
 #include <assert.h>
+
+#if __STDC_VERSION__ >= 199901L
+    #include <stdint.h>
+#else
+    /* Compatibility junk for things that don't yet support ISO C99. */
+    #if defined _MSC_VER || defined __BORLANDC__
+        #ifndef va_copy
+            #define va_copy(dest, src) (dest = (src))
+        #endif
+    #else
+        #ifndef va_copy
+            #error Unsupported platform.  va_copy is not defined.
+        #endif
+    #endif
+
+    #ifndef SIZE_MAX
+        #define SIZE_MAX ((size_t) -1)
+    #endif
+#endif
 
 #include "dropt_string.h"
 
@@ -49,20 +69,6 @@
     #define DEFAULT_STRINGSTREAM_BUFFER_SIZE 256
     #define GROWN_STRINGSTREAM_BUFFER_SIZE(oldSize, minAmount) MAX((oldSize) * 2, (oldSize) + (minAmount))
 #endif
-
-/* Compatibility junk for things that don't yet support ISO C99. */
-#if __STDC_VERSION__ < 199901L
-    #if defined _MSC_VER || defined __BORLANDC__
-        #ifndef va_copy
-            #define va_copy(dest, src) (dest = (src))
-        #endif
-    #else
-        #ifndef va_copy
-            #error Unsupported platform.  va_copy is not defined.
-        #endif
-    #endif
-#endif
-
 
 
 #ifndef DROPT_NO_STRING_BUFFERS
@@ -141,7 +147,7 @@ dropt_safe_realloc(void* p, size_t numElements, size_t elementSize)
   *     Duplicates a string.
   *
   * PARAMETERS:
-  *     IN s : The string to duplicate.
+  *     IN s : A NUL-terminated string to duplicate.
   *
   * RETURNS:
   *     The duplicated string.  The caller is responsible for calling
@@ -151,7 +157,7 @@ dropt_safe_realloc(void* p, size_t numElements, size_t elementSize)
 dropt_char_t*
 dropt_strdup(const dropt_char_t* s)
 {
-    return dropt_strndup(s, (size_t) -1);
+    return dropt_strndup(s, SIZE_MAX);
 }
 
 
@@ -161,31 +167,32 @@ dropt_strdup(const dropt_char_t* s)
   *
   * PARAMETERS:
   *     IN s : The string to duplicate.
-  *     IN n : The number of dropt_char_t-s to copy, excluding the
+  *     IN n : The maximum number of dropt_char_t-s to copy, excluding the
   *              NUL-terminator.
-  *            Pass -1 to copy the entire string.
   *
   * RETURNS:
-  *     The duplicated string.  The caller is responsible for calling
-  *       free() on it when no longer needed.
+  *     The duplicated string, which is always NUL-terminated.  The caller
+  *       is responsible for calling free() on it when no longer needed.
   *     Returns NULL on error.
   */
 dropt_char_t*
 dropt_strndup(const dropt_char_t* s, size_t n)
 {
     dropt_char_t* copy;
-    size_t len;
+    size_t len = 0;
 
     assert(s != NULL);
 
-    len = dropt_strlen(s);
-    n = (n == (size_t) -1) ? len : MIN(n, len);
+    while (len < n && s[len] != DROPT_TEXT_LITERAL('\0'))
+    {
+        len++;
+    }
 
-    copy = dropt_safe_malloc(n + 1 /* NUL */, sizeof *copy);
+    copy = dropt_safe_malloc(len + 1 /* NUL */, sizeof *copy);
     if (copy != NULL)
     {
-        memcpy(copy, s, n * sizeof *copy);
-        copy[n] = '\0';
+        memcpy(copy, s, len * sizeof *copy);
+        copy[len] = DROPT_TEXT_LITERAL('\0');
     }
 
     return copy;
@@ -194,8 +201,8 @@ dropt_strndup(const dropt_char_t* s, size_t n)
 
 /** dropt_stricmp
   *
-  *     Compares two strings ignoring case differences.  Not recommended
-  *       for non-ASCII strings.
+  *     Compares two NUL-terminated strings ignoring case differences.  Not
+  *       recommended for non-ASCII strings.
   *
   * PARAMETERS:
   *     IN s, t : The strings to compare.
@@ -210,7 +217,7 @@ dropt_stricmp(const dropt_char_t* s, const dropt_char_t* t)
 {
     assert(s != NULL);
     assert(t != NULL);
-    return dropt_strnicmp(s, t, dropt_strlen(s) + 1 /* NUL */);
+    return dropt_strnicmp(s, t, SIZE_MAX);
 }
 
 
@@ -238,7 +245,7 @@ dropt_strnicmp(const dropt_char_t* s, const dropt_char_t* t, size_t n)
 
     while (n--)
     {
-        if (*s == '\0' && *t == '\0')
+        if (*s == DROPT_TEXT_LITERAL('\0') && *t == DROPT_TEXT_LITERAL('\0'))
         {
             break;
         }
@@ -361,8 +368,8 @@ dropt_snprintf(dropt_char_t* s, size_t n, const dropt_char_t* format, ...)
   *     IN args   : Arguments to insert into the formatted string.
   *
   * RETURNS:
-  *     The formatted string.  The caller is responsible for calling free()
-  *       on it when no longer needed.
+  *     The formatted string, which is always NUL-terminated.  The caller
+  *       is responsible for calling free() on it when no longer needed.
   *     Returns NULL on error.
   */
 dropt_char_t*
@@ -493,6 +500,9 @@ dropt_ssresize(dropt_stringstream* ss, size_t n)
     /* Don't allow shrinking if it will truncate the string. */
     if (n < ss->maxSize) { n = MAX(n, ss->used + 1 /* NUL */); }
 
+    /* There should always be a buffer to point to. */
+    assert(n > 0);
+
     if (n != ss->maxSize)
     {
         dropt_char_t* p = dropt_safe_realloc(ss->string, n, sizeof *ss->string);
@@ -519,7 +529,7 @@ dropt_ssclear(dropt_stringstream* ss)
 {
     assert(ss != NULL);
 
-    ss->string[0] = '\0';
+    ss->string[0] = DROPT_TEXT_LITERAL('\0');
     ss->used = 0;
 
     dropt_ssresize(ss, DEFAULT_STRINGSTREAM_BUFFER_SIZE);
@@ -535,9 +545,9 @@ dropt_ssclear(dropt_stringstream* ss)
   *     IN/OUT ss : The dropt_stringstream.
   *
   * RETURNS:
-  *     The dropt_stringstream's string.  Note that the caller assumes
-  *       ownership of the returned string and is responsible for calling
-  *       free() on it when no longer needed.
+  *     The dropt_stringstream's string, which is always NUL-terminated.
+  *       Note that the caller assumes ownership of the returned string and
+  *       is responsible for calling free() on it when no longer needed.
   */
 dropt_char_t*
 dropt_ssfinalize(dropt_stringstream* ss)
@@ -563,9 +573,10 @@ dropt_ssfinalize(dropt_stringstream* ss)
   *     IN ss : The dropt_stringstream.
   *
   * RETURNS:
-  *     The dropt_stringstream's string.  The returned string will no
-  *       longer be valid if further operations are performed on the
-  *       dropt_stringstream or if the dropt_stringstream is closed.
+  *     The dropt_stringstream's string, which is always NUL-terminated.
+  *       The returned string will no longer be valid if further operations
+  *       are performed on the dropt_stringstream or if the
+  *       dropt_stringstream is closed.
   */
 const dropt_char_t*
 dropt_ssgetstring(const dropt_stringstream* ss)
@@ -604,7 +615,7 @@ dropt_vssprintf(dropt_stringstream* ss, const dropt_char_t* format, va_list args
     if (n > 0)
     {
         size_t available = dropt_ssgetfreespace(ss);
-        if ((unsigned int) n + 1 > available)
+        if ((unsigned int) n >= available)
         {
             size_t newSize = GROWN_STRINGSTREAM_BUFFER_SIZE(ss->maxSize, n);
             dropt_ssresize(ss, newSize);
@@ -619,11 +630,7 @@ dropt_vssprintf(dropt_stringstream* ss, const dropt_char_t* format, va_list args
         n = dropt_vsnprintf(ss->string + ss->used, available, format, args);
 
         /* We couldn't allocate enough space. */
-        if ((unsigned int) n >= available)
-        {
-            ss->string[ss->used] = '\0';
-            n = -1;
-        }
+        if ((unsigned int) n >= available) { n = -1; }
 
         if (n > 0) { ss->used += n; }
     }
