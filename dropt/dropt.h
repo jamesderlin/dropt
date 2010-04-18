@@ -82,6 +82,22 @@ typedef unsigned char dropt_bool;
 typedef struct dropt_context dropt_context;
 
 
+/** dropt_option_handler_func callbacks are responsible for parsing
+  * individual options.
+  *
+  * optionArgument will be NULL if no argument is specified for an option.
+  * It will be the empty string if the user explicitly passed an empty
+  * string as the argument (e.g. --option="").
+  *
+  * Note that options that don't expect arguments can receive a non-NULL
+  * value for optionArgument if the user explicitly specified one (e.g.
+  * --option=arg).
+  *
+  * Note that if the option's argument is optional, the handler might be
+  * called twice: once with a candidate argument, and if that argument is
+  * rejected by the handler, again with no argument.  Handlers should be
+  * aware of this if they have side-effects.
+  */
 typedef dropt_error (*dropt_option_handler_func)(dropt_context* context,
                                                  const dropt_char* optionArgument,
                                                  void* handlerData);
@@ -205,6 +221,8 @@ void dropt_print_help(FILE* f, const dropt_context* context,
                       const dropt_help_params* helpParams);
 #endif
 
+
+/* Stock option handlers for common types. */
 #define DROPT_HANDLER_DECL(func) \
     dropt_error func(dropt_context* context, const dropt_char* optionArgument, \
                      void* handlerData)

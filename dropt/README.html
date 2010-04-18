@@ -71,7 +71,7 @@ barriers to entry</strong>. Specifically, this includes:
 
 <ul>
 	<li>
-		<strong>High portability.</strong>  dropt is written entirely in standard C99 with
+		<strong>High portability.</strong>  dropt is written in standard C99 with
 		compatibility code for most non-pathological C89 compilers. (<code>wchar_t</code>
 		support for the help facility is supported only on Windows platforms,
 		however.)
@@ -100,10 +100,10 @@ barriers to entry</strong>. Specifically, this includes:
 		applications opt-in to this behavior.)
 	</li>
 	<li>
-		<strong>Flexibility.</strong>  dropt is designed to be entirely callback-based.  This
+		<strong>Flexibility.</strong>  dropt is designed to be callback-based.  This
 		allows it to handle arbitrary arguments to command-line options.  Even
-		common types such as integers or strings are handled by callbacks; dropt
-		provides standard handlers for them.  Exposing the handlers for standard
+		basic types such as integers or strings are handled by callbacks; dropt
+		provides standard handlers for them.  Exposing the handlers for basic
 		types also allows programs to extend them by building wrappers around
 		them.
 	</li>
@@ -163,12 +163,16 @@ The implementation is intended to be minimalistic.  What dropt does <em>not</em>
 		Command-line argument permutation.  dropt always expects options to come
 		before non-options.
 	</li>
+	<li>
+		Handling of different option styles (e.g. <kbd>/option</kbd>, <kbd>-option</kbd>).
+		dropt is meant to encourage consistent command-line option interfaces.
+	</li>
 </ul>
 
 <h2>Usage</h2>
 
 <p>
-There's no formal documentation yet, but for now, see
+There&rsquo;s no formal documentation yet, but for now, see
 <a href="http://www.taenarum.com/software/dropt/dropt_example.c"><kbd>dropt_example.c</kbd></a>.
 </p>
 
@@ -194,7 +198,7 @@ There's no formal documentation yet, but for now, see
 <address>Questions?  Comments?  Bugs?  I welcome feedback.  <a href="http://www.taenarum.com/contact.html">Contact me.</a></address>
 
 <p>
-Copyright &copy; 2006&ndash;2010 <a href="http://www.taenarum.com/software/">James D. Lin</a>.
+Copyright &copy; 2010 <a href="http://www.taenarum.com/software/">James D. Lin</a>.
 </p>
 </div><!-- footer -->
 

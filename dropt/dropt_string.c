@@ -588,7 +588,7 @@ dropt_ssgetstring(const dropt_stringstream* ss)
 
 /** dropt_vssprintf
   *
-  *     Prints a formatted string with vprintf semantics to a
+  *     Appends a formatted string with vprintf semantics to a
   *     dropt_stringstream.
   *
   * PARAMETERS:
