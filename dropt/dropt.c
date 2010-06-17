@@ -44,7 +44,7 @@ typedef enum { false, true } bool;
 enum
 {
     default_help_indent = 2,
-    default_description_start_column = 6
+    default_description_start_column = 6,
 };
 
 struct dropt_context
@@ -397,6 +397,10 @@ dropt_default_error_handler(dropt_error error,
     switch (error)
     {
         case dropt_error_none:
+            /* This shouldn't happen (unless client code invokes this
+             * directly with dropt_error_none), but it's here for
+             * completeness.
+             */
             break;
 
         case dropt_error_bad_configuration:
