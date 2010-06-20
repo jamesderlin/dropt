@@ -54,7 +54,7 @@
 <h1>dropt (deliberately rudimentary options)</h1>
 
 <p>
-dropt is yet another library for parsing command-line options.
+dropt is yet another C library for parsing command-line options.
 </p>
 </div><!-- header -->
 
@@ -74,7 +74,8 @@ barriers to entry</strong>. Specifically, this includes:
 		<strong>High portability.</strong>  dropt is written in standard C99 with
 		compatibility code for most non-pathological C89 compilers. (<code>wchar_t</code>
 		support for the help facility is supported only on Windows platforms,
-		however.)
+		however.) dropt is written in C to make it easily consumable.  C++ wrappers
+		also are provided as a convenience for C++ clients.
 	</li>
 	<li>(Hopefully) straightforward usage.</li>
 	<li>No global variables.</li>
@@ -108,6 +109,7 @@ barriers to entry</strong>. Specifically, this includes:
 		them.
 	</li>
 </ul>
+
 
 <h2>Features</h2>
 
@@ -169,6 +171,7 @@ The implementation is intended to be minimalistic.  What dropt does <em>not</em>
 	</li>
 </ul>
 
+
 <h2>Usage</h2>
 
 <p>
@@ -176,11 +179,13 @@ There&rsquo;s no formal documentation yet, but for now, see
 <a href="http://www.taenarum.com/software/dropt/dropt_example.c"><kbd>dropt_example.c</kbd></a>.
 </p>
 
+
 <h2>Download</h2>
 
 <p>
 <a href="http://www.taenarum.com/software/dropt/dropt-1.0.zip"><kbd>dropt-1.0.zip</kbd></a>
 </p>
+
 
 <h2 id="history">Version History</h2>
 
