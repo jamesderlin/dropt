@@ -233,8 +233,8 @@ DROPT_HANDLER_DECL(dropt_handle_uint);
 DROPT_HANDLER_DECL(dropt_handle_double);
 DROPT_HANDLER_DECL(dropt_handle_string);
 
-#define DROPT_MISUSE_PANIC(message) dropt_misuse_panic(message, __FILE__, __LINE__)
-void dropt_misuse_panic(const char* message, const char* filename, int line);
+#define DROPT_MISUSE(message) dropt_misuse(message, __FILE__, __LINE__)
+void dropt_misuse(const char* message, const char* filename, int line);
 
 #ifdef __cplusplus
 } /* extern "C" */

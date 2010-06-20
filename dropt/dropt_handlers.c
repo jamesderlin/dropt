@@ -70,7 +70,7 @@ dropt_handle_bool(dropt_context* context, const dropt_char* optionArgument,
 
     if (handlerData == NULL)
     {
-        DROPT_MISUSE_PANIC("No handler data specified.");
+        DROPT_MISUSE("No handler data specified.");
         err = dropt_error_bad_configuration;
     }
     else if (optionArgument == NULL)
@@ -180,7 +180,7 @@ dropt_handle_int(dropt_context* context, const dropt_char* optionArgument,
 
     if (handlerData == NULL)
     {
-        DROPT_MISUSE_PANIC("No handler data specified.");
+        DROPT_MISUSE("No handler data specified.");
         err = dropt_error_bad_configuration;
     }
     else if (optionArgument == NULL || optionArgument[0] == DROPT_TEXT_LITERAL('\0'))
@@ -254,7 +254,7 @@ dropt_handle_uint(dropt_context* context, const dropt_char* optionArgument,
 
     if (handlerData == NULL)
     {
-        DROPT_MISUSE_PANIC("No handler data specified.");
+        DROPT_MISUSE("No handler data specified.");
         err = dropt_error_bad_configuration;
     }
     else if (   optionArgument == NULL
@@ -334,7 +334,7 @@ dropt_handle_double(dropt_context* context, const dropt_char* optionArgument,
 
     if (handlerData == NULL)
     {
-        DROPT_MISUSE_PANIC("No handler data specified.");
+        DROPT_MISUSE("No handler data specified.");
         err = dropt_error_bad_configuration;
     }
     else if (   optionArgument == NULL
@@ -408,7 +408,7 @@ dropt_handle_string(dropt_context* context, const dropt_char* optionArgument,
 
     if (handlerData == NULL)
     {
-        DROPT_MISUSE_PANIC("No handler data specified.");
+        DROPT_MISUSE("No handler data specified.");
         err = dropt_error_bad_configuration;
     }
     else if (optionArgument == NULL)

@@ -259,7 +259,7 @@ dropt_get_error(const dropt_context* context)
 {
     if (context == NULL)
     {
-        DROPT_MISUSE_PANIC("No dropt context specified.");
+        DROPT_MISUSE("No dropt context specified.");
         return dropt_error_bad_configuration;
     }
     return context->errorDetails.err;
@@ -307,7 +307,7 @@ dropt_get_error_message(dropt_context* context)
 {
     if (context == NULL)
     {
-        DROPT_MISUSE_PANIC("No dropt context specified.");
+        DROPT_MISUSE("No dropt context specified.");
         return DROPT_TEXT_LITERAL("");
     }
 
@@ -473,7 +473,7 @@ dropt_get_help(const dropt_context* context, const dropt_help_params* helpParams
 
     if (context == NULL)
     {
-        DROPT_MISUSE_PANIC("No dropt context specified.");
+        DROPT_MISUSE("No dropt context specified.");
     }
     else if (ss != NULL)
     {
@@ -529,7 +529,7 @@ dropt_get_help(const dropt_context* context, const dropt_help_params* helpParams
             }
             else
             {
-                DROPT_MISUSE_PANIC("No option name specified.");
+                DROPT_MISUSE("No option name specified.");
                 break;
             }
 
@@ -641,7 +641,7 @@ set_option_value(dropt_context* context,
 
     if (option->handler == NULL)
     {
-        DROPT_MISUSE_PANIC("No option handler specified.");
+        DROPT_MISUSE("No option handler specified.");
         return dropt_error_bad_configuration;
     }
 
@@ -751,7 +751,7 @@ dropt_parse(dropt_context* context,
 
     if (context == NULL)
     {
-        DROPT_MISUSE_PANIC("No dropt context specified.");
+        DROPT_MISUSE("No dropt context specified.");
         set_error_details(context, dropt_error_bad_configuration,
                           DROPT_TEXT_LITERAL(""), 0, NULL);
         goto exit;
@@ -760,7 +760,7 @@ dropt_parse(dropt_context* context,
 #ifdef DROPT_NO_STRING_BUFFERS
     if (context->errorHandler == NULL)
     {
-        DROPT_MISUSE_PANIC("No error handler specified.");
+        DROPT_MISUSE("No error handler specified.");
         set_error_details(context, dropt_error_bad_configuration,
                           DROPT_TEXT_LITERAL(""), 0, NULL);
         goto exit;
@@ -992,7 +992,7 @@ dropt_new_context(const dropt_option* options)
 
     if (options == NULL)
     {
-        DROPT_MISUSE_PANIC("No option list specified.");
+        DROPT_MISUSE("No option list specified.");
         goto exit;
     }
 
@@ -1018,7 +1018,7 @@ dropt_new_context(const dropt_option* options)
                 || (   option->long_name != NULL
                     && dropt_strchr(option->long_name, DROPT_TEXT_LITERAL('=')) != NULL))
             {
-                DROPT_MISUSE_PANIC("Invalid option list. '=' may not be used in an option name.");
+                DROPT_MISUSE("Invalid option list. '=' may not be used in an option name.");
                 free(context);
                 context = NULL;
                 goto exit;
@@ -1061,7 +1061,7 @@ dropt_get_options(const dropt_context* context)
 {
     if (context == NULL)
     {
-        DROPT_MISUSE_PANIC("No dropt context specified.");
+        DROPT_MISUSE("No dropt context specified.");
         return NULL;
     }
 
@@ -1083,7 +1083,7 @@ dropt_init_help_params(dropt_help_params* helpParams)
 {
     if (helpParams == NULL)
     {
-        DROPT_MISUSE_PANIC("No dropt help parameters specified.");
+        DROPT_MISUSE("No dropt help parameters specified.");
         return;
     }
 
@@ -1110,7 +1110,7 @@ dropt_set_error_handler(dropt_context* context, dropt_error_handler_func handler
 {
     if (context == NULL)
     {
-        DROPT_MISUSE_PANIC("No dropt context specified.");
+        DROPT_MISUSE("No dropt context specified.");
         return;
     }
 
@@ -1135,7 +1135,7 @@ dropt_set_strncmp(dropt_context* context, dropt_strncmp_func cmp)
 {
     if (context == NULL)
     {
-        DROPT_MISUSE_PANIC("No dropt context specified.");
+        DROPT_MISUSE("No dropt context specified.");
         return;
     }
 
@@ -1143,7 +1143,7 @@ dropt_set_strncmp(dropt_context* context, dropt_strncmp_func cmp)
 }
 
 
-/** dropt_misuse_panic
+/** dropt_misuse
   *
   *     Prints a diagnostic for logical errors caused by external clients
   *     calling into dropt improperly.
@@ -1163,7 +1163,7 @@ dropt_set_strncmp(dropt_context* context, dropt_strncmp_func cmp)
   *     IN line     : The line number where the logical error occurred.
   */
 void
-dropt_misuse_panic(const char* message, const char* filename, int line)
+dropt_misuse(const char* message, const char* filename, int line)
 {
 #ifdef NDEBUG
     fprintf(stderr, "dropt: %s\n", message);
@@ -1191,7 +1191,7 @@ dropt_allow_concatenated_arguments(dropt_context* context, dropt_bool allow)
 {
     if (context == NULL)
     {
-        DROPT_MISUSE_PANIC("No dropt context specified.");
+        DROPT_MISUSE("No dropt context specified.");
         return;
     }
 

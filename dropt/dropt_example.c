@@ -61,8 +61,7 @@ main(int argc, char** argv)
          *
          * This also can happen due to logical errors (e.g. if the options
          * array is malformed).  Logical errors will trigger
-         * DROPT_MISUSE_PANIC() and will terminate the program in debug
-         * builds.
+         * DROPT_MISUSE() and will terminate the program in debug builds.
          */
         exitCode = EXIT_FAILURE;
     }
