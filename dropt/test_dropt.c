@@ -238,10 +238,11 @@ dropt_option options[] = {
 
 
 
-#define MAKE_EQUALITY_FUNC(name, type) static bool name(type a, type b) { return a == b; }
-MAKE_EQUALITY_FUNC(bool_equal, dropt_bool)
-MAKE_EQUALITY_FUNC(int_equal, int)
-MAKE_EQUALITY_FUNC(uint_equal, unsigned int)
+static bool
+integer_equal(long int a, long int b)
+{
+    return a == b;
+}
 
 
 static bool
@@ -269,13 +270,22 @@ string_equal(const dropt_char* a, const dropt_char* b)
 }
 
 
+#define VERIFY(expr) verify(expr, #expr, __LINE__)
+static bool
+verify(bool b, const char* s, unsigned int line)
+{
+    if (!b) { fprintf(stderr, "FAILED: %s (line: %u)\n", s, line); }
+    return b;
+}
+
+
 static bool
 test_strings(void)
 {
 #ifdef DROPT_NO_STRING_BUFFERS
     return true;
 #else
-    bool success;
+    bool success = true;
 
     {
         const dropt_char* s = T("foo bar");
@@ -291,15 +301,9 @@ test_strings(void)
             goto exit;
         }
 
-        success = (dropt_strcmp(copy, T("foo")) == 0);
+        success &= VERIFY(dropt_strcmp(copy, T("foo")) == 0);
         free(copy);
         copy = NULL;
-
-        if (!success)
-        {
-            fputts(T("FAILED: dropt_strndup\n"), stderr);
-            goto exit;
-        }
 
         copy = dropt_strndup(s, 100);
         if (copy == NULL)
@@ -309,15 +313,9 @@ test_strings(void)
             goto exit;
         }
 
-        success = (dropt_strcmp(copy, s) == 0);
+        success &= VERIFY(dropt_strcmp(copy, s) == 0);
         free(copy);
         copy = NULL;
-
-        if (!success)
-        {
-            fputts(T("FAILED: dropt_strndup\n"), stderr);
-            goto exit;
-        }
 
         copy = dropt_strdup(s);
         if (copy == NULL)
@@ -327,54 +325,34 @@ test_strings(void)
             goto exit;
         }
 
-        success = (dropt_strcmp(copy, s) == 0);
+        success &= VERIFY(dropt_strcmp(copy, s) == 0);
         free(copy);
         copy = NULL;
 
-        if (!success)
-        {
-            fputts(T("FAILED: dropt_strdup\n"), stderr);
-            goto exit;
-        }
+        success &= VERIFY(dropt_strnicmp(s, t, 4) == 0);
+        success &= VERIFY(dropt_strnicmp(s, t, 5) < 0);
+        success &= VERIFY(dropt_strnicmp(t, s, 5) > 0);
 
-        success &= (dropt_strnicmp(s, t, 4) == 0);
-        success &= (dropt_strnicmp(s, t, 5) < 0);
-        success &= (dropt_strnicmp(t, s, 5) > 0);
-        if (!success)
-        {
-            fputts(T("FAILED: dropt_strnicmp\n"), stderr);
-            goto exit;
-        }
-
-        success &= (dropt_stricmp(s, t) < 0);
-        success &= (dropt_stricmp(t, s) > 0);
-        success &= (dropt_stricmp(T("foo"), T("FOO")) == 0);
-        if (!success)
-        {
-            fputts(T("FAILED: dropt_stricmp\n"), stderr);
-            goto exit;
-        }
+        success &= VERIFY(dropt_stricmp(s, t) < 0);
+        success &= VERIFY(dropt_stricmp(t, s) > 0);
+        success &= VERIFY(dropt_stricmp(T("foo"), T("FOO")) == 0);
     }
 
     {
         dropt_char buf[4];
 
         ZERO_MEMORY(buf, sizeof buf);
-        success &= dropt_snprintf(buf, ARRAY_LENGTH(buf), T("%s"), T("foo")) == 3;
-        success &= string_equal(buf, T("foo"));
+        success &= VERIFY(dropt_snprintf(buf, ARRAY_LENGTH(buf), T("%s"), T("foo")) == 3);
+        success &= VERIFY(string_equal(buf, T("foo")));
 
         ZERO_MEMORY(buf, sizeof buf);
-        success &= dropt_snprintf(buf, ARRAY_LENGTH(buf), T("%s"), T("bar baz")) == 7;
-        success &= string_equal(buf, T("bar"));
-
-        if (!success)
-        {
-            fputts(T("FAILED: dropt_snprintf\n"), stderr);
-            goto exit;
-        }
+        success &= VERIFY(dropt_snprintf(buf, ARRAY_LENGTH(buf), T("%s"), T("bar baz")) == 7);
+        success &= VERIFY(string_equal(buf, T("bar")));
     }
 
     {
+        const char* expectedString = NULL;
+
         dropt_char* s;
         dropt_stringstream* ss = dropt_ssopen();
         if (ss == NULL)
@@ -384,7 +362,9 @@ test_strings(void)
             goto exit;
         }
 
-        dropt_ssprintf(ss, T("hello %s %X %d%c"), T("world"), 0xCAFEBABE, 31337, T('!'));
+        success &= VERIFY(dropt_ssprintf(ss, T("hello %s %X %d%c"),
+                                         T("world"), 0xCAFEBABE, 31337, T('!')) == 27);
+
         dropt_ssprintf(ss, T("%c"), T('\n'));
 
         /* About 300 characters to make sure we overflow the default buffer
@@ -395,21 +375,20 @@ test_strings(void)
         dropt_ssprintf(ss, T("Suspendisse orci felis, tristique eget, lacinia rhoncus, interdum at, lorem."));
         dropt_ssprintf(ss, T("Aliquam gravida dui nec erat. Integer pede. Aliquam erat volutpat."));
         dropt_ssprintf(ss, T("In eu nisl. Curabitur non tellus id arcu feugiat porta orci aliquam."));
+
+        success &= VERIFY(dropt_ssprintf(ss, T("%c"), T('\0')) == 1);
+        dropt_ssprintf(ss, T("This is junk data."));
+
         s = dropt_ssfinalize(ss);
 
-        success = string_equal(s, T("hello world CAFEBABE 31337!\n")
-                                  T("Lorem ipsum dolor sit amet, consectetuer adipiscing elit. ")
-                                  T("Aenean quis mauris. In augue. ")
-                                  T("Suspendisse orci felis, tristique eget, lacinia rhoncus, interdum at, lorem.")
-                                  T("Aliquam gravida dui nec erat. Integer pede. Aliquam erat volutpat.")
-                                  T("In eu nisl. Curabitur non tellus id arcu feugiat porta orci aliquam."));
+        expectedString = T("hello world CAFEBABE 31337!\n")
+                         T("Lorem ipsum dolor sit amet, consectetuer adipiscing elit. ")
+                         T("Aenean quis mauris. In augue. ")
+                         T("Suspendisse orci felis, tristique eget, lacinia rhoncus, interdum at, lorem.")
+                         T("Aliquam gravida dui nec erat. Integer pede. Aliquam erat volutpat.")
+                         T("In eu nisl. Curabitur non tellus id arcu feugiat porta orci aliquam.");
+        success &= VERIFY(string_equal(s, expectedString));
         free(s);
-    }
-
-    if (!success)
-    {
-        fputts(T("FAILED: dropt_ssprintf\n"), stderr);
-        goto exit;
     }
 
 exit:
@@ -421,7 +400,8 @@ exit:
 #define MAKE_TEST_FOR_HANDLER(handler, type, valueEqualityFunc, formatSpecifier) \
 static bool \
 test_ ## handler(dropt_context* context, const dropt_char* optionArgument, \
-                 dropt_error expectedError, type expectedValue, type initValue) \
+                 dropt_error expectedError, type expectedValue, type initValue, \
+                 unsigned int line) \
 { \
     bool success = false; \
     type value = initValue; \
@@ -432,24 +412,31 @@ test_ ## handler(dropt_context* context, const dropt_char* optionArgument, \
     } \
     else \
     { \
+        const char* quote = optionArgument ? "\"" : ""; \
         ftprintf(stderr, \
-                 T("FAILED: %s(\"%s\") ") \
+                 T("FAILED: %s(%s%s%s) ") \
                  T("returned %d, expected %d.  ") \
-                 T("Output ") formatSpecifier T(", expected ") formatSpecifier T(".\n"), \
-                 T(#handler), optionArgument ? optionArgument : T("(null)"), \
+                 T("Output ") formatSpecifier T(", expected ") formatSpecifier T(". (line: %u)\n"), \
+                 T(#handler), quote, optionArgument ? optionArgument : T("NULL"), quote, \
                  error, expectedError, \
-                 value, expectedValue); \
+                 value, expectedValue, \
+                 line); \
     } \
     return success; \
 }
 
 
-MAKE_TEST_FOR_HANDLER(dropt_handle_bool, dropt_bool, bool_equal, T("%d"))
-MAKE_TEST_FOR_HANDLER(dropt_handle_verbose_bool, dropt_bool, bool_equal, T("%d"))
-MAKE_TEST_FOR_HANDLER(dropt_handle_int, int, int_equal, T("%d"))
-MAKE_TEST_FOR_HANDLER(dropt_handle_uint, unsigned int, uint_equal, T("%u"))
+MAKE_TEST_FOR_HANDLER(dropt_handle_bool, dropt_bool, integer_equal, T("%d"))
+MAKE_TEST_FOR_HANDLER(dropt_handle_verbose_bool, dropt_bool, integer_equal, T("%d"))
+MAKE_TEST_FOR_HANDLER(dropt_handle_int, int, integer_equal, T("%d"))
+MAKE_TEST_FOR_HANDLER(dropt_handle_uint, unsigned int, integer_equal, T("%u"))
 MAKE_TEST_FOR_HANDLER(dropt_handle_double, double, double_equal, T("%g"))
 MAKE_TEST_FOR_HANDLER(dropt_handle_string, dropt_char*, string_equal, T("%s"))
+
+
+#define TEST_HANDLER(type, context, optionArgument, expectedError, expectedValue, initValue) \
+    test_dropt_handle_ ## type( \
+        context, optionArgument, expectedError, expectedValue, initValue, __LINE__)
 
 
 static bool
@@ -461,83 +448,83 @@ test_dropt_handlers(dropt_context* context)
     const unsigned int u = 0xCAFEBABE;
     const double d = 2.71828;
 
-    success &= test_dropt_handle_bool(context, NULL, dropt_error_none, 1, 0);
-    success &= test_dropt_handle_bool(context, T(""), dropt_error_insufficient_arguments, 0, 0);
-    success &= test_dropt_handle_bool(context, T(" "), dropt_error_mismatch, 0, 0);
-    success &= test_dropt_handle_bool(context, T("1"), dropt_error_none, 1, 0);
-    success &= test_dropt_handle_bool(context, T("0"), dropt_error_none, 0, 0);
-    success &= test_dropt_handle_bool(context, T("2"), dropt_error_mismatch, 0, 0);
-    success &= test_dropt_handle_bool(context, T("-1"), dropt_error_mismatch, 0, 0);
-    success &= test_dropt_handle_bool(context, T("01"), dropt_error_none, 1, 0);
-    success &= test_dropt_handle_bool(context, T("11"), dropt_error_mismatch, 0, 0);
-    success &= test_dropt_handle_bool(context, T("a"), dropt_error_mismatch, 0, 0);
-    success &= test_dropt_handle_bool(context, T("a"), dropt_error_mismatch, 1, 1);
-    success &= test_dropt_handle_bool(context, T("true"), dropt_error_mismatch, 0, 0);
-    success &= test_dropt_handle_bool(context, T("false"), dropt_error_mismatch, 0, 0);
+    success &= TEST_HANDLER(bool, context, NULL, dropt_error_none, 1, 0);
+    success &= TEST_HANDLER(bool, context, NULL, dropt_error_none, 1, 0);
+    success &= TEST_HANDLER(bool, context, T(""), dropt_error_insufficient_arguments, 0, 0);
+    success &= TEST_HANDLER(bool, context, T(" "), dropt_error_mismatch, 0, 0);
+    success &= TEST_HANDLER(bool, context, T("1"), dropt_error_none, 1, 0);
+    success &= TEST_HANDLER(bool, context, T("0"), dropt_error_none, 0, 0);
+    success &= TEST_HANDLER(bool, context, T("2"), dropt_error_mismatch, 0, 0);
+    success &= TEST_HANDLER(bool, context, T("-1"), dropt_error_mismatch, 0, 0);
+    success &= TEST_HANDLER(bool, context, T("01"), dropt_error_none, 1, 0);
+    success &= TEST_HANDLER(bool, context, T("11"), dropt_error_mismatch, 0, 0);
+    success &= TEST_HANDLER(bool, context, T("a"), dropt_error_mismatch, 0, 0);
+    success &= TEST_HANDLER(bool, context, T("a"), dropt_error_mismatch, 1, 1);
+    success &= TEST_HANDLER(bool, context, T("true"), dropt_error_mismatch, 0, 0);
+    success &= TEST_HANDLER(bool, context, T("false"), dropt_error_mismatch, 0, 0);
 
-    success &= test_dropt_handle_verbose_bool(context, NULL, dropt_error_none, 1, 0);
-    success &= test_dropt_handle_verbose_bool(context, T(""), dropt_error_insufficient_arguments, 0, 0);
-    success &= test_dropt_handle_verbose_bool(context, T(" "), dropt_error_mismatch, 0, 0);
-    success &= test_dropt_handle_verbose_bool(context, T("1"), dropt_error_none, 1, 0);
-    success &= test_dropt_handle_verbose_bool(context, T("0"), dropt_error_none, 0, 0);
-    success &= test_dropt_handle_verbose_bool(context, T("2"), dropt_error_mismatch, 0, 0);
-    success &= test_dropt_handle_verbose_bool(context, T("-1"), dropt_error_mismatch, 0, 0);
-    success &= test_dropt_handle_verbose_bool(context, T("01"), dropt_error_none, 1, 0);
-    success &= test_dropt_handle_verbose_bool(context, T("11"), dropt_error_mismatch, 0, 0);
-    success &= test_dropt_handle_verbose_bool(context, T("a"), dropt_error_mismatch, 0, 0);
-    success &= test_dropt_handle_verbose_bool(context, T("a"), dropt_error_mismatch, 1, 1);
-    success &= test_dropt_handle_verbose_bool(context, T("true"), dropt_error_none, 1, 0);
-    success &= test_dropt_handle_verbose_bool(context, T("false"), dropt_error_none, 0, 0);
+    success &= TEST_HANDLER(verbose_bool, context, NULL, dropt_error_none, 1, 0);
+    success &= TEST_HANDLER(verbose_bool, context, T(""), dropt_error_insufficient_arguments, 0, 0);
+    success &= TEST_HANDLER(verbose_bool, context, T(" "), dropt_error_mismatch, 0, 0);
+    success &= TEST_HANDLER(verbose_bool, context, T("1"), dropt_error_none, 1, 0);
+    success &= TEST_HANDLER(verbose_bool, context, T("0"), dropt_error_none, 0, 0);
+    success &= TEST_HANDLER(verbose_bool, context, T("2"), dropt_error_mismatch, 0, 0);
+    success &= TEST_HANDLER(verbose_bool, context, T("-1"), dropt_error_mismatch, 0, 0);
+    success &= TEST_HANDLER(verbose_bool, context, T("01"), dropt_error_none, 1, 0);
+    success &= TEST_HANDLER(verbose_bool, context, T("11"), dropt_error_mismatch, 0, 0);
+    success &= TEST_HANDLER(verbose_bool, context, T("a"), dropt_error_mismatch, 0, 0);
+    success &= TEST_HANDLER(verbose_bool, context, T("a"), dropt_error_mismatch, 1, 1);
+    success &= TEST_HANDLER(verbose_bool, context, T("true"), dropt_error_none, 1, 0);
+    success &= TEST_HANDLER(verbose_bool, context, T("false"), dropt_error_none, 0, 0);
 
-    success &= test_dropt_handle_int(context, NULL, dropt_error_insufficient_arguments, i, i);
-    success &= test_dropt_handle_int(context, T(""), dropt_error_insufficient_arguments, i, i);
-    success &= test_dropt_handle_int(context, T(" "), dropt_error_mismatch, i, i);
-    success &= test_dropt_handle_int(context, T("0"), dropt_error_none, 0, 0);
-    success &= test_dropt_handle_int(context, T("-0"), dropt_error_none, 0, 0);
-    success &= test_dropt_handle_int(context, T("123"), dropt_error_none, 123, 0);
-    success &= test_dropt_handle_int(context, T("0123"), dropt_error_none, 123, 0);
-    success &= test_dropt_handle_int(context, T("+123"), dropt_error_none, 123, 0);
-    success &= test_dropt_handle_int(context, T("-123"), dropt_error_none, -123, 0);
-    success &= test_dropt_handle_int(context, T("12.3"), dropt_error_mismatch, i, i);
-    success &= test_dropt_handle_int(context, T("a"), dropt_error_mismatch, i, i);
-    success &= test_dropt_handle_int(context, T("123a"), dropt_error_mismatch, i, i);
-    success &= test_dropt_handle_int(context, T("3000000000"), dropt_error_overflow, i, i);
-    success &= test_dropt_handle_int(context, T("-3000000000"), dropt_error_overflow, i, i);
+    success &= TEST_HANDLER(int, context, NULL, dropt_error_insufficient_arguments, i, i);
+    success &= TEST_HANDLER(int, context, T(""), dropt_error_insufficient_arguments, i, i);
+    success &= TEST_HANDLER(int, context, T(" "), dropt_error_mismatch, i, i);
+    success &= TEST_HANDLER(int, context, T("0"), dropt_error_none, 0, 0);
+    success &= TEST_HANDLER(int, context, T("-0"), dropt_error_none, 0, 0);
+    success &= TEST_HANDLER(int, context, T("123"), dropt_error_none, 123, 0);
+    success &= TEST_HANDLER(int, context, T("0123"), dropt_error_none, 123, 0);
+    success &= TEST_HANDLER(int, context, T("+123"), dropt_error_none, 123, 0);
+    success &= TEST_HANDLER(int, context, T("-123"), dropt_error_none, -123, 0);
+    success &= TEST_HANDLER(int, context, T("12.3"), dropt_error_mismatch, i, i);
+    success &= TEST_HANDLER(int, context, T("a"), dropt_error_mismatch, i, i);
+    success &= TEST_HANDLER(int, context, T("123a"), dropt_error_mismatch, i, i);
+    success &= TEST_HANDLER(int, context, T("3000000000"), dropt_error_overflow, i, i);
+    success &= TEST_HANDLER(int, context, T("-3000000000"), dropt_error_overflow, i, i);
 
-    success &= test_dropt_handle_uint(context, NULL, dropt_error_insufficient_arguments, u, u);
-    success &= test_dropt_handle_uint(context, T(""), dropt_error_insufficient_arguments, u, u);
-    success &= test_dropt_handle_uint(context, T(" "), dropt_error_mismatch, u, u);
-    success &= test_dropt_handle_uint(context, T("0"), dropt_error_none, 0, 0);
-    success &= test_dropt_handle_uint(context, T("-0"), dropt_error_mismatch, u, u);
-    success &= test_dropt_handle_uint(context, T("123"), dropt_error_none, 123, 0);
-    success &= test_dropt_handle_uint(context, T("0123"), dropt_error_none, 123, 0);
-    success &= test_dropt_handle_uint(context, T("123"), dropt_error_none, 123, 0);
-    success &= test_dropt_handle_uint(context, T("+123"), dropt_error_none, 123, 0);
-    success &= test_dropt_handle_uint(context, T("-123"), dropt_error_mismatch, u, u);
-    success &= test_dropt_handle_uint(context, T("12.3"), dropt_error_mismatch, u, u);
-    success &= test_dropt_handle_uint(context, T("a"), dropt_error_mismatch, u, u);
-    success &= test_dropt_handle_uint(context, T("123a"), dropt_error_mismatch, u, u);
-    success &= test_dropt_handle_uint(context, T("3000000000"), dropt_error_none, 3000000000u, 0);
-    success &= test_dropt_handle_uint(context, T("-3000000000"), dropt_error_mismatch, u, u);
-    success &= test_dropt_handle_uint(context, T("5000000000"), dropt_error_overflow, u, u);
+    success &= TEST_HANDLER(uint, context, NULL, dropt_error_insufficient_arguments, u, u);
+    success &= TEST_HANDLER(uint, context, T(""), dropt_error_insufficient_arguments, u, u);
+    success &= TEST_HANDLER(uint, context, T(" "), dropt_error_mismatch, u, u);
+    success &= TEST_HANDLER(uint, context, T("0"), dropt_error_none, 0, 0);
+    success &= TEST_HANDLER(uint, context, T("-0"), dropt_error_mismatch, u, u);
+    success &= TEST_HANDLER(uint, context, T("123"), dropt_error_none, 123, 0);
+    success &= TEST_HANDLER(uint, context, T("0123"), dropt_error_none, 123, 0);
+    success &= TEST_HANDLER(uint, context, T("123"), dropt_error_none, 123, 0);
+    success &= TEST_HANDLER(uint, context, T("+123"), dropt_error_none, 123, 0);
+    success &= TEST_HANDLER(uint, context, T("-123"), dropt_error_mismatch, u, u);
+    success &= TEST_HANDLER(uint, context, T("12.3"), dropt_error_mismatch, u, u);
+    success &= TEST_HANDLER(uint, context, T("a"), dropt_error_mismatch, u, u);
+    success &= TEST_HANDLER(uint, context, T("123a"), dropt_error_mismatch, u, u);
+    success &= TEST_HANDLER(uint, context, T("3000000000"), dropt_error_none, 3000000000u, 0);
+    success &= TEST_HANDLER(uint, context, T("-3000000000"), dropt_error_mismatch, u, u);
+    success &= TEST_HANDLER(uint, context, T("5000000000"), dropt_error_overflow, u, u);
 
-    success &= test_dropt_handle_double(context, NULL, dropt_error_insufficient_arguments, d, d);
-    success &= test_dropt_handle_double(context, T(""), dropt_error_insufficient_arguments, d, d);
-    success &= test_dropt_handle_double(context, T(" "), dropt_error_mismatch, d, d);
-    success &= test_dropt_handle_double(context, T("123"), dropt_error_none, 123, 0);
-    success &= test_dropt_handle_double(context, T("0123"), dropt_error_none, 123, 0);
-    success &= test_dropt_handle_double(context, T("+123"), dropt_error_none, 123, 0);
-    success &= test_dropt_handle_double(context, T("-123"), dropt_error_none, -123, 0);
-    success &= test_dropt_handle_double(context, T("12.3"), dropt_error_none, 12.3, 0);
-    success &= test_dropt_handle_double(context, T(".123"), dropt_error_none, 0.123, 0);
-    success &= test_dropt_handle_double(context, T("123e-1"), dropt_error_none, 12.3, 0);
-    success &= test_dropt_handle_double(context, T("12.3e-1"), dropt_error_none, 1.23, 0);
-    success &= test_dropt_handle_double(context, T("a"), dropt_error_mismatch, d, d);
-    success &= test_dropt_handle_double(context, T("123a"), dropt_error_mismatch, d, d);
-    success &= test_dropt_handle_double(context, T("1e1024"), dropt_error_overflow, d, d);
+    success &= TEST_HANDLER(double, context, NULL, dropt_error_insufficient_arguments, d, d);
+    success &= TEST_HANDLER(double, context, T(""), dropt_error_insufficient_arguments, d, d);
+    success &= TEST_HANDLER(double, context, T(" "), dropt_error_mismatch, d, d);
+    success &= TEST_HANDLER(double, context, T("123"), dropt_error_none, 123, 0);
+    success &= TEST_HANDLER(double, context, T("0123"), dropt_error_none, 123, 0);
+    success &= TEST_HANDLER(double, context, T("+123"), dropt_error_none, 123, 0);
+    success &= TEST_HANDLER(double, context, T("-123"), dropt_error_none, -123, 0);
+    success &= TEST_HANDLER(double, context, T("12.3"), dropt_error_none, 12.3, 0);
+    success &= TEST_HANDLER(double, context, T(".123"), dropt_error_none, 0.123, 0);
+    success &= TEST_HANDLER(double, context, T("123e-1"), dropt_error_none, 12.3, 0);
+    success &= TEST_HANDLER(double, context, T("12.3e-1"), dropt_error_none, 1.23, 0);
+    success &= TEST_HANDLER(double, context, T("a"), dropt_error_mismatch, d, d);
+    success &= TEST_HANDLER(double, context, T("123a"), dropt_error_mismatch, d, d);
+    success &= TEST_HANDLER(double, context, T("1e1024"), dropt_error_overflow, d, d);
 
-    /*
-     * This test depends on implementation-dependent behavior of strtod, so
+    /* This test depends on implementation-dependent behavior of strtod, so
      * we're less strict.
      */
     {
@@ -559,22 +546,13 @@ test_dropt_handlers(dropt_context* context)
         }
     }
 
-    success &= test_dropt_handle_string(context, NULL, dropt_error_insufficient_arguments, T("qux"), T("qux"));
-    success &= test_dropt_handle_string(context, T(""), dropt_error_none, T(""), NULL);
-    success &= test_dropt_handle_string(context, T(" "), dropt_error_none, T(" "), NULL);
-    success &= test_dropt_handle_string(context, T("foo"), dropt_error_none, T("foo"), NULL);
-    success &= test_dropt_handle_string(context, T("foo bar"), dropt_error_none, T("foo bar"), NULL);
+    success &= TEST_HANDLER(string, context, NULL, dropt_error_insufficient_arguments, T("qux"), T("qux"));
+    success &= TEST_HANDLER(string, context, T(""), dropt_error_none, T(""), NULL);
+    success &= TEST_HANDLER(string, context, T(" "), dropt_error_none, T(" "), NULL);
+    success &= TEST_HANDLER(string, context, T("foo"), dropt_error_none, T("foo"), NULL);
+    success &= TEST_HANDLER(string, context, T("foo bar"), dropt_error_none, T("foo bar"), NULL);
 
     return success;
-}
-
-
-#define VERIFY(expr) verify(expr, #expr, __LINE__)
-static bool
-verify(bool b, const char* s, unsigned int line)
-{
-    if (!b) { fprintf(stderr, "FAILED: %s (line: %u)\n", s, line); }
-    return b;
 }
 
 

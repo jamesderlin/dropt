@@ -346,7 +346,7 @@ dropt_vsnprintf(dropt_char* s, size_t n, const dropt_char* format, va_list args)
 }
 
 
-/* See dropt_vsnprintf. */
+/** See dropt_vsnprintf. */
 int
 dropt_snprintf(dropt_char* s, size_t n, const dropt_char* format, ...)
 {
@@ -398,7 +398,7 @@ dropt_vasprintf(const dropt_char* format, va_list args)
 }
 
 
-/* See dropt_vasprintf. */
+/** See dropt_vasprintf. */
 dropt_char*
 dropt_asprintf(const dropt_char* format, ...)
 {
@@ -597,7 +597,8 @@ dropt_ssgetstring(const dropt_stringstream* ss)
   *     IN args   : Arguments to insert into the formatted string.
   *
   * RETURNS:
-  *     The number of characters written to the dropt_stringstream.
+  *     The number of characters written to the dropt_stringstream,
+  *       excluding the NUL-terminator.
   *     Returns a negative value on error.
   */
 int
@@ -638,7 +639,7 @@ dropt_vssprintf(dropt_stringstream* ss, const dropt_char* format, va_list args)
 }
 
 
-/* See dropt_vssprintf. */
+/** See dropt_vssprintf. */
 int
 dropt_ssprintf(dropt_stringstream* ss, const dropt_char* format, ...)
 {
