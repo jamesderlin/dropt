@@ -183,13 +183,24 @@ There&rsquo;s no formal documentation yet, but for now, see
 <h2>Download</h2>
 
 <p>
-<a href="http://www.taenarum.com/software/dropt/dropt-1.0.zip"><kbd>dropt-1.0.zip</kbd></a>
+<a href="http://www.taenarum.com/software/dropt/dropt-1.0.1.zip"><kbd>dropt-1.0.1.zip</kbd></a>
 </p>
 
 
 <h2 id="history">Version History</h2>
 
 <ul id="historylist">
+	<li>
+		1.0.1 (2010-07-03)
+		<ul>
+			<li>Calling <code>dropt_ssgetstring</code> on a newly-opened <code>dropt_stringstream</code> returned garbage.  Fixed.  This would have affected only clients that used <code>dropt_stringstream</code> directly.</li>
+			<li>The <code>MIN</code> and <code>MAX</code> macros in <kbd>dropt_string.c</kbd> are now conditionally defined.</li>
+			<li><code>dropt_safe_malloc</code> and <code>dropt_safe_realloc</code> are now publicly declared in <kbd>dropt_string.h</kbd>.</li>
+			<li>Renamed <code>DROPT_MISUSE_PANIC</code> to <code>DROPT_MISUSE</code> since it's non-fatal in non-debug builds.</li>
+			<li><code>DEFAULT_STRINGSTREAM_BUFFER_SIZE</code> is now an <code>enum</code> constant instead of a preprocessor macro.</li>
+			<li>Modified <kbd>test_dropt.c</kbd>.  Now tries harder to report line numbers on failure, and more tests continue executing upon failure.  Added a few more tests for <code>dropt_stringstream</code> functions.  Rewrote one of the sample option handler callbacks more general.</li>
+		</ul>
+	</li>
 	<li>
 		1.0 (2010-06-19)
 		<ul><li>Initial release.</li></ul>

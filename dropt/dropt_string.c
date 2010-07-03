@@ -59,14 +59,19 @@
 
 #include "dropt_string.h"
 
+#ifndef MAX
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#endif
+
+#ifndef MIN
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
+#endif
 
 #ifdef DROPT_DEBUG_STRING_BUFFERS
-    #define DEFAULT_STRINGSTREAM_BUFFER_SIZE 1
+    enum { default_stringstream_buffer_size = 1 };
     #define GROWN_STRINGSTREAM_BUFFER_SIZE(oldSize, minAmount) ((oldSize) + (minAmount))
 #else
-    #define DEFAULT_STRINGSTREAM_BUFFER_SIZE 256
+    enum { default_stringstream_buffer_size = 256 };
     #define GROWN_STRINGSTREAM_BUFFER_SIZE(oldSize, minAmount) MAX((oldSize) * 2, (oldSize) + (minAmount))
 #endif
 
@@ -94,8 +99,11 @@ struct dropt_stringstream
   *     Returns NULL if numElements is 0.
   *     Returns NULL on error.
   */
-#define dropt_safe_malloc(numElements, elementSize) \
-    dropt_safe_realloc(NULL, numElements, elementSize)
+void*
+dropt_safe_malloc(size_t numElements, size_t elementSize)
+{
+    return dropt_safe_realloc(NULL, numElements, elementSize);
+}
 
 
 /** dropt_safe_realloc
@@ -115,7 +123,7 @@ struct dropt_stringstream
   *     Returns NULL if numElements is 0.
   *     Returns NULL on error.
   */
-static void*
+void*
 dropt_safe_realloc(void* p, size_t numElements, size_t elementSize)
 {
     size_t numBytes;
@@ -430,12 +438,16 @@ dropt_ssopen(void)
     if (ss != NULL)
     {
         ss->used = 0;
-        ss->maxSize = DEFAULT_STRINGSTREAM_BUFFER_SIZE;
+        ss->maxSize = default_stringstream_buffer_size;
         ss->string = dropt_safe_malloc(ss->maxSize, sizeof *ss->string);
         if (ss->string == NULL)
         {
             free(ss);
             ss = NULL;
+        }
+        else
+        {
+            ss->string[0] = DROPT_TEXT_LITERAL('\0');
         }
     }
     return ss;
@@ -532,7 +544,7 @@ dropt_ssclear(dropt_stringstream* ss)
     ss->string[0] = DROPT_TEXT_LITERAL('\0');
     ss->used = 0;
 
-    dropt_ssresize(ss, DEFAULT_STRINGSTREAM_BUFFER_SIZE);
+    dropt_ssresize(ss, default_stringstream_buffer_size);
 }
 
 

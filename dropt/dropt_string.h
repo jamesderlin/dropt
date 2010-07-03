@@ -58,6 +58,8 @@ extern "C" {
     #define dropt_fputs fputs
 #endif
 
+void* dropt_safe_malloc(size_t numElements, size_t elementSize);
+void* dropt_safe_realloc(void* p, size_t numElements, size_t elementSize);
 
 dropt_char* dropt_strdup(const dropt_char* s);
 dropt_char* dropt_strndup(const dropt_char* s, size_t n);

@@ -84,11 +84,13 @@ static dropt_char* stringVal;
 static dropt_char* stringVal2;
 static int intVal;
 
-static struct
+typedef struct
 {
-    bool enabled;
-    unsigned int lines;
-} unified;
+    bool is_set;
+    unsigned int value;
+} optional_uint;
+
+static optional_uint optionalUInt;
 
 static unsigned int ipAddress;
 
@@ -106,19 +108,35 @@ init_option_defaults(void)
     stringVal2 = NULL;
     intVal = 0;
 
-    unified.enabled = false;
-    unified.lines = 10;
+    optionalUInt.is_set = false;
+    optionalUInt.value = 10;
 
     ipAddress = 0;
 }
 
 
 static dropt_error
-handle_unified(dropt_context* context, const dropt_char* optionArgument, void* handlerData)
+handle_optional_uint(dropt_context* context, const dropt_char* optionArgument, void* handlerData)
 {
     dropt_error err = dropt_error_none;
-    if (optionArgument != NULL) { err = dropt_handle_uint(context, optionArgument, &unified.lines); }
-    if (err == dropt_error_none) { unified.enabled = true; }
+
+    if (handlerData == NULL)
+    {
+        DROPT_MISUSE("No handler data specified.");
+        err = dropt_error_bad_configuration;
+    }
+    else
+    {
+        optional_uint* p = handlerData;
+
+        if (optionArgument != NULL)
+        {
+            err = dropt_handle_uint(context, optionArgument, &(p->value));
+        }
+
+        if (err == dropt_error_none) { p->is_set = true; }
+    }
+
     return err;
 }
 
@@ -231,7 +249,7 @@ dropt_option options[] = {
     { T('i'),  T("int"), T("Test integer value."), T("value"), dropt_handle_int, &intVal },
     { T('\0'), NULL, T("") },
     { T('\0'), NULL, T("Options for testing custom handlers:") },
-    { T('u'),  T("unified"), T("Test unified value with optional argument.\nAlso test multiple\nlines."), T("lines"), handle_unified, NULL, dropt_attr_optional_val },
+    { T('o'),  T("optionalUInt"), T("Test an optional unsigned integer argument.\nAlso test multiple\nlines."), T("lines"), handle_optional_uint, &optionalUInt, dropt_attr_optional_val },
     { T('\0'), T("ip"), T("Test IP address."), T("address"), handle_ip_address, &ipAddress},
     { 0 }
 };
@@ -361,6 +379,8 @@ test_strings(void)
             success = false;
             goto exit;
         }
+
+        success &= VERIFY(dropt_ssgetstring(ss)[0] == T('\0'));
 
         success &= VERIFY(dropt_ssprintf(ss, T("hello %s %X %d%c"),
                                          T("world"), 0xCAFEBABE, 31337, T('!')) == 27);
@@ -680,82 +700,82 @@ test_dropt_parse(dropt_context* context)
 
     /* Test optional arguments with no acceptable argument provided. */
     {
-        dropt_char* args[] = { T("-u"), T("-n"), NULL };
-        unified.enabled = false;
-        unified.lines = 10;
+        dropt_char* args[] = { T("-o"), T("-n"), NULL };
+        optionalUInt.is_set = false;
+        optionalUInt.value = 10;
         normalFlag = false;
         rest = dropt_parse(context, -1, args);
         success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
-        success &= VERIFY(unified.enabled == true);
-        success &= VERIFY(unified.lines == 10);
+        success &= VERIFY(optionalUInt.is_set == true);
+        success &= VERIFY(optionalUInt.value == 10);
         success &= VERIFY(normalFlag == true);
         success &= VERIFY(*rest == NULL);
     }
 
     {
-        dropt_char* args[] = { T("--unified"), T("-n"), NULL };
-        unified.enabled = false;
-        unified.lines = 10;
+        dropt_char* args[] = { T("--optionalUInt"), T("-n"), NULL };
+        optionalUInt.is_set = false;
+        optionalUInt.value = 10;
         normalFlag = false;
         rest = dropt_parse(context, -1, args);
         success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
-        success &= VERIFY(unified.enabled == true);
-        success &= VERIFY(unified.lines == 10);
+        success &= VERIFY(optionalUInt.is_set == true);
+        success &= VERIFY(optionalUInt.value == 10);
         success &= VERIFY(normalFlag == true);
         success &= VERIFY(*rest == NULL);
     }
 
     /* Test that optional arguments are consumed when possible. */
     {
-        dropt_char* args[] = { T("-u"), T("42"), T("-n"), NULL };
-        unified.enabled = false;
-        unified.lines = 10;
+        dropt_char* args[] = { T("-o"), T("42"), T("-n"), NULL };
+        optionalUInt.is_set = false;
+        optionalUInt.value = 10;
         normalFlag = false;
         rest = dropt_parse(context, -1, args);
         success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
-        success &= VERIFY(unified.enabled == true);
-        success &= VERIFY(unified.lines == 42);
+        success &= VERIFY(optionalUInt.is_set == true);
+        success &= VERIFY(optionalUInt.value == 42);
         success &= VERIFY(normalFlag == true);
         success &= VERIFY(*rest == NULL);
     }
 
     {
-        dropt_char* args[] = { T("--unified"), T("42"), T("-n"), NULL };
-        unified.enabled = false;
-        unified.lines = 10;
+        dropt_char* args[] = { T("--optionalUInt"), T("42"), T("-n"), NULL };
+        optionalUInt.is_set = false;
+        optionalUInt.value = 10;
         normalFlag = false;
         rest = dropt_parse(context, -1, args);
         success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
-        success &= VERIFY(unified.enabled == true);
-        success &= VERIFY(unified.lines == 42);
+        success &= VERIFY(optionalUInt.is_set == true);
+        success &= VERIFY(optionalUInt.value == 42);
         success &= VERIFY(normalFlag == true);
         success &= VERIFY(*rest == NULL);
     }
 
     /* Test grouping short boolean options where one has an optional argument. */
     {
-        dropt_char* args[] = { T("-un"), NULL };
-        unified.enabled = false;
-        unified.lines = 10;
+        dropt_char* args[] = { T("-on"), NULL };
+        optionalUInt.is_set = false;
+        optionalUInt.value = 10;
         normalFlag = false;
         rest = dropt_parse(context, -1, args);
         success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
-        success &= VERIFY(unified.enabled == true);
-        success &= VERIFY(unified.lines == 10);
+        success &= VERIFY(optionalUInt.is_set == true);
+        success &= VERIFY(optionalUInt.value == 10);
         success &= VERIFY(normalFlag == true);
         success &= VERIFY(*rest == NULL);
     }
 
     {
-        dropt_char* args[] = { T("-nu"), T("42"), NULL };
+        dropt_char* args[] = { T("-no"), T("42"), NULL };
         normalFlag = false;
-        unified.enabled = false;
-        unified.lines = 10;
+        optionalUInt.is_set = false;
+        optionalUInt.value = 10;
         rest = dropt_parse(context, -1, args);
         success &= VERIFY(get_and_print_dropt_error(context) == dropt_error_none);
         success &= VERIFY(normalFlag == true);
-        success &= VERIFY(unified.enabled == true);
-        success &= VERIFY(unified.lines == 42);
+        success &= VERIFY(optionalUInt.is_set == true);
+        success &= VERIFY(optionalUInt.value == 42);
         success &= VERIFY(*rest == NULL);
     }
 
@@ -1173,7 +1193,7 @@ main(int argc, char** argv)
                          T("hiddenFlag: %u\n")
                          T("string: %s\n")
                          T("intVal: %d\n")
-                         T("unified: %u, lines: %u\n")
+                         T("optionalUInt: %u, value: %u\n")
                          T("ipAddress: %u.%u.%u.%u (%u)\n")
                          T("\n"),
 #ifdef NDEBUG
@@ -1193,7 +1213,7 @@ main(int argc, char** argv)
 #endif
                  normalFlag, requiredArgFlag, hiddenFlag,
                  (stringVal == NULL) ? T("(null)") : stringVal,
-                 intVal, unified.enabled, unified.lines,
+                 intVal, optionalUInt.is_set, optionalUInt.value,
                  (ipAddress >> 24) & 0xFF,
                  (ipAddress >> 16) & 0xFF,
                  (ipAddress >> 8) & 0xFF,
