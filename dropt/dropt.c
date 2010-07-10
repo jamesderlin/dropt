@@ -232,6 +232,7 @@ static void
 set_short_option_error_details(dropt_context* context, dropt_error err,
                                dropt_char shortName, const dropt_char* optionArgument)
 {
+    /* "-?" is just a placeholder. */
     dropt_char shortNameBuf[] = DROPT_TEXT_LITERAL("-?");
 
     assert(context != NULL);

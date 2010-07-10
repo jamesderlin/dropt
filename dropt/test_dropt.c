@@ -60,10 +60,18 @@
 /* For convenience. */
 #define T(s) DROPT_TEXT_LITERAL(s)
 
-
+#ifndef ARRAY_LENGTH
 #define ARRAY_LENGTH(array) (sizeof (array) / sizeof (array)[0])
+#endif
+
+#ifndef ABS
 #define ABS(x) (((x) < 0) ? -(x) : (x))
+#endif
+
+#ifndef MAX
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#endif
+
 #define ZERO_MEMORY(p, numBytes) memset(p, 0, numBytes)
 
 
