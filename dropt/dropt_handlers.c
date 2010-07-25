@@ -59,7 +59,6 @@ typedef enum { false, true } bool;
   *     dropt_error_bad_configuration
   *     dropt_error_insufficient_arguments
   *     dropt_error_mismatch
-  *     dropt_error_overflow
   */
 dropt_error
 dropt_handle_bool(dropt_context* context, const dropt_char* optionArgument,
@@ -100,6 +99,10 @@ dropt_handle_bool(dropt_context* context, const dropt_char* optionArgument,
                     err = dropt_error_mismatch;
                     break;
             }
+        }
+        else if (err == dropt_error_overflow)
+        {
+            err = dropt_error_mismatch;
         }
     }
 
@@ -233,7 +236,7 @@ dropt_handle_int(dropt_context* context, const dropt_char* optionArgument,
   *     IN optionArgument : A string representing an unsigned base-10
   *                           integer.
   *                         If NULL, returns dropt_error_insufficient_arguments.
-  *     OUT handlerData   : An unsigned int*
+  *     OUT handlerData   : An unsigned int*.
   *                         On success, set to the interpreted integer.
   *                         On error, left untouched.
   *
