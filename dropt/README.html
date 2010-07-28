@@ -183,13 +183,20 @@ There&rsquo;s no formal documentation yet, but for now, see
 <h2>Download</h2>
 
 <p>
-<a href="http://www.taenarum.com/software/dropt/dropt-1.0.1.zip"><kbd>dropt-1.0.1.zip</kbd></a>
+<a href="http://www.taenarum.com/software/dropt/dropt-1.0.2.zip"><kbd>dropt-1.0.2.zip</kbd></a>
 </p>
 
 
 <h2 id="history">Version History</h2>
 
 <ul id="historylist">
+	<li>
+		1.0.2 (2010-07-28)
+		<ul>
+			<li><code>dropt_handle_bool</code> and <code>dropt_handle_verbose_bool</code> now return <code>dropt_error_mismatch</code> instead of <code>dropt_error_overflow</code> if given very large numbers.</li>
+			<li>Fix the compilation of <kbd>test_dropt.c</kbd> when building with <code>_UNICODE=1</code>.</li>
+		</ul>
+	</li>
 	<li>
 		1.0.1 (2010-07-03)
 		<ul>

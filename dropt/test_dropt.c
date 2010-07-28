@@ -377,7 +377,7 @@ test_strings(void)
     }
 
     {
-        const char* expectedString = NULL;
+        dropt_char* expectedString = NULL;
 
         dropt_char* s;
         dropt_stringstream* ss = dropt_ssopen();

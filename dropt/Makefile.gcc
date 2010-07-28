@@ -16,9 +16,9 @@ ifndef BUILD_ROOT
 BUILD_ROOT := $(SRC_DIR)/build
 endif
 
-CC = gcc
-CXX = g++
-AR = ar
+CC := gcc
+CXX := g++
+AR := ar
 
 CFLAGS := -g -Wall $(CFLAGS)
 ARFLAGS := rcs
@@ -43,17 +43,17 @@ UNICODE_SUFFIX := -w
 CFLAGS := -D_UNICODE $(CFLAGS)
 endif
 
-OUTDIR := $(BUILD_ROOT)/lib$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)$(UNICODE_SUFFIX)
-OBJDIR := $(BUILD_ROOT)/tmp$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)$(UNICODE_SUFFIX)
+OUT_DIR := $(BUILD_ROOT)/lib$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)$(UNICODE_SUFFIX)
+OBJ_DIR := $(BUILD_ROOT)/tmp$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)$(UNICODE_SUFFIX)
 
 GLOBAL_DEP := $(SRC_DIR)/dropt.h $(SRC_DIR)/dropt_string.h
-LIB_OBJ_FILES := $(OBJDIR)/dropt.o $(OBJDIR)/dropt_handlers.o $(OBJDIR)/dropt_string.o
-OBJ_FILES := $(LIB_OBJ_FILES) $(OBJDIR)/dropt_example.o $(OBJDIR)/test_dropt.o
+LIB_OBJ_FILES := $(OBJ_DIR)/dropt.o $(OBJ_DIR)/dropt_handlers.o $(OBJ_DIR)/dropt_string.o
+OBJ_FILES := $(LIB_OBJ_FILES) $(OBJ_DIR)/dropt_example.o $(OBJ_DIR)/test_dropt.o
 
-DROPT_LIB := $(OUTDIR)/libdropt.a
-DROPTXX_LIB := $(OUTDIR)/libdroptxx.a
-EXAMPLE_EXE := $(OBJDIR)/dropt_example
-TEST_EXE := $(OBJDIR)/test_dropt
+DROPT_LIB := $(OUT_DIR)/libdropt.a
+DROPTXX_LIB := $(OUT_DIR)/libdroptxx.a
+EXAMPLE_EXE := $(OBJ_DIR)/dropt_example
+TEST_EXE := $(OBJ_DIR)/test_dropt
 
 
 # Targets --------------------------------------------------------------
@@ -92,21 +92,22 @@ test: $(TEST_EXE)
 	@echo "Tests passed."
 endif
 
+
 $(DROPT_LIB) $(DROPTXX_LIB): $(LIB_OBJ_FILES)
 	-mkdir -p $(@D)
 	$(AR) $(ARFLAGS) $@ $^
 
-$(DROPTXX_LIB): $(OBJDIR)/droptxx.o
+$(DROPTXX_LIB): $(OBJ_DIR)/droptxx.o
 
-$(OBJDIR)/% : $(OBJDIR)/%.o $(DROPT_LIB)
-	$(CC) $(CFLAGS) $< -L$(OUTDIR) -ldropt -o $@
+$(OBJ_DIR)/% : $(OBJ_DIR)/%.o $(DROPT_LIB)
+	$(CC) $(CFLAGS) $< -L$(OUT_DIR) -ldropt -o $@
 
-$(OBJDIR)/%.o : $(SRC_DIR)/%.c $(GLOBAL_DEP)
+$(OBJ_DIR)/%.o : $(SRC_DIR)/%.c $(GLOBAL_DEP)
 	-mkdir -p $(@D)
 	$(CC) -c -o $@ $(CFLAGS) $<
 	@echo "$(<F)"
 
-$(OBJDIR)/droptxx.o : $(SRC_DIR)/droptxx.cpp $(GLOBAL_DEP) $(SRC_DIR)/droptxx.hpp
+$(OBJ_DIR)/droptxx.o : $(SRC_DIR)/droptxx.cpp $(GLOBAL_DEP) $(SRC_DIR)/droptxx.hpp
 	-mkdir -p $(@D)
 	$(CXX) -c -o $@ $(CFLAGS) $(CXXFLAGS) $<
 	@echo "$(<F)"
