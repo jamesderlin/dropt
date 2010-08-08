@@ -183,14 +183,21 @@ There&rsquo;s no formal documentation yet, but for now, see
 <h2>Download</h2>
 
 <ul>
-<li><a href="http://www.taenarum.com/software/dropt/dropt-1.0.2.zip"><kbd>dropt-1.0.2.zip</kbd></a></li>
-<li><a href="http://www.taenarum.com/software/dropt/dropt-1.0.2.tar.gz"><kbd>dropt-1.0.2.tar.gz</kbd></a></li>
+<li><a href="http://www.taenarum.com/software/dropt/dropt-1.0.3.zip"><kbd>dropt-1.0.3.zip</kbd></a></li>
+<li><a href="http://www.taenarum.com/software/dropt/dropt-1.0.3.tar.gz"><kbd>dropt-1.0.3.tar.gz</kbd></a></li>
 </ul>
 
 
 <h2 id="history">Version History</h2>
 
 <ul id="historylist">
+	<li>
+		1.0.3 (2010-08-08)
+		<ul>
+			<li><code>dropt_handle_bool</code> and <code>dropt_handle_verbose_bool</code> now return <code>dropt_error_mismatch</code> instead of <code>dropt_error_insufficient_arguments</code> if given empty string arguments.</li>
+			<li>The error messages from <code>dropt_default_error_handler</code> now consistently do not end with periods.</li>
+		</ul>
+	</li>
 	<li>
 		1.0.2 (2010-07-28)
 		<ul>

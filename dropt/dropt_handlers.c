@@ -57,7 +57,6 @@ typedef enum { false, true } bool;
   *     dropt_error_none
   *     dropt_error_unknown
   *     dropt_error_bad_configuration
-  *     dropt_error_insufficient_arguments
   *     dropt_error_mismatch
   */
 dropt_error
@@ -79,7 +78,7 @@ dropt_handle_bool(dropt_context* context, const dropt_char* optionArgument,
     }
     else if (optionArgument[0] == DROPT_TEXT_LITERAL('\0'))
     {
-        err = dropt_error_insufficient_arguments;
+        err = dropt_error_mismatch;
     }
     else
     {

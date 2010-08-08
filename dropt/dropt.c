@@ -393,7 +393,13 @@ dropt_default_error_handler(dropt_error error,
                             const dropt_char* optionArgument)
 {
     dropt_char* s = NULL;
-    bool hasArgument = optionArgument != NULL;
+
+    const dropt_char* separator = DROPT_TEXT_LITERAL(": ");
+
+    if (optionArgument == NULL)
+    {
+        separator = optionArgument = DROPT_TEXT_LITERAL("");
+    }
 
     switch (error)
     {
@@ -405,7 +411,7 @@ dropt_default_error_handler(dropt_error error,
             break;
 
         case dropt_error_bad_configuration:
-            s = dropt_strdup(DROPT_TEXT_LITERAL("Invalid option configuration."));
+            s = dropt_strdup(DROPT_TEXT_LITERAL("Invalid option configuration"));
             break;
 
         case dropt_error_invalid_option:
@@ -418,34 +424,22 @@ dropt_default_error_handler(dropt_error error,
             break;
         case dropt_error_mismatch:
             s = dropt_asprintf(DROPT_TEXT_LITERAL("Invalid value for option %s%s%s"),
-                               optionName,
-                               hasArgument ? DROPT_TEXT_LITERAL(": ")
-                                           : DROPT_TEXT_LITERAL(""),
-                               hasArgument ? optionArgument
-                                           : DROPT_TEXT_LITERAL(""));
+                               optionName, separator, optionArgument);
             break;
         case dropt_error_overflow:
             s = dropt_asprintf(DROPT_TEXT_LITERAL("Value too large for option %s%s%s"),
-                               optionName,
-                               hasArgument ? DROPT_TEXT_LITERAL(": ")
-                                           : DROPT_TEXT_LITERAL(""),
-                               hasArgument ? optionArgument
-                                           : DROPT_TEXT_LITERAL(""));
+                               optionName, separator, optionArgument);
             break;
         case dropt_error_underflow:
             s = dropt_asprintf(DROPT_TEXT_LITERAL("Value too small for option %s%s%s"),
-                               optionName,
-                               hasArgument ? DROPT_TEXT_LITERAL(": ")
-                                           : DROPT_TEXT_LITERAL(""),
-                               hasArgument ? optionArgument
-                                           : DROPT_TEXT_LITERAL(""));
+                               optionName, separator, optionArgument);
             break;
         case dropt_error_insufficient_memory:
-            s = dropt_strdup(DROPT_TEXT_LITERAL("Insufficient memory."));
+            s = dropt_strdup(DROPT_TEXT_LITERAL("Insufficient memory"));
             break;
         case dropt_error_unknown:
         default:
-            s = dropt_asprintf(DROPT_TEXT_LITERAL("Unknown error handling option %s."), optionName);
+            s = dropt_asprintf(DROPT_TEXT_LITERAL("Unknown error handling option %s"), optionName);
             break;
     }
 

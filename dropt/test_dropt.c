@@ -478,7 +478,7 @@ test_dropt_handlers(dropt_context* context)
 
     success &= TEST_HANDLER(bool, context, NULL, dropt_error_none, 1, 0);
     success &= TEST_HANDLER(bool, context, NULL, dropt_error_none, 1, 0);
-    success &= TEST_HANDLER(bool, context, T(""), dropt_error_insufficient_arguments, 0, 0);
+    success &= TEST_HANDLER(bool, context, T(""), dropt_error_mismatch, 0, 0);
     success &= TEST_HANDLER(bool, context, T(" "), dropt_error_mismatch, 0, 0);
     success &= TEST_HANDLER(bool, context, T("1"), dropt_error_none, 1, 0);
     success &= TEST_HANDLER(bool, context, T("0"), dropt_error_none, 0, 0);
@@ -495,7 +495,7 @@ test_dropt_handlers(dropt_context* context)
     success &= TEST_HANDLER(bool, context, T("5000000000"), dropt_error_mismatch, 0, 0);
 
     success &= TEST_HANDLER(verbose_bool, context, NULL, dropt_error_none, 1, 0);
-    success &= TEST_HANDLER(verbose_bool, context, T(""), dropt_error_insufficient_arguments, 0, 0);
+    success &= TEST_HANDLER(verbose_bool, context, T(""), dropt_error_mismatch, 0, 0);
     success &= TEST_HANDLER(verbose_bool, context, T(" "), dropt_error_mismatch, 0, 0);
     success &= TEST_HANDLER(verbose_bool, context, T("1"), dropt_error_none, 1, 0);
     success &= TEST_HANDLER(verbose_bool, context, T("0"), dropt_error_none, 0, 0);
