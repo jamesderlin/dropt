@@ -49,15 +49,22 @@ set FILES=dropt.c ^
           README.html ^
           test_dropt.c
 
-set ZIP_FILE=build\dropt-%DROPT_VERSION%.zip
-set TAR_FILE=build\dropt-%DROPT_VERSION%.tar
+set PUBLISH_DIR_BASENAME=dropt-%DROPT_VERSION%
+if exist "build\%PUBLISH_DIR_BASENAME%" rd /s /q "build\%PUBLISH_DIR_BASENAME%"
+md "build\%PUBLISH_DIR_BASENAME%"
+for %%x in (%FILES%) do (copy /y %%x "build\%PUBLISH_DIR_BASENAME%" > NUL)
+
+pushd build
+
+set ZIP_FILE=dropt-%DROPT_VERSION%.zip
+set TAR_FILE=dropt-%DROPT_VERSION%.tar
 
 echo.*** Packaging %ZIP_FILE% ***
-7z a -tzip -mx=9 -mcu=on -r -- "%ZIP_FILE%" %FILES%
+7z a -tzip -mx=9 -mcu=on -r -- "%ZIP_FILE%" "%PUBLISH_DIR_BASENAME%"
 if ERRORLEVEL 1 exit /b 1
 
 echo.*** Packaging %TAR_FILE%.gz ***
-tar -cv -f "%TAR_FILE%" %FILES%
+tar -cv -f "%TAR_FILE%" "%PUBLISH_DIR_BASENAME%"
 if ERRORLEVEL 1 exit /b 1
 
 gzip -f -9 "%TAR_FILE%"
