@@ -183,14 +183,26 @@ There&rsquo;s no formal documentation yet, but for now, see
 <h2>Download</h2>
 
 <ul>
-<li><a href="http://www.taenarum.com/software/dropt/dropt-1.0.3.zip"><kbd>dropt-1.0.3.zip</kbd></a></li>
-<li><a href="http://www.taenarum.com/software/dropt/dropt-1.0.3.tar.gz"><kbd>dropt-1.0.3.tar.gz</kbd></a></li>
+<li><a href="http://www.taenarum.com/software/dropt/dropt-1.0.4.zip"><kbd>dropt-1.0.4.zip</kbd></a></li>
+<li><a href="http://www.taenarum.com/software/dropt/dropt-1.0.4.tar.gz"><kbd>dropt-1.0.4.tar.gz</kbd></a></li>
 </ul>
 
 
 <h2 id="history">Version History</h2>
 
 <ul id="historylist">
+	<li>
+		1.0.4 (2010-09-12)
+		<ul>
+			<li>
+				The <code>DROPT_HANDLER_DECL</code> macro has been replaced with a <code>dropt_option_handler_decl</code> function <code>typedef</code>.  I apologize for breaking compatibility in a minor version update, but in this case the breakage should be minor, and it should be trivial to fix sites that used the old macro:
+				<ul>
+					<li>Replace <code>DROPT_HANDLER_DECL(func);</code> with <code>dropt_option_handler_decl func;</code></li>
+					<li>Alternatively, re-create the macro: <code>#define DROPT_HANDLER_DECL(func) dropt_option_handler_decl func</code></li>
+				</ul>
+			</li>
+		</ul>
+	</li>
 	<li>
 		1.0.3 (2010-08-08)
 		<ul>

@@ -2,7 +2,7 @@
   *
   * A deliberately rudimentary command-line option parser.
   *
-  * Version 1.0.3
+  * Version 1.0.4
   *
   * Copyright (c) 2006-2010 James D. Lin <jameslin@cal.berkeley.edu>
   *
@@ -85,6 +85,10 @@ typedef struct dropt_context dropt_context;
 /** dropt_option_handler_func callbacks are responsible for parsing
   * individual options.
   *
+  * dropt_option_handler_decl may be used for declaring the callback
+  * functions; dropt_option_handler_func is the actual function pointer
+  * type.
+  *
   * optionArgument will be NULL if no argument is specified for an option.
   * It will be the empty string if the user explicitly passed an empty
   * string as the argument (e.g. --option="").
@@ -97,10 +101,14 @@ typedef struct dropt_context dropt_context;
   * called twice: once with a candidate argument, and if that argument is
   * rejected by the handler, again with no argument.  Handlers should be
   * aware of this if they have side-effects.
+  *
+  * handlerData is the client-specified value specified in the dropt_option
+  * table.
   */
-typedef dropt_error (*dropt_option_handler_func)(dropt_context* context,
-                                                 const dropt_char* optionArgument,
-                                                 void* handlerData);
+typedef dropt_error dropt_option_handler_decl(dropt_context* context,
+                                              const dropt_char* optionArgument,
+                                              void* handlerData);
+typedef dropt_option_handler_decl* dropt_option_handler_func;
 
 /** dropt_error_handler_func callbacks are responsible for generating error
   * messages.  The returned string must be allocated on the heap and must
@@ -223,15 +231,12 @@ void dropt_print_help(FILE* f, const dropt_context* context,
 
 
 /* Stock option handlers for common types. */
-#define DROPT_HANDLER_DECL(func) \
-    dropt_error func(dropt_context* context, const dropt_char* optionArgument, \
-                     void* handlerData)
-DROPT_HANDLER_DECL(dropt_handle_bool);
-DROPT_HANDLER_DECL(dropt_handle_verbose_bool);
-DROPT_HANDLER_DECL(dropt_handle_int);
-DROPT_HANDLER_DECL(dropt_handle_uint);
-DROPT_HANDLER_DECL(dropt_handle_double);
-DROPT_HANDLER_DECL(dropt_handle_string);
+dropt_option_handler_decl dropt_handle_bool;
+dropt_option_handler_decl dropt_handle_verbose_bool;
+dropt_option_handler_decl dropt_handle_int;
+dropt_option_handler_decl dropt_handle_uint;
+dropt_option_handler_decl dropt_handle_double;
+dropt_option_handler_decl dropt_handle_string;
 
 #define DROPT_MISUSE(message) dropt_misuse(message, __FILE__, __LINE__)
 void dropt_misuse(const char* message, const char* filename, int line);

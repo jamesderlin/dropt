@@ -128,13 +128,13 @@ private:
 dropt_error convert_exception();
 
 // These use C++ bool and std::basic_string types.
-DROPT_HANDLER_DECL(handle_bool);
-DROPT_HANDLER_DECL(handle_verbose_bool);
-DROPT_HANDLER_DECL(handle_string);
+dropt_option_handler_decl handle_bool;
+dropt_option_handler_decl handle_verbose_bool;
+dropt_option_handler_decl handle_string;
 
-DROPT_HANDLER_DECL(handle_int);
-DROPT_HANDLER_DECL(handle_uint);
-DROPT_HANDLER_DECL(handle_double);
+dropt_option_handler_decl handle_int;
+dropt_option_handler_decl handle_uint;
+dropt_option_handler_decl handle_double;
 
 
 } // namespace dropt

@@ -12,13 +12,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+
 #include "dropt.h"
 
 
 typedef enum { unknown, heads, tails } face_type;
 
 /* Function prototype for our custom function to parse a string to a face_type. */
-static DROPT_HANDLER_DECL(handle_face);
+static dropt_option_handler_decl handle_face;
 
 
 int
@@ -56,12 +57,12 @@ main(int argc, char** argv)
     dropt_context* droptContext = dropt_new_context(options);
     if (droptContext == NULL)
     {
-        /* We failed to create the dropt context, possibly due to a memory
+        /* We failed to create the dropt context, possibly due to memory
          * allocation failure.
          *
          * This also can happen due to logical errors (e.g. if the options
-         * array is malformed).  Logical errors will trigger
-         * DROPT_MISUSE() and will terminate the program in debug builds.
+         * array is malformed).  Logical errors will trigger DROPT_MISUSE()
+         * and will terminate the program in debug builds.
          */
         exitCode = EXIT_FAILURE;
     }
@@ -75,8 +76,8 @@ main(int argc, char** argv)
     }
     else
     {
-        /* argv[1] is safe since argv[argc] is guaranteed to be NULL and
-         * since argc > 0.
+        /* argv[1] is always safe since argv[argc] is guaranteed to be NULL
+         * and since argc > 0.
          */
         char** rest = dropt_parse(droptContext, -1, &argv[1]);
         if (dropt_get_error(droptContext) != dropt_error_none)
