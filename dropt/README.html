@@ -85,11 +85,12 @@ barriers to entry</strong>. Specifically, this includes:
 		features they want.
 	</li>
 	<li>
-		<strong>An unrestrictive license.</strong>  dropt uses the zlib/libpng license and may be
-		statically linked with existing code freely.  This avoids some of the
-		hassles that sometimes come with dynamically-linked libraries (such as
-		ensuring that the compiler options used to build the library match those
-		used for the main binary).
+		<strong>An unrestrictive license.</strong>  dropt uses the
+		<a class="unemphasized" href="http://opensource.org/licenses/Zlib">zlib/libpng license</a>
+		and may be statically linked with existing code freely.  This avoids
+		some of the hassles that sometimes come with dynamically-linked libraries
+		(such as ensuring that the compiler options used to build the library
+		match those used for the main binary).
 	</li>
 	<li>
 		<strong>(Approximate) POSIX compatibility.</strong>  Existing applications that use
@@ -102,11 +103,11 @@ barriers to entry</strong>. Specifically, this includes:
 	</li>
 	<li>
 		<strong>Flexibility.</strong>  dropt is designed to be callback-based.  This
-		allows it to handle arbitrary arguments to command-line options.  Even
-		basic types such as integers or strings are handled by callbacks; dropt
-		provides standard handlers for them.  Exposing the handlers for basic
-		types also allows programs to extend them by building wrappers around
-		them.
+		allows it to handle arbitrary arguments to command-line options.  All types
+		are considered equal.  Even basic types such as integers or strings are
+		handled by callbacks; dropt provides standard handlers for them.  Exposing
+		the handlers for basic types also allows programs to extend them by building
+		wrappers around them.
 	</li>
 </ul>
 
@@ -138,8 +139,8 @@ dropt provides basic option-parsing features:
 	</li>
 	<li>
 		Overridable option values.  For example, &ldquo;<kbd>--option=1 --option=2</kbd>&rdquo; will use
-		the value 2.  Boolean flags can be disabled by using <kbd>--flag=0</kbd> (since
-		<kbd>--flag</kbd> by itself is syntactic sugar for <kbd>--flag=1</kbd>).  This is useful to
+		the value 2.  Boolean flags can be disabled by using <kbd>--flag=0</kbd>
+		(<kbd>--flag</kbd> by itself is syntactic sugar for <kbd>--flag=1</kbd>).  This is useful to
 		override options specified by shell aliases.  Note that clients that
 		specify custom handlers can implement different behaviors if desired.
 	</li>
@@ -223,9 +224,9 @@ There&rsquo;s no formal documentation yet, but for now, see
 			<li>Calling <code>dropt_ssgetstring</code> on a newly-opened <code>dropt_stringstream</code> returned garbage.  Fixed.  This would have affected only clients that used <code>dropt_stringstream</code> directly.</li>
 			<li>The <code>MIN</code> and <code>MAX</code> macros in <kbd>dropt_string.c</kbd> are now conditionally defined.</li>
 			<li><code>dropt_safe_malloc</code> and <code>dropt_safe_realloc</code> are now publicly declared in <kbd>dropt_string.h</kbd>.</li>
-			<li>Renamed <code>DROPT_MISUSE_PANIC</code> to <code>DROPT_MISUSE</code> since it's non-fatal in non-debug builds.</li>
+			<li>Renamed <code>DROPT_MISUSE_PANIC</code> to <code>DROPT_MISUSE</code> since it&rsquo;s non-fatal in non-debug builds.</li>
 			<li><code>DEFAULT_STRINGSTREAM_BUFFER_SIZE</code> is now an <code>enum</code> constant instead of a preprocessor macro.</li>
-			<li>Modified <kbd>test_dropt.c</kbd>.  Now tries harder to report line numbers on failure, and more tests continue executing upon failure.  Added a few more tests for <code>dropt_stringstream</code> functions.  Rewrote one of the sample option handler callbacks more general.</li>
+			<li>Modified <kbd>test_dropt.c</kbd>.  Now tries harder to report line numbers on failure, and more tests continue executing upon failure.  Added a few more tests for <code>dropt_stringstream</code> functions.  Rewrote one of the sample option handler callbacks to be more general.</li>
 		</ul>
 	</li>
 	<li>
@@ -238,7 +239,7 @@ There&rsquo;s no formal documentation yet, but for now, see
 
 <div id="footer">
 
-<address>Questions?  Comments?  Bugs?  I welcome feedback.  <a href="http://www.taenarum.com/contact.html">Contact me.</a></address>
+<address>Questions?  Comments?  Bugs?  I welcome feedback.  <a href="http://www.taenarum.com/contact.html">Contact me</a> or <a href="http://www.taenarum.com/software/dropt/bugs/">file a bug</a>.</address>
 
 <p>
 Copyright &copy; 2010 <a href="http://www.taenarum.com/software/">James D. Lin</a>.

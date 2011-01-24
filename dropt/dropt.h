@@ -93,14 +93,14 @@ typedef struct dropt_context dropt_context;
   * It will be the empty string if the user explicitly passed an empty
   * string as the argument (e.g. --option="").
   *
-  * Note that options that don't expect arguments can receive a non-NULL
+  * An option that doesn't expect an argument still can receive a non-NULL
   * value for optionArgument if the user explicitly specified one (e.g.
   * --option=arg).
   *
-  * Note that if the option's argument is optional, the handler might be
-  * called twice: once with a candidate argument, and if that argument is
-  * rejected by the handler, again with no argument.  Handlers should be
-  * aware of this if they have side-effects.
+  * If the option's argument is optional, the handler might be called
+  * twice: once with a candidate argument, and if that argument is rejected
+  * by the handler, again with no argument.  Handlers should be aware of
+  * this if they have side-effects.
   *
   * handlerData is the client-specified value specified in the dropt_option
   * table.

@@ -99,15 +99,15 @@ $(DROPT_LIB) $(DROPTXX_LIB): $(LIB_OBJ_FILES)
 
 $(DROPTXX_LIB): $(OBJ_DIR)/droptxx.o
 
-$(OBJ_DIR)/% : $(OBJ_DIR)/%.o $(DROPT_LIB)
+$(OBJ_DIR)/%: $(OBJ_DIR)/%.o $(DROPT_LIB)
 	$(CC) $(CFLAGS) $< -L$(OUT_DIR) -ldropt -o $@
 
-$(OBJ_DIR)/%.o : $(SRC_DIR)/%.c $(GLOBAL_DEP)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(GLOBAL_DEP)
 	-mkdir -p $(@D)
 	$(CC) -c -o $@ $(CFLAGS) $<
 	@echo "$(<F)"
 
-$(OBJ_DIR)/droptxx.o : $(SRC_DIR)/droptxx.cpp $(GLOBAL_DEP) $(SRC_DIR)/droptxx.hpp
+$(OBJ_DIR)/droptxx.o: $(SRC_DIR)/droptxx.cpp $(GLOBAL_DEP) $(SRC_DIR)/droptxx.hpp
 	-mkdir -p $(@D)
 	$(CXX) -c -o $@ $(CFLAGS) $(CXXFLAGS) $<
 	@echo "$(<F)"

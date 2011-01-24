@@ -25,9 +25,10 @@ static dropt_option_handler_decl handle_face;
 int
 main(int argc, char** argv)
 {
-    /* C89 requires that array initializers have static storage duration.
-     * This restriction is relaxed in C99 (some compilers ignore it
-     * anyway).
+    /* C89 requires that array initializers be constant, so they need to
+     * have static storage duration if their addresses are to be used as
+     * initialization values.  This restriction is relaxed in C99 (most
+     * compilers ignore it anyway).
      */
     static dropt_bool showHelp = 0;
     static dropt_bool showVersion = 0;

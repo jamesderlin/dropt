@@ -2,7 +2,7 @@
   *
   * String routines for dropt.
   *
-  * Copyright (c) 2006-2010 James D. Lin <jameslin@cal.berkeley.edu>
+  * Copyright (c) 2006-2012 James D. Lin <jameslin@cal.berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>
@@ -288,8 +288,8 @@ dropt_strnicmp(const dropt_char* s, const dropt_char* t, size_t n)
   *     IN args   : Arguments to insert into the formatted string.
   *
   * RETURNS:
-  *     The number of characters that would be to the destination buffer if
-  *       sufficiently large, excluding the NUL-terminator.
+  *     The number of characters that would be written to the destination
+  *       buffer if it's sufficiently large, excluding the NUL-terminator.
   *     Returns -1 on error.
   */
 int

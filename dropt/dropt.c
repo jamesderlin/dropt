@@ -2,7 +2,7 @@
   *
   * A deliberately rudimentary command-line option parser.
   *
-  * Copyright (c) 2006-2010 James D. Lin <jameslin@cal.berkeley.edu>
+  * Copyright (c) 2006-2012 James D. Lin <jameslin@cal.berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>
@@ -67,13 +67,14 @@ struct dropt_context
     dropt_strncmp_func strncmp;
 };
 
+
 typedef struct
 {
     const dropt_option* option;
     const dropt_char* optionArgument;
     dropt_char** argNext;
     int argsLeft;
-} parseState;
+} parse_state;
 
 
 /** is_valid_option
@@ -105,7 +106,7 @@ is_valid_option(const dropt_option* option)
   *     of the form "--option").
   *
   * PARAMETERS:
-  *     IN context     : The options context.
+  *     IN context     : The dropt context.
   *     IN longName    : The "long" option to search for (excluding leading
   *                        dashes).
   *                      This might not be NUL-terminated.
@@ -149,7 +150,7 @@ find_long_option(const dropt_context* context,
   *     option of the form "-o").
   *
   * PARAMETERS:
-  *     IN context   : The options context.
+  *     IN context   : The dropt context.
   *     IN shortName : The "short" option to search for.
   *
   * RETURNS:
@@ -179,10 +180,10 @@ find_short_option(const dropt_context* context, dropt_char shortName)
 
 /** set_error_details
   *
-  *     Generates error details in the options context.
+  *     Generates error details in the dropt context.
   *
   * PARAMETERS:
-  *     IN/OUT context    : The options context.
+  *     IN/OUT context    : The dropt context.
   *                         Must not be NULL.
   *     IN err            : The error code.
   *     IN optionName     : The name of the option we failed on.
@@ -207,9 +208,9 @@ set_error_details(dropt_context* context, dropt_error err,
     free(context->errorDetails.optionArgument);
 
     context->errorDetails.optionName = dropt_strndup(optionName, optionNameLen);
-    context->errorDetails.optionArgument = (optionArgument != NULL)
-                                           ? dropt_strdup(optionArgument)
-                                           : NULL;
+    context->errorDetails.optionArgument = (optionArgument == NULL)
+                                           ? NULL
+                                           : dropt_strdup(optionArgument);
 
     /* The message will be generated lazily on retrieval. */
     free(context->errorDetails.message);
@@ -219,10 +220,10 @@ set_error_details(dropt_context* context, dropt_error err,
 
 /** set_short_option_error_details
   *
-  *     Generates error details in the options context.
+  *     Generates error details in the dropt context.
   *
   * PARAMETERS:
-  *     IN/OUT context    : The options context.
+  *     IN/OUT context    : The dropt context.
   *     IN err            : The error code.
   *     IN shortName      : the "short" name of the option we failed on.
   *     IN optionArgument : The value of the option we failed on.
@@ -249,11 +250,11 @@ set_short_option_error_details(dropt_context* context, dropt_error err,
 /** dropt_get_error
   *
   * PARAMETERS:
-  *     IN context : The options context.
+  *     IN context : The dropt context.
   *                  Must not be NULL.
   *
   * RETURNS:
-  *     The current error code waiting in the options context.
+  *     The current error code waiting in the dropt context.
   */
 dropt_error
 dropt_get_error(const dropt_context* context)
@@ -272,7 +273,7 @@ dropt_get_error(const dropt_context* context)
   *     Retrieves details about the current error.
   *
   * PARAMETERS:
-  *     IN context         : The options context.
+  *     IN context         : The dropt context.
   *     OUT optionName     : On output, the name of the option we failed
   *                            on.  Do not free this string.
   *                          Pass NULL if unwanted.
@@ -293,12 +294,12 @@ dropt_get_error_details(const dropt_context* context,
 /** dropt_get_error_message
   *
   * PARAMETERS:
-  *     IN context : The options context.
+  *     IN context : The dropt context.
   *                  Must not be NULL.
   *
   * RETURNS:
-  *     The current error message waiting in the options context or the
-  *       empty string if there are no errors.  Note that calling any dropt
+  *     The current error message waiting in the dropt context or the empty
+  *       string if there are no errors.  Note that calling any dropt
   *       function other than dropt_get_error, dropt_get_error_details, and
   *       dropt_get_error_message may invalidate a previously-returned
   *       string.
@@ -349,7 +350,7 @@ dropt_get_error_message(dropt_context* context)
   *     Clears the error waiting in the dropt context.
   *
   * PARAMETERS:
-  *     IN/OUT context : The options context to free.
+  *     IN/OUT context : The dropt context to free.
   *                      May be NULL.
   */
 void
@@ -439,7 +440,8 @@ dropt_default_error_handler(dropt_error error,
             break;
         case dropt_error_unknown:
         default:
-            s = dropt_asprintf(DROPT_TEXT_LITERAL("Unknown error handling option %s"), optionName);
+            s = dropt_asprintf(DROPT_TEXT_LITERAL("Unknown error handling option %s"),
+                               optionName);
             break;
     }
 
@@ -450,7 +452,7 @@ dropt_default_error_handler(dropt_error error,
 /** dropt_get_help
   *
   * PARAMETERS:
-  *     IN context    : The options context.
+  *     IN context    : The dropt context.
   *                     Must not be NULL.
   *     IN helpParams : The help parameters.
   *                     Pass NULL to use the default help parameters.
@@ -596,7 +598,7 @@ dropt_get_help(const dropt_context* context, const dropt_help_params* helpParams
   *
   * PARAMETERS:
   *     IN/OUT f      : The file stream to print to.
-  *     IN context    : The options context.
+  *     IN context    : The dropt context.
   *                     Must not be NULL.
   *     IN helpParams : The help parameters.
   *                     Pass NULL to use the default help parameters.
@@ -621,7 +623,7 @@ dropt_print_help(FILE* f, const dropt_context* context,
   *     handler callback.
   *
   * PARAMETERS:
-  *     IN/OUT context    : The options context.
+  *     IN/OUT context    : The dropt context.
   *     IN option         : The option.
   *     IN optionArgument : The option's value.  May be NULL.
   *
@@ -650,14 +652,14 @@ set_option_value(dropt_context* context,
   *     optional arguments.
   *
   * PARAMETERS:
-  *     IN/OUT context : The options context.
+  *     IN/OUT context : The dropt context.
   *     IN/OUT ps      : The current parse state.
   *
   * RETURNS:
   *     An error code.
   */
 static dropt_error
-parse_option_arg(dropt_context* context, parseState* ps)
+parse_option_arg(dropt_context* context, parse_state* ps)
 {
     dropt_error err;
 
@@ -713,7 +715,7 @@ exit:
   *     Parses command-line options.
   *
   * PARAMETERS:
-  *     IN/OUT context : The options context.
+  *     IN/OUT context : The dropt context.
   *                      Must not be NULL.
   *     IN argc        : The maximum number of arguments to parse from
   *                        argv.
@@ -732,7 +734,7 @@ dropt_parse(dropt_context* context,
     dropt_error err = dropt_error_none;
 
     dropt_char* arg;
-    parseState ps;
+    parse_state ps;
 
     ps.option = NULL;
     ps.optionArgument = NULL;
@@ -791,7 +793,7 @@ dropt_parse(dropt_context* context,
 
         if (arg[1] == DROPT_TEXT_LITERAL('-'))
         {
-            dropt_char* longName = arg + 2;
+            const dropt_char* longName = arg + 2;
             if (longName[0] == DROPT_TEXT_LITERAL('\0'))
             {
                 /* -- */
@@ -969,15 +971,15 @@ exit:
 
 /** dropt_new_context
   *
-  *     Creates a new options context.
+  *     Creates a new dropt context.
   *
   * PARAMETERS:
   *     IN options : The list of option specifications.
   *                  Must not be NULL.
   *
   * RETURNS:
-  *     An allocated options context.  The caller is responsible for
-  *       freeing it with dropt_free_context when no longer needed.
+  *     An allocated dropt context.  The caller is responsible for freeing
+  *       it with dropt_free_context when no longer needed.
   *     Returns NULL on error.
   */
 dropt_context*
@@ -1028,10 +1030,10 @@ exit:
 
 /** dropt_free_context
   *
-  *     Frees an options context.
+  *     Frees a dropt context.
   *
   * PARAMETERS:
-  *     IN/OUT context : The options context to free.
+  *     IN/OUT context : The dropt context to free.
   *                      May be NULL.
   */
 void
@@ -1045,7 +1047,7 @@ dropt_free_context(dropt_context* context)
 /** dropt_get_options
   *
   * PARAMETERS:
-  *     IN context : The options context.
+  *     IN context : The dropt context.
   *                  Must not be NULL.
   *
   * RETURNS:
@@ -1094,7 +1096,7 @@ dropt_init_help_params(dropt_help_params* helpParams)
   *     error codes.
   *
   * PARAMETERS:
-  *     IN/OUT context : The options context.
+  *     IN/OUT context : The dropt context.
   *                      Must not be NULL.
   *     IN handler     : The error handler callback.
   *                      Pass NULL to use the default error handler.
@@ -1116,10 +1118,10 @@ dropt_set_error_handler(dropt_context* context, dropt_error_handler_func handler
 
 /** dropt_set_strncmp
   *
-  *     Sets the callback function usde to compare strings.
+  *     Sets the callback function used to compare strings.
   *
   * PARAMETERS:
-  *     IN/OUT context : The options context.
+  *     IN/OUT context : The dropt context.
   *                      Must not be NULL.
   *     IN cmp         : The string comparison function.
   *                      Pass NULL to use the default string comparison
@@ -1135,6 +1137,31 @@ dropt_set_strncmp(dropt_context* context, dropt_strncmp_func cmp)
     }
 
     context->strncmp = cmp;
+}
+
+
+/** dropt_allow_concatenated_arguments
+  *
+  *     Specifies whether "short" options are allowed to have concatenated
+  *     arguments (i.e. without space or '=' separators, such as -oARGUMENT).
+  *
+  *     (Concatenated arguments are disallowed by default.)
+  *
+  * PARAMETERS:
+  *     IN/OUT context : The dropt context.
+  *     IN allow       : Pass 1 if concatenated arguments should be allowed,
+  *                        0 otherwise.
+  */
+void
+dropt_allow_concatenated_arguments(dropt_context* context, dropt_bool allow)
+{
+    if (context == NULL)
+    {
+        DROPT_MISUSE("No dropt context specified.");
+        return;
+    }
+
+    context->allowConcatenatedArgs = (allow != 0);
 }
 
 
@@ -1166,29 +1193,4 @@ dropt_misuse(const char* message, const char* filename, int line)
     fprintf(stderr, "dropt: %s (%s: %d)\n", message, filename, line);
     abort();
 #endif
-}
-
-
-/** dropt_allow_concatenated_arguments
-  *
-  *     Specifies whether "short" options are allowed to have concatenated
-  *     arguments (i.e. without space or '=' separators, such as -oARGUMENT).
-  *
-  *     (Concatenated arguments are disallowed by default.)
-  *
-  * PARAMETERS:
-  *     IN/OUT context : The options context.
-  *     IN allow       : Pass 1 if concatenated arguments should be allowed,
-  *                        0 otherwise.
-  */
-void
-dropt_allow_concatenated_arguments(dropt_context* context, dropt_bool allow)
-{
-    if (context == NULL)
-    {
-        DROPT_MISUSE("No dropt context specified.");
-        return;
-    }
-
-    context->allowConcatenatedArgs = (allow != 0);
 }
