@@ -35,7 +35,24 @@
 #include "dropt.h"
 #include "dropt_string.h"
 
+#if __STDC_VERSION__ >= 199901L
+    #include <stdint.h>
+#else
+    /* Compatibility junk for things that don't yet support ISO C99. */
+    #ifndef SIZE_MAX
+        #define SIZE_MAX ((size_t) -1)
+    #endif
+#endif
+
+#ifndef MIN
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+#endif
+
+#ifndef ARRAY_LENGTH
 #define ARRAY_LENGTH(array) (sizeof (array) / sizeof (array)[0])
+#endif
+
+#define IMPLIES(p, q) (!(p) || q)
 
 #define OPTION_TAKES_ARG(option) ((option)->arg_description != NULL)
 
@@ -47,9 +64,42 @@ enum
     default_description_start_column = 6,
 };
 
+
+/** A string that might not be NUL-terminated. */
+typedef struct
+{
+    const dropt_char* s;
+
+    /* The length of s, excluding any NUL terminator. */
+    size_t len;
+} char_array;
+
+
+/** A proxy for a dropt_option used for qsort and bsearch.  Instead of
+  * sorting the dropt_option table directly, we sort arrays of option_proxy
+  * structures.  This allows us to have separate arrays sorted by different
+  * keys and allows passing along additional data.
+  */
+typedef struct
+{
+    const dropt_option* option;
+
+    /* The qsort and bsearch comparison callbacks don't pass along any
+     * client-supplied contextual data, so we have to embed it alongside
+     * the regular data.
+     */
+    const dropt_context* context;
+} option_proxy;
+
+
 struct dropt_context
 {
     const dropt_option* options;
+    size_t numOptions;
+
+    /* These may be NULL. */
+    option_proxy* sortedByLong;
+    option_proxy* sortedByShort;
 
     bool allowConcatenatedArgs;
 
@@ -75,6 +125,272 @@ typedef struct
     dropt_char** argNext;
     int argsLeft;
 } parse_state;
+
+
+/** make_char_array
+  *
+  * PARAMETERS:
+  *     IN s : A string.  Might not be NUL-terminated.
+  *            May be NULL.
+  *     len  : The length of s, excluding any NUL terminator.
+  *
+  * RETURNS:
+  *     The constructed char_array structure.
+  */
+static char_array
+make_char_array(const dropt_char* s, size_t len)
+{
+   char_array a;
+
+   assert(IMPLIES(s == NULL, len == 0));
+
+   a.s = s;
+   a.len = len;
+   return a;
+}
+
+
+/** cmp_key_option_proxy_long
+  *
+  *     Comparison callback for bsearch.  Compares a char_array structure
+  *     against an option_proxy structure based on long option names.
+  *
+  * PARAMETERS:
+  *     IN key  : A pointer to the char_array structure to search for.
+  *     IN item : A pointer to the option_proxy structure being searched
+  *                 against.
+  *
+  * RETURNS:
+  *     0 if key and item are equivalent,
+  *     < 0 if key should precede item,
+  *     > 0 if key should follow item.
+  */
+static int
+cmp_key_option_proxy_long(const void* key, const void* item)
+{
+    const char_array* longName = key;
+    const option_proxy* op = item;
+
+    size_t optionLen;
+    int ret;
+
+    assert(longName != NULL);
+    assert(op != NULL);
+    assert(op->option != NULL);
+    assert(op->context != NULL);
+    assert(op->context->strncmp != NULL);
+
+    if (longName->s == op->option->long_name)
+    {
+        return 0;
+    }
+    else if (longName->s == NULL)
+    {
+        return -1;
+    }
+    else if (op->option->long_name == NULL)
+    {
+        return +1;
+    }
+
+    /* Although the longName key might not be NUL-terminated, the
+     * option_proxy item we're searching against must be.
+     */
+    optionLen = dropt_strlen(op->option->long_name);
+    ret = op->context->strncmp(longName->s,
+                               op->option->long_name,
+                               MIN(longName->len, optionLen));
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    if (longName->len < optionLen)
+    {
+        return -1;
+    }
+    else if (longName->len > optionLen)
+    {
+        return +1;
+    }
+
+    return 0;
+}
+
+
+/** cmp_option_proxies_long
+  *
+  *     Comparison callback for qsort.  Compares two option_proxy
+  *     structures based on long option names.
+  *
+  * PARAMETERS:
+  *     IN p1, p2 : Pointers to the option_proxy structures to compare.
+  *
+  * RETURNS:
+  *     0 if p1 and p2 are equivalent,
+  *     < 0 if p1 should precede p2,
+  *     > 0 if p1 should follow p2.
+  */
+static int
+cmp_option_proxies_long(const void* p1, const void* p2)
+{
+    const option_proxy* o1 = p1;
+    const option_proxy* o2 = p2;
+
+    char_array ca1;
+
+    assert(o1 != NULL);
+    assert(o2 != NULL);
+    assert(o1->option != NULL);
+    assert(o1->context == o2->context);
+
+    ca1 = make_char_array(o1->option->long_name,
+                          (o1->option->long_name == NULL)
+                          ? 0
+                          : dropt_strlen(o1->option->long_name));
+    return cmp_key_option_proxy_long(&ca1, o2);
+}
+
+
+/** cmp_key_option_proxy_short
+  *
+  *     Comparison callback for bsearch.  Compares a dropt_char against an
+  *     option_proxy structure based on short option names.
+  *
+  * PARAMETERS:
+  *     IN key  : A pointer to the dropt_char to search for.
+  *     IN item : A pointer to the option_proxy structure being searched
+  *                 against.
+  *
+  * RETURNS:
+  *     0 if key and item are equivalent,
+  *     < 0 if key should precede item,
+  *     > 0 if key should follow item.
+  */
+static int
+cmp_key_option_proxy_short(const void* key, const void* item)
+{
+    const dropt_char* shortName = key;
+    const option_proxy* op = item;
+
+    assert(shortName != NULL);
+    assert(op != NULL);
+    assert(op->option != NULL);
+    assert(op->context != NULL);
+    assert(op->context->strncmp != NULL);
+
+    return op->context->strncmp(shortName,
+                                &op->option->short_name,
+                                1);
+}
+
+
+/** cmp_option_proxies_short
+  *
+  *     Comparison callback for qsort.  Compares two option_proxy
+  *     structures based on short option names.
+  *
+  * PARAMETERS:
+  *     IN p1, p2 : Pointers to the option_proxy structures to compare.
+  *
+  * RETURNS:
+  *     0 if p1 and p2 are equivalent,
+  *     < 0 if p1 should precede p2,
+  *     > 0 if p1 should follow p2.
+  */
+static int
+cmp_option_proxies_short(const void* p1, const void* p2)
+{
+    const option_proxy* o1 = p1;
+    const option_proxy* o2 = p2;
+
+    assert(o1 != NULL);
+    assert(o2 != NULL);
+    assert(o1->option != NULL);
+    assert(o1->context == o2->context);
+
+    return cmp_key_option_proxy_short(&o1->option->short_name, o2);
+}
+
+
+/** init_lookup_tables
+  *
+  *     Initializes the sorted lookup tables in a dropt context if not
+  *     already initialized.
+  *
+  * PARAMETERS:
+  *     IN/OUT context : The dropt context.
+  *                      Must not be NULL.
+  */
+static void
+init_lookup_tables(dropt_context* context)
+{
+    const dropt_option* options;
+    size_t n;
+
+    assert(context != NULL);
+
+    options = context->options;
+    n = context->numOptions;
+
+    if (context->sortedByLong == NULL)
+    {
+        context->sortedByLong = dropt_safe_malloc(n, sizeof *(context->sortedByLong));
+        if (context->sortedByLong != NULL)
+        {
+            size_t i;
+            for (i = 0; i < n; i++)
+            {
+                context->sortedByLong[i].option = &options[i];
+                context->sortedByLong[i].context = context;
+            }
+
+            qsort(context->sortedByLong,
+                  n, sizeof *(context->sortedByLong),
+                  cmp_option_proxies_long);
+        }
+    }
+
+    if (context->sortedByShort == NULL)
+    {
+        context->sortedByShort = dropt_safe_malloc(n, sizeof *(context->sortedByShort));
+        if (context->sortedByShort != NULL)
+        {
+            size_t i;
+            for (i = 0; i < n; i++)
+            {
+                context->sortedByShort[i].option = &options[i];
+                context->sortedByShort[i].context = context;
+            }
+
+            qsort(context->sortedByShort,
+                  n, sizeof *(context->sortedByShort),
+                  cmp_option_proxies_short);
+        }
+    }
+}
+
+
+/** free_lookup_tables
+  *
+  *     Frees the sorted lookup tables in a dropt context.
+  *
+  * PARAMETERS:
+  *     IN/OUT context : The dropt context.
+  *                      May be NULL.
+  */
+static void
+free_lookup_tables(dropt_context* context)
+{
+    if (context != NULL)
+    {
+        free(context->sortedByLong);
+        context->sortedByLong = NULL;
+
+        free(context->sortedByShort);
+        context->sortedByShort = NULL;
+    }
+}
 
 
 /** is_valid_option
@@ -109,9 +425,7 @@ is_valid_option(const dropt_option* option)
   *     IN context     : The dropt context.
   *     IN longName    : The "long" option to search for (excluding leading
   *                        dashes).
-  *                      This might not be NUL-terminated.
-  *     IN longNameLen : The length of the longName string, excluding a
-  *                        NUL-terminator.
+  *                      longName.s must not be NULL.
   *
   * RETURNS:
   *     A pointer to the corresponding option specification or NULL if not
@@ -119,25 +433,29 @@ is_valid_option(const dropt_option* option)
   */
 static const dropt_option*
 find_long_option(const dropt_context* context,
-                 const dropt_char* longName, size_t longNameLen)
+                 char_array longName)
 {
-    dropt_strncmp_func cmp;
-    const dropt_option* option;
-
     assert(context != NULL);
-    assert(longName != NULL);
+    assert(longName.s != NULL);
 
-    cmp = (context->strncmp != NULL)
-          ? context->strncmp
-          : dropt_strncmp;
-
-    for (option = context->options; is_valid_option(option); option++)
+    if (context->sortedByLong != NULL)
     {
-        if (   option->long_name != NULL
-            && longNameLen == dropt_strlen(option->long_name)
-            && cmp(longName, option->long_name, longNameLen) == 0)
+        option_proxy* found = bsearch(&longName, context->sortedByLong,
+                                      context->numOptions, sizeof *(context->sortedByLong),
+                                      cmp_key_option_proxy_long);
+        return (found == NULL) ? NULL : found->option;
+    }
+
+    /* Fall back to a linear search. */
+    {
+        option_proxy item = { 0 };
+        item.context = context;
+        for (item.option = context->options; is_valid_option(item.option); item.option++)
         {
-            return option;
+            if (cmp_key_option_proxy_long(&longName, &item) == 0)
+            {
+                return item.option;
+            }
         }
     }
     return NULL;
@@ -160,18 +478,27 @@ find_long_option(const dropt_context* context,
 static const dropt_option*
 find_short_option(const dropt_context* context, dropt_char shortName)
 {
-    const dropt_option* option;
-
     assert(context != NULL);
     assert(shortName != DROPT_TEXT_LITERAL('\0'));
+    assert(context->strncmp != NULL);
 
-    for (option = context->options; is_valid_option(option); option++)
+    if (context->sortedByShort != NULL)
     {
-        if (   shortName == option->short_name
-            || (   context->strncmp != NULL
-                && context->strncmp(&shortName, &option->short_name, 1) == 0))
+        option_proxy* found = bsearch(&shortName, context->sortedByShort,
+                                      context->numOptions, sizeof *(context->sortedByShort),
+                                      cmp_key_option_proxy_short);
+        return (found == NULL) ? NULL : found->option;
+    }
+
+    /* Fall back to a linear search. */
+    {
+        const dropt_option* option;
+        for (option = context->options; is_valid_option(option); option++)
         {
-            return option;
+            if (context->strncmp(&shortName, &option->short_name, 1) == 0)
+            {
+                return option;
+            }
         }
     }
     return NULL;
@@ -187,27 +514,24 @@ find_short_option(const dropt_context* context, dropt_char shortName)
   *                         Must not be NULL.
   *     IN err            : The error code.
   *     IN optionName     : The name of the option we failed on.
-  *                         This might not be NUL-terminated.
-  *                         Must not be NULL.
-  *     IN optionNameLen  : The length of the optionName string, excluding
-  *                           a NUL-terminator.
+  *                         optionName.s must not be NULL.
   *     IN optionArgument : The value of the option we failed on.
   *                         Pass NULL if unwanted.
   */
 static void
 set_error_details(dropt_context* context, dropt_error err,
-                  const dropt_char* optionName, size_t optionNameLen,
+                  char_array optionName,
                   const dropt_char* optionArgument)
 {
     assert(context != NULL);
-    assert(optionName != NULL);
+    assert(optionName.s != NULL);
 
     context->errorDetails.err = err;
 
     free(context->errorDetails.optionName);
     free(context->errorDetails.optionArgument);
 
-    context->errorDetails.optionName = dropt_strndup(optionName, optionNameLen);
+    context->errorDetails.optionName = dropt_strndup(optionName.s, optionName.len);
     context->errorDetails.optionArgument = (optionArgument == NULL)
                                            ? NULL
                                            : dropt_strdup(optionArgument);
@@ -242,7 +566,7 @@ set_short_option_error_details(dropt_context* context, dropt_error err,
     shortNameBuf[1] = shortName;
 
     set_error_details(context, err,
-                      shortNameBuf, ARRAY_LENGTH(shortNameBuf) - 1,
+                      make_char_array(shortNameBuf, ARRAY_LENGTH(shortNameBuf) - 1),
                       optionArgument);
 }
 
@@ -750,7 +1074,8 @@ dropt_parse(dropt_context* context,
     {
         DROPT_MISUSE("No dropt context specified.");
         set_error_details(context, dropt_error_bad_configuration,
-                          DROPT_TEXT_LITERAL(""), 0, NULL);
+                          make_char_array(DROPT_TEXT_LITERAL(""), 0),
+                          NULL);
         goto exit;
     }
 
@@ -759,7 +1084,8 @@ dropt_parse(dropt_context* context,
     {
         DROPT_MISUSE("No error handler specified.");
         set_error_details(context, dropt_error_bad_configuration,
-                          DROPT_TEXT_LITERAL(""), 0, NULL);
+                          make_char_array(DROPT_TEXT_LITERAL(""), 0),
+                          NULL);
         goto exit;
     }
 #endif
@@ -769,6 +1095,14 @@ dropt_parse(dropt_context* context,
         argc = 0;
         while (argv[argc] != NULL) { argc++; }
     }
+
+    if (argc == 0)
+    {
+        /* Nothing to do. */
+        goto exit;
+    }
+
+    init_lookup_tables(context);
 
     ps.argsLeft = argc;
 
@@ -812,7 +1146,9 @@ dropt_parse(dropt_context* context,
                  * "--=".
                  */
                 err = dropt_error_invalid_option;
-                set_error_details(context, err, arg, dropt_strlen(arg), NULL);
+                set_error_details(context, err,
+                                  make_char_array(arg, dropt_strlen(arg)),
+                                  NULL);
                 goto exit;
             }
             else
@@ -836,18 +1172,23 @@ dropt_parse(dropt_context* context,
                  * to mutate the original string by inserting a
                  * NUL-terminator.
                  */
-                ps.option = find_long_option(context, longName, longNameEnd - longName);
+                ps.option = find_long_option(context,
+                                             make_char_array(longName,
+                                                             longNameEnd - longName));
                 if (ps.option == NULL)
                 {
                     err = dropt_error_invalid_option;
-                    set_error_details(context, err, arg, longNameEnd - arg, NULL);
+                    set_error_details(context, err,
+                                      make_char_array(arg, longNameEnd - arg),
+                                      NULL);
                 }
                 else
                 {
                     err = parse_option_arg(context, &ps);
                     if (err != dropt_error_none)
                     {
-                        set_error_details(context, err, arg, longNameEnd - arg,
+                        set_error_details(context, err,
+                                          make_char_array(arg, longNameEnd - arg),
                                           ps.optionArgument);
                     }
                 }
@@ -871,7 +1212,9 @@ dropt_parse(dropt_context* context,
                  * "-=".
                  */
                 err = dropt_error_invalid_option;
-                set_error_details(context, err, arg, dropt_strlen(arg), NULL);
+                set_error_details(context, err,
+                                  make_char_array(arg, dropt_strlen(arg)),
+                                  NULL);
                 goto exit;
             }
             else
@@ -986,6 +1329,7 @@ dropt_context*
 dropt_new_context(const dropt_option* options)
 {
     dropt_context* context = NULL;
+    size_t n;
 
     if (options == NULL)
     {
@@ -993,34 +1337,31 @@ dropt_new_context(const dropt_option* options)
         goto exit;
     }
 
-    context = malloc(sizeof *context);
-    if (context == NULL) { goto exit; }
-
-    context->options = options;
-    context->allowConcatenatedArgs = false;
-    context->errorHandler = NULL;
-    context->errorHandlerData = NULL;
-    context->errorDetails.err = dropt_error_none;
-    context->errorDetails.optionName = NULL;
-    context->errorDetails.optionArgument = NULL;
-    context->errorDetails.message = NULL;
-    context->strncmp = NULL;
-
     /* Sanity-check the options. */
+    for (n = 0; is_valid_option(&options[n]); n++)
     {
-        const dropt_option* option;
-        for (option = options; is_valid_option(option); option++)
+        if (   options[n].short_name == DROPT_TEXT_LITERAL('=')
+            || (   options[n].long_name != NULL
+                && dropt_strchr(options[n].long_name, DROPT_TEXT_LITERAL('=')) != NULL))
         {
-            if (   option->short_name == DROPT_TEXT_LITERAL('=')
-                || (   option->long_name != NULL
-                    && dropt_strchr(option->long_name, DROPT_TEXT_LITERAL('=')) != NULL))
-            {
-                DROPT_MISUSE("Invalid option list. '=' may not be used in an option name.");
-                free(context);
-                context = NULL;
-                goto exit;
-            }
+            DROPT_MISUSE("Invalid option list. '=' may not be used in an option name.");
+            goto exit;
         }
+    }
+
+    context = malloc(sizeof *context);
+    if (context == NULL)
+    {
+        goto exit;
+    }
+    else
+    {
+        dropt_context emptyContext = { 0 };
+        *context = emptyContext;
+
+        context->options = options;
+        context->numOptions = n;
+        dropt_set_strncmp(context, NULL);
     }
 
 exit:
@@ -1040,6 +1381,7 @@ void
 dropt_free_context(dropt_context* context)
 {
     dropt_clear_error(context);
+    free_lookup_tables(context);
     free(context);
 }
 
@@ -1136,7 +1478,11 @@ dropt_set_strncmp(dropt_context* context, dropt_strncmp_func cmp)
         return;
     }
 
+    if (cmp == NULL) { cmp = dropt_strncmp; }
     context->strncmp = cmp;
+
+    /* Changing the sort method invalidates our existing lookup tables. */
+    free_lookup_tables(context);
 }
 
 

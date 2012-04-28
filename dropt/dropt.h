@@ -2,7 +2,7 @@
   *
   * A deliberately rudimentary command-line option parser.
   *
-  * Version 1.0.4
+  * Version 1.1.0
   *
   * Copyright (c) 2006-2010 James D. Lin <jameslin@cal.berkeley.edu>
   *
