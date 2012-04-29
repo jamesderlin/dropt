@@ -4,7 +4,7 @@
   *
   * Version 1.1.0
   *
-  * Copyright (c) 2006-2010 James D. Lin <jameslin@cal.berkeley.edu>
+  * Copyright (c) 2006-2012 James D. Lin <jameslin@cal.berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>

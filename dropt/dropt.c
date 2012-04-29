@@ -416,15 +416,15 @@ is_valid_option(const dropt_option* option)
 }
 
 
-/** find_long_option
+/** find_option_long
   *
-  *     Finds the option specification for a "long" option (i.e., an option
-  *     of the form "--option").
+  *     Finds the option specification for a long option name (i.e., an
+  *     option of the form "--option").
   *
   * PARAMETERS:
   *     IN context     : The dropt context.
-  *     IN longName    : The "long" option to search for (excluding leading
-  *                        dashes).
+  *     IN longName    : The long option name to search for (excluding
+  *                        leading dashes).
   *                      longName.s must not be NULL.
   *
   * RETURNS:
@@ -432,7 +432,7 @@ is_valid_option(const dropt_option* option)
   *       found.
   */
 static const dropt_option*
-find_long_option(const dropt_context* context,
+find_option_long(const dropt_context* context,
                  char_array longName)
 {
     assert(context != NULL);
@@ -462,21 +462,21 @@ find_long_option(const dropt_context* context,
 }
 
 
-/** find_short_option
+/** find_option_short
   *
-  *     Finds the option specification for a "short" option (i.e., an
+  *     Finds the option specification for a short option name (i.e., an
   *     option of the form "-o").
   *
   * PARAMETERS:
   *     IN context   : The dropt context.
-  *     IN shortName : The "short" option to search for.
+  *     IN shortName : The short option name to search for.
   *
   * RETURNS:
   *     A pointer to the corresponding option specification or NULL if not
   *       found.
   */
 static const dropt_option*
-find_short_option(const dropt_context* context, dropt_char shortName)
+find_option_short(const dropt_context* context, dropt_char shortName)
 {
     assert(context != NULL);
     assert(shortName != DROPT_TEXT_LITERAL('\0'));
@@ -1172,7 +1172,7 @@ dropt_parse(dropt_context* context,
                  * to mutate the original string by inserting a
                  * NUL-terminator.
                  */
-                ps.option = find_long_option(context,
+                ps.option = find_option_long(context,
                                              make_char_array(longName,
                                                              longNameEnd - longName));
                 if (ps.option == NULL)
@@ -1235,7 +1235,7 @@ dropt_parse(dropt_context* context,
 
             for (j = 1; j < len; j++)
             {
-                ps.option = find_short_option(context, arg[j]);
+                ps.option = find_option_short(context, arg[j]);
                 if (ps.option == NULL)
                 {
                     err = dropt_error_invalid_option;
