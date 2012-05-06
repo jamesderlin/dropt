@@ -2,7 +2,7 @@
   *
   * Default type handlers for dropt.
   *
-  * Copyright (c) 2006-2010 James D. Lin <jameslin@cal.berkeley.edu>
+  * Copyright (c) 2006-2012 James D. Lin <jameslin@cal.berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>
@@ -31,6 +31,7 @@
 #include <limits.h>
 #include <float.h>
 #include <errno.h>
+#include <assert.h>
 
 #include "dropt.h"
 #include "dropt_string.h"
@@ -65,8 +66,9 @@ dropt_handle_bool(dropt_context* context, const dropt_char* optionArgument,
 {
     dropt_error err = dropt_error_none;
     bool val = false;
+    dropt_bool* out = handlerData;
 
-    if (handlerData == NULL)
+    if (out == NULL)
     {
         DROPT_MISUSE("No handler data specified.");
         err = dropt_error_bad_configuration;
@@ -105,7 +107,7 @@ dropt_handle_bool(dropt_context* context, const dropt_char* optionArgument,
         }
     }
 
-    if (err == dropt_error_none) { *((dropt_bool*) handlerData) = val; }
+    if (err == dropt_error_none) { *out = val; }
     return err;
 }
 
@@ -133,9 +135,14 @@ dropt_handle_verbose_bool(dropt_context* context, const dropt_char* optionArgume
                           void* handlerData)
 {
     dropt_error err = dropt_handle_bool(context, optionArgument, handlerData);
-    if (err != dropt_error_none)
+    if (err == dropt_error_mismatch)
     {
         bool val = false;
+        dropt_bool* out = handlerData;
+
+        /* dropt_handle_bool already checks for this. */
+        assert(out != NULL);
+
         if (dropt_stricmp(optionArgument, DROPT_TEXT_LITERAL("false")) == 0)
         {
             val = false;
@@ -147,7 +154,7 @@ dropt_handle_verbose_bool(dropt_context* context, const dropt_char* optionArgume
             err = dropt_error_none;
         }
 
-        if (err == dropt_error_none) { *((dropt_bool*) handlerData) = val; }
+        if (err == dropt_error_none) { *out = val; }
     }
     return err;
 }
@@ -179,8 +186,9 @@ dropt_handle_int(dropt_context* context, const dropt_char* optionArgument,
 {
     dropt_error err = dropt_error_none;
     int val = 0;
+    int* out = handlerData;
 
-    if (handlerData == NULL)
+    if (out == NULL)
     {
         DROPT_MISUSE("No handler data specified.");
         err = dropt_error_bad_configuration;
@@ -221,7 +229,7 @@ dropt_handle_int(dropt_context* context, const dropt_char* optionArgument,
         }
     }
 
-    if (err == dropt_error_none) { *((int*) handlerData) = val; }
+    if (err == dropt_error_none) { *out = val; }
     return err;
 }
 
@@ -253,8 +261,9 @@ dropt_handle_uint(dropt_context* context, const dropt_char* optionArgument,
 {
     dropt_error err = dropt_error_none;
     int val = 0;
+    unsigned int* out = handlerData;
 
-    if (handlerData == NULL)
+    if (out == NULL)
     {
         DROPT_MISUSE("No handler data specified.");
         err = dropt_error_bad_configuration;
@@ -300,7 +309,7 @@ dropt_handle_uint(dropt_context* context, const dropt_char* optionArgument,
         }
     }
 
-    if (err == dropt_error_none) { *((unsigned int*) handlerData) = val; }
+    if (err == dropt_error_none) { *out = val; }
     return err;
 }
 
@@ -333,8 +342,9 @@ dropt_handle_double(dropt_context* context, const dropt_char* optionArgument,
 {
     dropt_error err = dropt_error_none;
     double val = 0.0;
+    double* out = handlerData;
 
-    if (handlerData == NULL)
+    if (out == NULL)
     {
         DROPT_MISUSE("No handler data specified.");
         err = dropt_error_bad_configuration;
@@ -378,7 +388,7 @@ dropt_handle_double(dropt_context* context, const dropt_char* optionArgument,
         }
     }
 
-    if (err == dropt_error_none) { *((double*) handlerData) = val; }
+    if (err == dropt_error_none) { *out = val; }
     return err;
 }
 
@@ -407,8 +417,9 @@ dropt_handle_string(dropt_context* context, const dropt_char* optionArgument,
                     void* handlerData)
 {
     dropt_error err = dropt_error_none;
+    const dropt_char** out = handlerData;
 
-    if (handlerData == NULL)
+    if (out == NULL)
     {
         DROPT_MISUSE("No handler data specified.");
         err = dropt_error_bad_configuration;
@@ -418,6 +429,6 @@ dropt_handle_string(dropt_context* context, const dropt_char* optionArgument,
         err = dropt_error_insufficient_arguments;
     }
 
-    if (err == dropt_error_none) { *((const dropt_char**) handlerData) = optionArgument; }
+    if (err == dropt_error_none) { *out = optionArgument; }
     return err;
 }

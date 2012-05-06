@@ -69,10 +69,12 @@
 
 #ifdef DROPT_DEBUG_STRING_BUFFERS
     enum { default_stringstream_buffer_size = 1 };
-    #define GROWN_STRINGSTREAM_BUFFER_SIZE(oldSize, minAmount) ((oldSize) + (minAmount))
+    #define GROWN_STRINGSTREAM_BUFFER_SIZE(oldSize, minAmount) \
+        ((oldSize) + (minAmount))
 #else
     enum { default_stringstream_buffer_size = 256 };
-    #define GROWN_STRINGSTREAM_BUFFER_SIZE(oldSize, minAmount) MAX((oldSize) * 2, (oldSize) + (minAmount))
+    #define GROWN_STRINGSTREAM_BUFFER_SIZE(oldSize, minAmount) \
+        MAX((oldSize) * 2, (oldSize) + (minAmount))
 #endif
 
 
@@ -128,16 +130,19 @@ dropt_safe_realloc(void* p, size_t numElements, size_t elementSize)
 {
     size_t numBytes;
 
-    if (numElements == 0)
+    /* elementSize shouldn't legally be 0, but we check for it in case a
+     * caller got the argument order wrong.
+     */
+    if (numElements == 0 || elementSize == 0)
     {
         /* The behavior of realloc(p, 0) is implementation-defined.  Let's
          * enforce a particular behavior.
          */
         free(p);
+
+        assert(elementSize != 0);
         return NULL;
     }
-
-    assert(elementSize != 0);
 
     numBytes = numElements * elementSize;
     if (numBytes / elementSize != numElements)
@@ -194,6 +199,16 @@ dropt_strndup(const dropt_char* s, size_t n)
     while (len < n && s[len] != DROPT_TEXT_LITERAL('\0'))
     {
         len++;
+    }
+
+    if (len + 1 < len)
+    {
+        /* This overflow check shouldn't be strictly necessary.  len can be
+         * at most SIZE_MAX, so SIZE_MAX + 1 can wrap around to 0, but
+         * dropt_safe_malloc will return NULL for a 0-sized allocation.
+         * However, favor defensive paranoia.
+         */
+        return NULL;
     }
 
     copy = dropt_safe_malloc(len + 1 /* NUL */, sizeof *copy);
@@ -630,6 +645,10 @@ dropt_vssprintf(dropt_stringstream* ss, const dropt_char* format, va_list args)
         size_t available = dropt_ssgetfreespace(ss);
         if ((unsigned int) n >= available)
         {
+            /* It's possible that newSize < ss->maxSize if
+             * GROWN_STRINGSTREAM_BUFFER_SIZE overflows, but it should be
+             * safe since we'll recompute the available space.
+             */
             size_t newSize = GROWN_STRINGSTREAM_BUFFER_SIZE(ss->maxSize, n);
             dropt_ssresize(ss, newSize);
             available = dropt_ssgetfreespace(ss);

@@ -78,7 +78,7 @@ main(int argc, char** argv)
     else
     {
         /* argv[1] is always safe since argv[argc] is guaranteed to be NULL
-         * and since argc > 0.
+         * and since we've established that argc > 0.
          */
         char** rest = dropt_parse(droptContext, -1, &argv[1]);
         if (dropt_get_error(droptContext) != dropt_error_none)

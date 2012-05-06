@@ -2,7 +2,7 @@
   *
   * Unit tests for dropt.
   *
-  * Copyright (c) 2007-2010 James D. Lin <jameslin@cal.berkeley.edu>
+  * Copyright (c) 2007-2012 James D. Lin <jameslin@cal.berkeley.edu>
   *
   * This software is provided 'as-is', without any express or implied
   * warranty.  In no event will the authors be held liable for any damages
@@ -45,7 +45,7 @@
     #define tcsncat wcsncat
     #define stscanf swscanf
 
-    #define istdigit iswdigit
+    #define istdigit(wc) iswdigit(wc)
 #else
     #define ftprintf fprintf
     #define fputts fputs
@@ -54,7 +54,7 @@
     #define tcsncat strncat
     #define stscanf sscanf
 
-    #define istdigit isdigit
+    #define istdigit(c) isdigit((unsigned char) c)
 #endif
 
 /* For convenience. */
@@ -156,7 +156,9 @@ handle_ip_address(dropt_context* context, const dropt_char* optionArgument, void
     unsigned int octet[4];
     size_t i;
 
-    assert(handlerData != NULL);
+    unsigned int* out = handlerData;
+
+    assert(out != NULL);
 
     if (optionArgument == NULL || optionArgument[0] == T('\0'))
     {
@@ -193,7 +195,7 @@ handle_ip_address(dropt_context* context, const dropt_char* optionArgument, void
         }
     }
 
-    *((unsigned int*) handlerData) = (octet[0] << 24) | (octet[1] << 16) | (octet[2] << 8) | octet[3];
+    *out = (octet[0] << 24) | (octet[1] << 16) | (octet[2] << 8) | octet[3];
 
 exit:
     return err;
@@ -440,7 +442,7 @@ test_ ## handler(dropt_context* context, const dropt_char* optionArgument, \
     } \
     else \
     { \
-        const char* quote = optionArgument ? "\"" : ""; \
+        const dropt_char* quote = optionArgument ? T("\"") : T(""); \
         ftprintf(stderr, \
                  T("FAILED: %s(%s%s%s) ") \
                  T("returned %d, expected %d.  ") \
@@ -475,6 +477,19 @@ test_dropt_handlers(dropt_context* context)
     const int i = 42;
     const unsigned int u = 0xCAFEBABE;
     const double d = 2.71828;
+
+#if 0
+    /* These tests normally aren't enabled because they intentionally
+     * trigger DROPT_MISUSE, and that either generates error spew or is
+     * fatal.
+     */
+    success &= (dropt_handle_bool(context, "1", NULL) == dropt_error_bad_configuration);
+    success &= (dropt_handle_verbose_bool(context, "1", NULL) == dropt_error_bad_configuration);
+    success &= (dropt_handle_int(context, "1", NULL) == dropt_error_bad_configuration);
+    success &= (dropt_handle_uint(context, "1", NULL) == dropt_error_bad_configuration);
+    success &= (dropt_handle_double(context, "1", NULL) == dropt_error_bad_configuration);
+    success &= (dropt_handle_string(context, "1", NULL) == dropt_error_bad_configuration);
+#endif
 
     success &= TEST_HANDLER(bool, context, NULL, dropt_error_none, 1, 0);
     success &= TEST_HANDLER(bool, context, NULL, dropt_error_none, 1, 0);

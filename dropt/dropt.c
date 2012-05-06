@@ -842,16 +842,12 @@ dropt_get_help(const dropt_context* context, const dropt_help_params* helpParams
                                    hp.indent, DROPT_TEXT_LITERAL(""),
                                    option->short_name);
             }
-            else if (option->description != NULL)
-            {
-                /* Comment text.  Don't bother with indentation. */
-                dropt_ssprintf(ss, DROPT_TEXT_LITERAL("%s\n"), option->description);
-                goto next;
-            }
             else
             {
-                DROPT_MISUSE("No option name specified.");
-                break;
+                /* Comment text.  Don't bother with indentation. */
+                assert(option->description != NULL);
+                dropt_ssprintf(ss, DROPT_TEXT_LITERAL("%s\n"), option->description);
+                goto next;
             }
 
             if (n < 0) { n = 0; }
@@ -1537,6 +1533,6 @@ dropt_misuse(const char* message, const char* filename, int line)
     fprintf(stderr, "dropt: %s\n", message);
 #else
     fprintf(stderr, "dropt: %s (%s: %d)\n", message, filename, line);
-    abort();
+    //abort();
 #endif
 }

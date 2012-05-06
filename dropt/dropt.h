@@ -137,6 +137,7 @@ typedef int (*dropt_strncmp_func)(const dropt_char* s, const dropt_char* t, size
   *
   * description:
   *     The description shown when generating help.
+  *     May be NULL for undocumented options.
   *
   * arg_description:
   *     The description for the option's argument (e.g. --option=argument
@@ -224,7 +225,7 @@ dropt_char* dropt_default_error_handler(dropt_error error,
 
 void dropt_init_help_params(dropt_help_params* helpParams);
 dropt_char* dropt_get_help(const dropt_context* context,
-                             const dropt_help_params* helpParams);
+                           const dropt_help_params* helpParams);
 void dropt_print_help(FILE* f, const dropt_context* context,
                       const dropt_help_params* helpParams);
 #endif
