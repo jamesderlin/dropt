@@ -8,12 +8,12 @@
 .SILENT:
 .SUFFIXES:
 
-!IFNDEF SRC_DIR
-SRC_DIR = $(MAKEDIR)
+!IFNDEF SRC_ROOT
+SRC_ROOT = $(MAKEDIR)
 !ENDIF
 
 !IFNDEF BUILD_ROOT
-BUILD_ROOT = $(SRC_DIR)\build
+BUILD_ROOT = $(SRC_ROOT)\build
 !ENDIF
 
 # nmake doesn't support the special .PHONY target.  Create our own
@@ -31,7 +31,7 @@ LINK = link.exe
 LINKLIB = lib.exe
 
 # /wd4100 disables a warning about unused function parameters.
-CFLAGS = /EHsc /nologo /GF /Gy /GS /W4 /wd4100 /DSTRICT /DWIN32_LEAN_AND_MEAN
+CFLAGS = /EHsc /nologo /GF /Gy /GS /W4 /wd4100 /DSTRICT /DWIN32_LEAN_AND_MEAN /I$(SRC_ROOT)\include
 LINK_FLAGS = /NOLOGO /NXCOMPAT
 LINKLIB_FLAGS = /NOLOGO
 
@@ -66,11 +66,11 @@ CFLAGS = $(CFLAGS) /D_UNICODE
 OUT_DIR = $(BUILD_ROOT)\lib$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)$(UNICODE_SUFFIX)
 OBJ_DIR = $(BUILD_ROOT)\tmp$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)$(UNICODE_SUFFIX)
 
-GLOBAL_DEP = "$(SRC_DIR)\dropt.h" "$(SRC_DIR)\dropt_string.h"
-GLOBALXX_DEP = $(GLOBAL_DEP) "$(SRC_DIR)\droptxx.hpp"
+GLOBAL_DEP = "$(SRC_ROOT)\include\dropt.h" "$(SRC_ROOT)\include\dropt_string.h"
+GLOBALXX_DEP = $(GLOBAL_DEP) "$(SRC_ROOT)\include\droptxx.hpp"
 LIB_OBJ_FILES = "$(OBJ_DIR)\dropt.obj" "$(OBJ_DIR)\dropt_handlers.obj" "$(OBJ_DIR)\dropt_string.obj"
-OBJ_FILES = $(LIB_OBJ_FILES) "$(OBJ_DIR)\dropt_example.obj" "$(OBJ_DIR)\test_dropt.obj"
-OBJXX_FILES =  "$(OBJ_DIR)\droptxx.obj" "$(OBJ_DIR)\droptxx_example.obj"
+OBJ_FILES = $(LIB_OBJ_FILES) "$(OBJ_DIR)\test_dropt.obj"
+OBJXX_FILES =  "$(OBJ_DIR)\droptxx.obj"
 
 DROPT_LIB = "$(OUT_DIR)\dropt.lib"
 DROPTXX_LIB = "$(OUT_DIR)\droptxx.lib"
@@ -123,10 +123,13 @@ $(EXAMPLEXX_EXE): "$(OBJ_DIR)\$(@B:"=).obj" $(DROPTXX_LIB)
     $(MKDIR_DEST)
     $(LINK) /SUBSYSTEM:CONSOLE /OUT:$@ $(LINK_FLAGS) $**
 
-$(OBJ_FILES): "$(SRC_DIR)\$(@B:"=).c" $(GLOBAL_DEP)
-$(OBJXX_FILES): "$(SRC_DIR)\$(@B:"=).cpp" $(GLOBALXX_DEP)
+$(OBJ_FILES): "$(SRC_ROOT)\src\$(@B:"=).c" $(GLOBAL_DEP)
+$(OBJXX_FILES): "$(SRC_ROOT)\src\$(@B:"=).cpp" $(GLOBALXX_DEP)
 
-$(OBJ_FILES) $(OBJXX_FILES):
+"$(OBJ_DIR)\dropt_example.obj": "$(SRC_ROOT)\$(@B:"=).c" $(GLOBAL_DEP)
+"$(OBJ_DIR)\droptxx_example.obj": "$(SRC_ROOT)\$(@B:"=).cpp" $(GLOBALXX_DEP)
+
+$(OBJ_FILES) $(OBJXX_FILES) "$(OBJ_DIR)\dropt_example.obj" "$(OBJ_DIR)\droptxx_example.obj":
     $(MKDIR_DEST)
     $(CC) /c /Fo"$(OBJ_DIR)\\" /Fd"$(OBJ_DIR)\\" $(CFLAGS) %s
 

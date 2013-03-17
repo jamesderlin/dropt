@@ -8,22 +8,24 @@
 .SILENT:
 .SUFFIXES:
 
-ifndef SRC_DIR
-SRC_DIR := $(CURDIR)
+ifndef SRC_ROOT
+SRC_ROOT := $(CURDIR)
 endif
 
 ifndef BUILD_ROOT
-BUILD_ROOT := $(SRC_DIR)/build
+BUILD_ROOT := $(SRC_ROOT)/build
 endif
+
+CFLAGS := -I$(SRC_ROOT)/include
 
 OUT_DIR := $(BUILD_ROOT)/lib$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)$(UNICODE_SUFFIX)
 OBJ_DIR := $(BUILD_ROOT)/tmp$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)$(UNICODE_SUFFIX)
 
-GLOBAL_DEP := $(SRC_DIR)/dropt.h $(SRC_DIR)/dropt_string.h
-GLOBALXX_DEP := $(GLOBAL_DEP) $(SRC_DIR)/droptxx.hpp
+GLOBAL_DEP := $(SRC_ROOT)/include/dropt.h $(SRC_ROOT)/include/dropt_string.h
+GLOBALXX_DEP := $(GLOBAL_DEP) $(SRC_ROOT)/include/droptxx.hpp
 LIB_OBJ_FILES := $(OBJ_DIR)/dropt.o $(OBJ_DIR)/dropt_handlers.o $(OBJ_DIR)/dropt_string.o
-OBJ_FILES := $(LIB_OBJ_FILES) $(OBJ_DIR)/dropt_example.o $(OBJ_DIR)/test_dropt.o
-OBJXX_FILES := $(OBJ_DIR)/droptxx.o $(OBJ_DIR)/droptxx_example.o
+OBJ_FILES := $(LIB_OBJ_FILES) $(OBJ_DIR)/test_dropt.o
+OBJXX_FILES := $(OBJ_DIR)/droptxx.o
 
 DROPT_LIB := $(OUT_DIR)/libdropt.a
 DROPTXX_LIB := $(OUT_DIR)/libdroptxx.a
@@ -81,12 +83,18 @@ $(EXAMPLEXX_EXE): $(OBJ_DIR)/%: $(OBJ_DIR)/%.o $(DROPTXX_LIB)
 $(OBJ_DIR)/%: $(OBJ_DIR)/%.o $(DROPT_LIB)
 	$(CC) $(CFLAGS) $< -L$(OUT_DIR) -ldropt -o $@
 
-$(OBJ_FILES): $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(GLOBAL_DEP)
+$(OBJ_FILES): $(OBJ_DIR)/%.o: $(SRC_ROOT)/src/%.c $(GLOBAL_DEP)
+$(OBJ_DIR)/dropt_example.o: $(OBJ_DIR)/%.o: $(SRC_ROOT)/%.c $(GLOBAL_DEP)
+
+$(OBJ_FILES) $(OBJ_DIR)/dropt_example.o:
 	-mkdir -p $(@D)
 	$(CC) -c -o $@ $(CFLAGS) $<
 	@echo "$(<F)"
 
-$(OBJXX_FILES): $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(GLOBALXX_DEP)
+$(OBJXX_FILES): $(OBJ_DIR)/%.o: $(SRC_ROOT)/src/%.cpp $(GLOBALXX_DEP)
+$(OBJ_DIR)/droptxx_example.o: $(OBJ_DIR)/%.o: $(SRC_ROOT)/%.cpp $(GLOBALXX_DEP)
+
+$(OBJXX_FILES) $(OBJ_DIR)/droptxx_example.o:
 	-mkdir -p $(@D)
 	$(CXX) -c -o $@ $(CFLAGS) $(CXXFLAGS) $<
 	@echo "$(<F)"

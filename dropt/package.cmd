@@ -35,25 +35,30 @@ echo.*** Building dropt (DEBUG=1 _UNICODE=1 DROPT_NO_STRING_BUFFERS=1) ***
 %MAKE% DEBUG=1 _UNICODE=1 DROPT_NO_STRING_BUFFERS=1 all
 if ERRORLEVEL 1 exit /b 1
 
-set FILES=dropt.c ^
-          dropt.h ^
-          dropt_example.c ^
-          dropt_handlers.c ^
-          dropt_string.c ^
-          dropt_string.h ^
-          droptxx.cpp ^
-          droptxx.hpp ^
+set FILES=include\dropt.h ^
+          include\dropt_string.h ^
+          include\droptxx.hpp ^
+          src\dropt.c ^
+          src\dropt_handlers.c ^
+          src\dropt_string.c ^
+          src\droptxx.cpp ^
+          src\test_dropt.c ^
           INSTALL ^
           LICENSE ^
+          Makefile.clang ^
           Makefile.gcc ^
           Makefile.vcwin32 ^
           README.html ^
-          test_dropt.c
+          dropt_example.c ^
+          droptxx_example.cpp ^
+          gmake.mk
 
 set PUBLISH_DIR_BASENAME=dropt-%DROPT_VERSION%
 if exist "build\%PUBLISH_DIR_BASENAME%" rd /s /q "build\%PUBLISH_DIR_BASENAME%"
 md "build\%PUBLISH_DIR_BASENAME%"
-for %%x in (%FILES%) do (copy /y %%x "build\%PUBLISH_DIR_BASENAME%" > NUL)
+md "build\%PUBLISH_DIR_BASENAME%\include"
+md "build\%PUBLISH_DIR_BASENAME%\src"
+for %%x in (%FILES%) do (copy /y %%x "build\%PUBLISH_DIR_BASENAME%\%%x" > NUL)
 
 pushd build
 
