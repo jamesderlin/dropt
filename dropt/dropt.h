@@ -2,7 +2,7 @@
   *
   * A deliberately rudimentary command-line option parser.
   *
-  * Version 1.1.0
+  * Version 1.1.1
   *
   * Copyright (c) 2006-2012 James D. Lin <jameslin@cal.berkeley.edu>
   *
@@ -57,7 +57,7 @@ extern "C" {
 #endif
 
 
-typedef enum
+enum
 {
     /* Errors in the range [0x00, 0x7F] are reserved for dropt. */
     dropt_error_none,
@@ -73,8 +73,8 @@ typedef enum
     /* Errors in the range [0x80, 0xFFFF] are free for clients to use. */
     dropt_error_custom_start = 0x80,
     dropt_error_custom_last = 0xFFFF
-} dropt_error;
-
+};
+typedef unsigned int dropt_error;
 
 typedef unsigned char dropt_bool;
 

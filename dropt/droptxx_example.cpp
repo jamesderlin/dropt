@@ -1,4 +1,4 @@
-/** dropt_example.c
+/** droptxx_example.cpp
   *
   * A simple dropt example.
   *
@@ -8,12 +8,13 @@
   * <http://www.taenarum.com/software/dropt/>
   */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
+#include <iostream>
+#include <vector>
+#include <cstdlib>
+#include <cstring>
+#include <cassert>
 
-#include "dropt.h"
+#include "droptxx.hpp"
 
 
 typedef enum { unknown, heads, tails } face_type;
@@ -25,17 +26,10 @@ static dropt_option_handler_decl handle_face;
 int
 main(int argc, char** argv)
 {
-    /* C89 requires that array initializers be constant, so they need to
-     * have static storage duration if their addresses are to be used as
-     * initialization values.  This restriction is relaxed in C99 (most
-     * compilers ignore it anyway).
-     */
-    static dropt_bool showHelp = 0;
-    static dropt_bool showVersion = 0;
-    static int i = 0;
-    static face_type face = unknown;
-
-    int exitCode = EXIT_SUCCESS;
+    bool showHelp = 0;
+    bool showVersion = 0;
+    int i = 0;
+    face_type face = unknown;
 
     /* Each option is defined by a row in a table, containing properties
      * such as the option's short name (e.g. -h), its long name (e.g.
@@ -45,29 +39,59 @@ main(int argc, char** argv)
      *
      * See the dropt_option documentation in dropt.h for a complete list
      * of option properties.
+     *
+     * The table alternatively can be formed by adding options explicitly
+     * as shown below:
      */
-    dropt_option options[] = {
-        { 'h',  "help", "Shows help.", NULL, dropt_handle_bool, &showHelp, dropt_attr_halt },
-        { '?', NULL, NULL, NULL, dropt_handle_bool, &showHelp, dropt_attr_halt | dropt_attr_hidden },
-        { '\0', "version", "Shows version information.", NULL, dropt_handle_bool, &showVersion, dropt_attr_halt },
-        { 'i',  "int", "Sample integer option.", "value", dropt_handle_int, &i },
-        { 'f',  "face", "Sample custom option.", "{heads, tails}", handle_face, &face },
-        { 0 } /* Required sentinel value. */
-    };
+    dropt_option emptyOpt = { };
+    dropt_option opt;
+    std::vector<dropt_option> options;
 
-    dropt_context* droptContext = dropt_new_context(options);
-    if (droptContext == NULL)
-    {
-        /* We failed to create the dropt context, possibly due to memory
-         * allocation failure.
-         *
-         * This also can happen due to logical errors (e.g. if the options
-         * array is malformed).  Logical errors will trigger DROPT_MISUSE()
-         * and will terminate the program in debug builds.
-         */
-        exitCode = EXIT_FAILURE;
-    }
-    else if (argc == 0)
+    opt = emptyOpt;
+    opt.short_name = 'h';
+    opt.long_name = "help";
+    opt.handler = dropt::handle_bool;
+    opt.handler_data = &showHelp;
+    opt.attr = dropt_attr_halt;
+    options.push_back(opt);
+
+    opt.short_name = '?';
+    opt.long_name = NULL;
+    opt.attr |= dropt_attr_hidden;
+    options.push_back(opt);
+
+    opt = emptyOpt;
+    opt.long_name = "version";
+    opt.description = "Shows version information.";
+    opt.handler = dropt::handle_bool;
+    opt.handler_data = &showVersion;
+    opt.attr = dropt_attr_halt;
+    options.push_back(opt);
+
+    opt = emptyOpt;
+    opt.short_name = 'i';
+    opt.long_name = "int";
+    opt.description = "Sample integer option.";
+    opt.arg_description = "value";
+    opt.handler = dropt::handle_int;
+    opt.handler_data = &i;
+    options.push_back(opt);
+
+    opt = emptyOpt;
+    opt.short_name = 'f';
+    opt.long_name = "face";
+    opt.description = "Sample custom option.";
+    opt.arg_description = "{heads, tails}";
+    opt.handler = handle_face;
+    opt.handler_data = &face;
+    options.push_back(opt);
+
+    // Required sentinel value.
+    options.push_back(emptyOpt);
+
+    dropt::context droptContext(&options[0]);
+
+    if (argc == 0)
     {
         /* This check is useless but is here for pedantic completeness.
          * Hosted C environments are not required to supply command-line
@@ -82,40 +106,38 @@ main(int argc, char** argv)
          * argv[1] is always safe to access since argv[argc] is guaranteed
          * to be NULL and since we've established that argc > 0.
          */
-        char** rest = dropt_parse(droptContext, -1, &argv[1]);
-        if (dropt_get_error(droptContext) != dropt_error_none)
+        char** rest = droptContext.parse(-1, &argv[1]);
+        if (droptContext.get_error() != dropt_error_none)
         {
-            fprintf(stderr, "dropt_example: %s\n", dropt_get_error_message(droptContext));
-            exitCode = EXIT_FAILURE;
+            std::cerr << "droptxx_example: " << droptContext.get_error_message() << std::endl;
+            return EXIT_FAILURE;
         }
         else if (showHelp)
         {
-            printf("Usage: dropt_example [options] [--] [operands]\n\n"
-                   "Options:\n");
-            dropt_print_help(stdout, droptContext, NULL);
+            std::cout << "Usage: droptxx_example [options] [--] [operands]\n\n"
+                      << "Options:\n"
+                      << droptContext.get_help()
+                      << std::endl;
         }
         else if (showVersion)
         {
-            printf("dropt_example 1.0\n");
+            std::cout << "droptxx_example 1.0" << std::endl;
         }
         else
         {
-            printf("int value: %d\n", i);
-            printf("face value: %d\n", face);
-
-            printf("Operands: ");
+            std::cout << "int value: " << i << "\n"
+                      << "face value: " << face << "\n"
+                      << "Operands: ";
             while (*rest != NULL)
             {
-                printf("%s ", *rest);
+                std::cout << *rest << " ";
                 rest++;
             }
-            printf("\n");
+            std::cout << std::endl;
         }
     }
 
-    dropt_free_context(droptContext);
-
-    return exitCode;
+    return EXIT_SUCCESS;
 }
 
 
@@ -129,7 +151,7 @@ static dropt_error
 handle_face(dropt_context* context, const char* optionArgument, void* handlerData)
 {
     dropt_error err = dropt_error_none;
-    face_type* face = handlerData;
+    face_type* face = static_cast<face_type*>(handlerData);
     assert(face != NULL);
 
     /* Option handlers should handle 'optionArgument' being NULL (if the
@@ -151,7 +173,7 @@ handle_face(dropt_context* context, const char* optionArgument, void* handlerDat
     }
     else
     {
-        /* Reject the value as being inappropriate for this handler. */
+        // Reject the value as being inappropriate for this handler.
         err = dropt_error_mismatch;
     }
 

@@ -43,7 +43,7 @@
 		border-bottom: black solid 1px;
 	}
 
-	#content li { margin-bottom: 0.5em; }
+	#content li { margin-top: 0.50em; margin-bottom: 0.50em; }
 -->
 </style>
 </head>
@@ -106,8 +106,7 @@ barriers to entry</strong>. Specifically, this includes:
 		allows it to handle arbitrary arguments to command-line options.  All types
 		are considered equal.  Even basic types such as integers or strings are
 		handled by callbacks; dropt provides standard handlers for them.  Exposing
-		the handlers for basic types also allows programs to extend them by building
-		wrappers around them.
+		the handlers for basic types also allows custom handlers to leverage them.
 	</li>
 </ul>
 
@@ -183,21 +182,33 @@ The implementation is intended to be minimalistic.  What dropt does <em>not</em>
 
 <p>
 There&rsquo;s no formal documentation yet, but for now, see
-<a href="http://www.taenarum.com/software/dropt/dropt_example.c"><kbd>dropt_example.c</kbd></a>.
+<a href="http://www.taenarum.com/software/dropt/dropt_example.c"><kbd>dropt_example.c</kbd></a> or
+<a href="http://www.taenarum.com/software/dropt/droptxx_example.cpp"><kbd>droptxx_example.cpp</kbd></a>.
 </p>
 
 
 <h2>Download</h2>
 
 <ul>
-<li><a href="http://www.taenarum.com/software/dropt/dropt-1.1.0.zip"><kbd>dropt-1.1.0.zip</kbd></a></li>
-<li><a href="http://www.taenarum.com/software/dropt/dropt-1.1.0.tar.gz"><kbd>dropt-1.1.0.tar.gz</kbd></a></li>
+<li><a href="http://www.taenarum.com/software/dropt/dropt-1.1.1.zip"><kbd>dropt-1.1.1.zip</kbd></a></li>
+<li><a href="http://www.taenarum.com/software/dropt/dropt-1.1.1.tar.gz"><kbd>dropt-1.1.1.tar.gz</kbd></a></li>
 </ul>
 
 
 <h2 id="history">Version History</h2>
 
 <ul id="historylist">
+	<li>
+		1.1.1 (2013-03-17)
+		<ul>
+			<li>Fixed a build issue with gcc with optimizations enabled.</li>
+			<li>Changed <code>dropt_error</code> to be an <code>unsigned int</code> type instead of an <code>enum</code> type to avoid potential comparison warnings with custom error values.</li>
+			<li>Fixed <code>dropt_misuse</code> to terminate in debug builds. (I accidentally disabled termination in dropt 1.1.0.)</li>
+			<li>Added a Makefile for clang.</li>
+			<li>Added an <kbd>INSTALL</kbd> file with build instructions.</li>
+			<li>Added a <kbd>droptxx_example.cpp</kbd> file as a C++ sample program.</li>
+		</ul>
+	</li>
 	<li>
 		1.1.0 (2012-05-06)
 		<ul>
@@ -258,7 +269,7 @@ There&rsquo;s no formal documentation yet, but for now, see
 <address>Questions?  Comments?  Bugs?  I welcome feedback.  <a href="http://www.taenarum.com/contact.html">Contact me</a> or <a href="http://www.taenarum.com/software/dropt/bugs/">file a bug</a>.</address>
 
 <p>
-Copyright &copy; 2010&ndash;2012 <a href="http://www.taenarum.com/software/">James D. Lin</a>.
+Copyright &copy; 2010&ndash;2013 <a href="http://www.taenarum.com/software/">James D. Lin</a>.
 </p>
 </div><!-- footer -->
 

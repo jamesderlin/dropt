@@ -37,11 +37,14 @@
 
 #if __STDC_VERSION__ >= 199901L
     #include <stdint.h>
+    #include <stdbool.h>
 #else
     /* Compatibility junk for things that don't yet support ISO C99. */
     #ifndef SIZE_MAX
         #define SIZE_MAX ((size_t) -1)
     #endif
+
+    typedef enum { false, true } bool;
 #endif
 
 #ifndef MIN
@@ -55,8 +58,6 @@
 #define IMPLIES(p, q) (!(p) || q)
 
 #define OPTION_TAKES_ARG(option) ((option)->arg_description != NULL)
-
-typedef enum { false, true } bool;
 
 enum
 {
@@ -114,7 +115,11 @@ struct dropt_context
         dropt_char* message;
     } errorDetails;
 
-    dropt_strncmp_func strncmp;
+    /* This isn't named strncmp because platforms might provide a macro
+     * version of strncmp, and we want to avoid a potential naming
+     * conflict.
+     */
+    dropt_strncmp_func ncmpstr;
 };
 
 
@@ -178,7 +183,7 @@ cmp_key_option_proxy_long(const void* key, const void* item)
     assert(op != NULL);
     assert(op->option != NULL);
     assert(op->context != NULL);
-    assert(op->context->strncmp != NULL);
+    assert(op->context->ncmpstr != NULL);
 
     if (longName->s == op->option->long_name)
     {
@@ -197,7 +202,7 @@ cmp_key_option_proxy_long(const void* key, const void* item)
      * option_proxy item we're searching against must be.
      */
     optionLen = dropt_strlen(op->option->long_name);
-    ret = op->context->strncmp(longName->s,
+    ret = op->context->ncmpstr(longName->s,
                                op->option->long_name,
                                MIN(longName->len, optionLen));
     if (ret != 0)
@@ -277,9 +282,9 @@ cmp_key_option_proxy_short(const void* key, const void* item)
     assert(op != NULL);
     assert(op->option != NULL);
     assert(op->context != NULL);
-    assert(op->context->strncmp != NULL);
+    assert(op->context->ncmpstr != NULL);
 
-    return op->context->strncmp(shortName,
+    return op->context->ncmpstr(shortName,
                                 &op->option->short_name,
                                 1);
 }
@@ -480,7 +485,7 @@ find_option_short(const dropt_context* context, dropt_char shortName)
 {
     assert(context != NULL);
     assert(shortName != DROPT_TEXT_LITERAL('\0'));
-    assert(context->strncmp != NULL);
+    assert(context->ncmpstr != NULL);
 
     if (context->sortedByShort != NULL)
     {
@@ -495,7 +500,7 @@ find_option_short(const dropt_context* context, dropt_char shortName)
         const dropt_option* option;
         for (option = context->options; is_valid_option(option); option++)
         {
-            if (context->strncmp(&shortName, &option->short_name, 1) == 0)
+            if (context->ncmpstr(&shortName, &option->short_name, 1) == 0)
             {
                 return option;
             }
@@ -1475,7 +1480,7 @@ dropt_set_strncmp(dropt_context* context, dropt_strncmp_func cmp)
     }
 
     if (cmp == NULL) { cmp = dropt_strncmp; }
-    context->strncmp = cmp;
+    context->ncmpstr = cmp;
 
     /* Changing the sort method invalidates our existing lookup tables. */
     free_lookup_tables(context);
@@ -1533,6 +1538,6 @@ dropt_misuse(const char* message, const char* filename, int line)
     fprintf(stderr, "dropt: %s\n", message);
 #else
     fprintf(stderr, "dropt: %s (%s: %d)\n", message, filename, line);
-    //abort();
+    abort();
 #endif
 }

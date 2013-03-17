@@ -43,6 +43,7 @@ set FILES=dropt.c ^
           dropt_string.h ^
           droptxx.cpp ^
           droptxx.hpp ^
+          INSTALL ^
           LICENSE ^
           Makefile.gcc ^
           Makefile.vcwin32 ^

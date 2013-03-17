@@ -67,38 +67,41 @@ OUT_DIR = $(BUILD_ROOT)\lib$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)$(UNICODE_SUFFIX)
 OBJ_DIR = $(BUILD_ROOT)\tmp$(DEBUG_SUFFIX)$(NO_STRING_SUFFIX)$(UNICODE_SUFFIX)
 
 GLOBAL_DEP = "$(SRC_DIR)\dropt.h" "$(SRC_DIR)\dropt_string.h"
+GLOBALXX_DEP = $(GLOBAL_DEP) "$(SRC_DIR)\droptxx.hpp"
 LIB_OBJ_FILES = "$(OBJ_DIR)\dropt.obj" "$(OBJ_DIR)\dropt_handlers.obj" "$(OBJ_DIR)\dropt_string.obj"
 OBJ_FILES = $(LIB_OBJ_FILES) "$(OBJ_DIR)\dropt_example.obj" "$(OBJ_DIR)\test_dropt.obj"
+OBJXX_FILES =  "$(OBJ_DIR)\droptxx.obj" "$(OBJ_DIR)\droptxx_example.obj"
 
 DROPT_LIB = "$(OUT_DIR)\dropt.lib"
 DROPTXX_LIB = "$(OUT_DIR)\droptxx.lib"
 EXAMPLE_EXE = "$(OBJ_DIR)\dropt_example.exe"
+EXAMPLEXX_EXE = "$(OBJ_DIR)\droptxx_example.exe"
 TEST_EXE = "$(OBJ_DIR)\test_dropt.exe"
 
 
 # Targets --------------------------------------------------------------
 
 default: $(PHONY) lib libxx
-all: $(PHONY) default example test
+all: $(PHONY) default example examplexx test
 lib: $(PHONY) $(DROPT_LIB)
 libxx: $(PHONY) $(DROPTXX_LIB)
 
 
-example: $(PHONY)
+example examplexx: $(PHONY)
 
 !IF "$(DROPT_NO_STRING_BUFFERS)" != ""
-example: skip_example
+example examplexx: skip_example
 !ELSEIF "$(_UNICODE)" != ""
-example: skip_example
+example examplexx: skip_example
 !ELSE
 example: $(EXAMPLE_EXE)
+examplexx: $(EXAMPLEXX_EXE)
 !ENDIF
 
 skip_example: $(PHONY)
-    @echo.(Skipping dropt_example because either DROPT_NO_STRING_BUFFERS or _UNICODE was specified.)
+    @echo.(Skipping dropt_example and droptxx_example because either DROPT_NO_STRING_BUFFERS or _UNICODE was specified.)
 
 
-check: $(PHONY) test
 test: $(PHONY) $(TEST_EXE)
     @echo.Running tests...
     $(TEST_EXE) $(TEST_DROPT_ARGS)
@@ -116,10 +119,14 @@ $(EXAMPLE_EXE) $(TEST_EXE): "$(OBJ_DIR)\$(@B:"=).obj" $(DROPT_LIB)
     $(MKDIR_DEST)
     $(LINK) /SUBSYSTEM:CONSOLE /OUT:$@ $(LINK_FLAGS) $**
 
-$(OBJ_FILES): "$(SRC_DIR)\$(@B:"=).c" $(GLOBAL_DEP)
-"$(OBJ_DIR)\droptxx.obj": "$(SRC_DIR)\$(@B:"=).cpp" "$(SRC_DIR)\$(@B:"=).hpp" $(GLOBAL_DEP)
+$(EXAMPLEXX_EXE): "$(OBJ_DIR)\$(@B:"=).obj" $(DROPTXX_LIB)
+    $(MKDIR_DEST)
+    $(LINK) /SUBSYSTEM:CONSOLE /OUT:$@ $(LINK_FLAGS) $**
 
-$(OBJ_FILES) "$(OBJ_DIR)\droptxx.obj":
+$(OBJ_FILES): "$(SRC_DIR)\$(@B:"=).c" $(GLOBAL_DEP)
+$(OBJXX_FILES): "$(SRC_DIR)\$(@B:"=).cpp" $(GLOBALXX_DEP)
+
+$(OBJ_FILES) $(OBJXX_FILES):
     $(MKDIR_DEST)
     $(CC) /c /Fo"$(OBJ_DIR)\\" /Fd"$(OBJ_DIR)\\" $(CFLAGS) %s
 
