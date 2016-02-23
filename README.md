@@ -169,7 +169,7 @@ Version History
 
 Questions?  Comments?  Bugs?  I welcome feedback. [Contact me].
 
-Copyright (C) 2010-2016 James D. Lin
+Copyright © 2010–2016 James D. Lin
 <http://www.taenarum.com/software/>
 
 
