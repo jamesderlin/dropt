@@ -48,7 +48,7 @@ set FILES=include\dropt.h ^
           Makefile.clang ^
           Makefile.gcc ^
           Makefile.vcwin32 ^
-          README.html ^
+          README.md ^
           dropt_example.c ^
           droptxx_example.cpp ^
           gmake.mk
