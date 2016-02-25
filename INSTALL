@@ -1,8 +1,10 @@
 To build dropt:
 
-For systems using gcc and GNU make:
+For systems using GNU make:
 
-    make -f Makefile.gcc [OPTIONS] [TARGETS]
+    make -f Makefile.[COMPILER] [OPTIONS] [TARGETS]
+
+where COMPILER may be `gcc` or `clang`.
 
 
 For systems using Microsoft's C/C++ compiler (MSVC):
