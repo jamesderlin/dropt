@@ -43,7 +43,7 @@ Specifically, this includes:
 
 Secondary goals include being secure, performant, maintainable, and
 extensible; minimizing memory usage; and gracefully failing if memory is
-exhausted.
+exhausted.  Code simplicity is prioritized over non-critical features.
 
 
 Features
