@@ -99,8 +99,8 @@ There's no formal documentation yet, but for now, see [`dropt_example.c`] or
 Download
 --------
 
-* [`dropt-1.1.1.zip`](http://www.taenarum.com/software/dropt/dropt-1.1.1.zip)
-* [`dropt-1.1.1.tar.gz`](http://www.taenarum.com/software/dropt/dropt-1.1.1.tar.gz)
+* [`dropt-1.1.1.zip`](https://github.com/jamesderlin/dropt/archive/v1.1.1.zip)
+* [`dropt-1.1.1.tar.gz`](https://github.com/jamesderlin/dropt/archive/v1.1.1.tar.gz)
 
 
 Version History
@@ -174,6 +174,6 @@ Copyright © 2010–2016 James D. Lin
 
 
 [zlib/libpng license]: http://opensource.org/licenses/Zlib
-[`dropt_example.c`]: http://www.taenarum.com/software/dropt/dropt_example.c
-[`droptxx_example.cpp`]: http://www.taenarum.com/software/dropt/droptxx_example.cpp
+[`dropt_example.c`]: https://github.com/jamesderlin/dropt/blob/master/dropt_example.c
+[`droptxx_example.cpp`]: https://github.com/jamesderlin/dropt/blob/master/dropt_example.cpp
 [Contact me]: http://www.taenarum.com/contact.html
