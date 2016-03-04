@@ -175,5 +175,5 @@ Copyright © 2010–2016 James D. Lin
 
 [zlib/libpng license]: http://opensource.org/licenses/Zlib
 [`dropt_example.c`]: https://github.com/jamesderlin/dropt/blob/master/dropt_example.c
-[`droptxx_example.cpp`]: https://github.com/jamesderlin/dropt/blob/master/dropt_example.cpp
+[`droptxx_example.cpp`]: https://github.com/jamesderlin/dropt/blob/master/droptxx_example.cpp
 [Contact me]: http://www.taenarum.com/contact.html
