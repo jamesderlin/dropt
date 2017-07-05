@@ -92,8 +92,8 @@ The implementation is intended to be minimalistic.  What dropt does *not* do:
 Usage
 -----
 
-There's no formal documentation yet, but for now, see [`dropt_example.c`] or
-[`droptxx_example.cpp`].
+There's no formal documentation yet.  In the meantime, [`dropt_example.c`] or
+[`droptxx_example.cpp`] should be suitable tutorials.
 
 
 Download

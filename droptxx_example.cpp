@@ -17,6 +17,7 @@
 #include "droptxx.hpp"
 
 
+/* dropt is not limited to built-in types.  Let's use it with a custom type. */
 typedef enum { unknown, heads, tails } face_type;
 
 /* Function prototype for our custom function to parse a string to a face_type. */
@@ -93,18 +94,18 @@ main(int argc, char** argv)
 
     if (argc == 0)
     {
-        /* This check is useless but is here for pedantic completeness.
-         * Hosted C environments are not required to supply command-line
-         * arguments, although obviously any environment that doesn't
-         * supply arguments wouldn't have any use for dropt.
+        /* This check is here only for pedantic completeness.  Hosted C++
+         * environments are not required to supply command-line arguments,
+         * although obviously any environment that doesn't supply arguments
+         * wouldn't have any use for dropt.
          */
     }
     else
     {
         /* Parse the arguments from argv.
          *
-         * argv[1] is always safe to access since argv[argc] is guaranteed
-         * to be NULL and since we've established that argc > 0.
+         * argv[1] is always safe to access since we've established that
+         * argc > 0 and since argv[argc] is guaranteed to be a null pointer.
          */
         char** rest = droptContext.parse(-1, &argv[1]);
         if (droptContext.get_error() != dropt_error_none)
@@ -143,9 +144,9 @@ main(int argc, char** argv)
 
 /** handle_face
   *
-  *     An example of a custom option handler.  Usually the stock callbacks
-  *     (e.g. dropt_handle_bool, dropt_handle_int, dropt_handle_string,
-  *     etc.) should be sufficient for most purposes.
+  *     Usually the stock callbacks (e.g. dropt_handle_bool, dropt_handle_int,
+  *     dropt_handle_string, etc.) should be sufficient for most purposes, but
+  *     this is an example of an option handler for a custom type.
   */
 static dropt_error
 handle_face(dropt_context* context, const char* optionArgument, void* handlerData)
@@ -154,7 +155,7 @@ handle_face(dropt_context* context, const char* optionArgument, void* handlerDat
     face_type* face = static_cast<face_type*>(handlerData);
     assert(face != NULL);
 
-    /* Option handlers should handle 'optionArgument' being NULL (if the
+    /* Option handlers should handle 'optionArgument' being null (if the
      * option's argument is optional and wasn't supplied) or being the
      * empty string (if a user explicitly passed an empty string (e.g.
      * --face="").

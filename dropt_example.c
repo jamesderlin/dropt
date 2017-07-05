@@ -16,6 +16,7 @@
 #include "dropt.h"
 
 
+/* dropt is not limited to built-in types.  Let's use it with a custom type. */
 typedef enum { unknown, heads, tails } face_type;
 
 /* Function prototype for our custom function to parse a string to a face_type. */
@@ -25,10 +26,13 @@ static dropt_option_handler_decl handle_face;
 int
 main(int argc, char** argv)
 {
-    /* C89 requires that array initializers be constant, so they need to
+    /* The `static` keyword is used here for compatibility with strict
+     * C89 compilers.
+     *
+     * (C89 requires that array initializers be constant, so they need to
      * have static storage duration if their addresses are to be used as
-     * initialization values.  This restriction is relaxed in C99 (most
-     * compilers ignore it anyway).
+     * initialization values.  This restriction is relaxed in C99, and many
+     * compilers ignored it anyway.)
      */
     static dropt_bool showHelp = 0;
     static dropt_bool showVersion = 0;
@@ -69,18 +73,18 @@ main(int argc, char** argv)
     }
     else if (argc == 0)
     {
-        /* This check is useless but is here for pedantic completeness.
-         * Hosted C environments are not required to supply command-line
-         * arguments, although obviously any environment that doesn't
-         * supply arguments wouldn't have any use for dropt.
+        /* This check is here only for pedantic completeness.  Hosted C
+         * environments are not required to supply command-line arguments,
+         * although obviously any environment that doesn't supply arguments
+         * wouldn't have any use for dropt.
          */
     }
     else
     {
         /* Parse the arguments from argv.
          *
-         * argv[1] is always safe to access since argv[argc] is guaranteed
-         * to be NULL and since we've established that argc > 0.
+         * argv[1] is always safe to access since we've established that
+         * argc > 0 and since argv[argc] is guaranteed to be a null pointer.
          */
         char** rest = dropt_parse(droptContext, -1, &argv[1]);
         if (dropt_get_error(droptContext) != dropt_error_none)
@@ -121,9 +125,9 @@ main(int argc, char** argv)
 
 /** handle_face
   *
-  *     An example of a custom option handler.  Usually the stock callbacks
-  *     (e.g. dropt_handle_bool, dropt_handle_int, dropt_handle_string,
-  *     etc.) should be sufficient for most purposes.
+  *     Usually the stock callbacks (e.g. dropt_handle_bool, dropt_handle_int,
+  *     dropt_handle_string, etc.) should be sufficient for most purposes, but
+  *     this is an example of an option handler for a custom type.
   */
 static dropt_error
 handle_face(dropt_context* context, const char* optionArgument, void* handlerData)
