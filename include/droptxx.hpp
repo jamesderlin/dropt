@@ -2,7 +2,7 @@
   *
   * A C++ wrapper for dropt.
   *
-  * Copyright (C) 2008-2010 James D. Lin <jameslin@cal.berkeley.edu>
+  * Copyright (C) 2008-2018 James D. Lin <jameslin@cal.berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>

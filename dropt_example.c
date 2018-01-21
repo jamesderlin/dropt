@@ -130,7 +130,10 @@ main(int argc, char** argv)
   *     this is an example of an option handler for a custom type.
   */
 static dropt_error
-handle_face(dropt_context* context, const char* optionArgument, void* handlerData)
+handle_face(dropt_context* context,
+            const dropt_option* option,
+            const char* optionArgument,
+            void* handlerData)
 {
     dropt_error err = dropt_error_none;
     face_type* face = handlerData;

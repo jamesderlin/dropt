@@ -2,7 +2,7 @@
   *
   * Default type handlers for dropt.
   *
-  * Copyright (C) 2006-2012 James D. Lin <jameslin@cal.berkeley.edu>
+  * Copyright (C) 2006-2018 James D. Lin <jameslin@cal.berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>
@@ -46,6 +46,8 @@ typedef enum { false, true } bool;
   *
   * PARAMETERS:
   *     IN/OUT context    : The options context.
+  *     IN option         : The matched option.  For more information, see
+  *                         dropt_option_handler_decl.
   *     IN optionArgument : A string representing a boolean value (0 or 1).
   *                         If NULL, the boolean value is assumed to be
   *                           true.
@@ -61,7 +63,9 @@ typedef enum { false, true } bool;
   *     dropt_error_mismatch
   */
 dropt_error
-dropt_handle_bool(dropt_context* context, const dropt_char* optionArgument,
+dropt_handle_bool(dropt_context* context,
+                  const dropt_option* option,
+                  const dropt_char* optionArgument,
                   void* handlerData)
 {
     dropt_error err = dropt_error_none;
@@ -85,7 +89,7 @@ dropt_handle_bool(dropt_context* context, const dropt_char* optionArgument,
     else
     {
         unsigned int i = 0;
-        err = dropt_handle_uint(context, optionArgument, &i);
+        err = dropt_handle_uint(context, option, optionArgument, &i);
         if (err == dropt_error_none)
         {
             switch (i)
@@ -119,6 +123,8 @@ dropt_handle_bool(dropt_context* context, const dropt_char* optionArgument,
   *
   * PARAMETERS:
   *     IN/OUT context    : The options context.
+  *     IN option         : The matched option.  For more information, see
+  *                         dropt_option_handler_decl.
   *     IN optionArgument : A string representing a boolean value.
   *                         If NULL, the boolean value is assumed to be
   *                           true.
@@ -131,10 +137,13 @@ dropt_handle_bool(dropt_context* context, const dropt_char* optionArgument,
   *     See dropt_handle_bool.
   */
 dropt_error
-dropt_handle_verbose_bool(dropt_context* context, const dropt_char* optionArgument,
+dropt_handle_verbose_bool(dropt_context* context,
+                          const dropt_option* option,
+                          const dropt_char* optionArgument,
                           void* handlerData)
 {
-    dropt_error err = dropt_handle_bool(context, optionArgument, handlerData);
+    dropt_error err = dropt_handle_bool(context, option, optionArgument,
+                                        handlerData);
     if (err == dropt_error_mismatch)
     {
         bool val = false;
@@ -166,6 +175,8 @@ dropt_handle_verbose_bool(dropt_context* context, const dropt_char* optionArgume
   *
   * PARAMETERS:
   *     IN/OUT context    : The options context.
+  *     IN option         : The matched option.  For more information, see
+  *                         dropt_option_handler_decl.
   *     IN optionArgument : A string representing a base-10 integer.
   *                         If NULL, returns dropt_error_insufficient_arguments.
   *     OUT handlerData   : An int*.
@@ -181,7 +192,9 @@ dropt_handle_verbose_bool(dropt_context* context, const dropt_char* optionArgume
   *     dropt_error_overflow
   */
 dropt_error
-dropt_handle_int(dropt_context* context, const dropt_char* optionArgument,
+dropt_handle_int(dropt_context* context,
+                 const dropt_option* option,
+                 const dropt_char* optionArgument,
                  void* handlerData)
 {
     dropt_error err = dropt_error_none;
@@ -243,6 +256,8 @@ dropt_handle_int(dropt_context* context, const dropt_char* optionArgument,
   *     IN optionArgument : A string representing an unsigned base-10
   *                           integer.
   *                         If NULL, returns dropt_error_insufficient_arguments.
+  *     IN option         : The matched option.  For more information, see
+  *                         dropt_option_handler_decl.
   *     OUT handlerData   : An unsigned int*.
   *                         On success, set to the interpreted integer.
   *                         On error, left untouched.
@@ -256,7 +271,9 @@ dropt_handle_int(dropt_context* context, const dropt_char* optionArgument,
   *     dropt_error_overflow
   */
 dropt_error
-dropt_handle_uint(dropt_context* context, const dropt_char* optionArgument,
+dropt_handle_uint(dropt_context* context,
+                  const dropt_option* option,
+                  const dropt_char* optionArgument,
                   void* handlerData)
 {
     dropt_error err = dropt_error_none;
@@ -320,6 +337,8 @@ dropt_handle_uint(dropt_context* context, const dropt_char* optionArgument,
   *
   * PARAMETERS:
   *     IN/OUT context    : The options context.
+  *     IN option         : The matched option.  For more information, see
+  *                         dropt_option_handler_decl.
   *     IN optionArgument : A string representing a base-10 floating-point
   *                           number.
   *                         If NULL, returns dropt_error_insufficient_arguments.
@@ -337,7 +356,9 @@ dropt_handle_uint(dropt_context* context, const dropt_char* optionArgument,
   *     dropt_error_underflow
   */
 dropt_error
-dropt_handle_double(dropt_context* context, const dropt_char* optionArgument,
+dropt_handle_double(dropt_context* context,
+                    const dropt_option* option,
+                    const dropt_char* optionArgument,
                     void* handlerData)
 {
     dropt_error err = dropt_error_none;
@@ -399,6 +420,8 @@ dropt_handle_double(dropt_context* context, const dropt_char* optionArgument,
   *
   * PARAMETERS:
   *     IN/OUT context    : The options context.
+  *     IN option         : The matched option.  For more information, see
+  *                         dropt_option_handler_decl.
   *     IN optionArgument : A string.
   *                         If NULL, returns dropt_error_insufficient_arguments.
   *     OUT handlerData   : A dropt_char**.
@@ -413,7 +436,9 @@ dropt_handle_double(dropt_context* context, const dropt_char* optionArgument,
   *     dropt_error_insufficient_arguments
   */
 dropt_error
-dropt_handle_string(dropt_context* context, const dropt_char* optionArgument,
+dropt_handle_string(dropt_context* context,
+                    const dropt_option* option,
+                    const dropt_char* optionArgument,
                     void* handlerData)
 {
     dropt_error err = dropt_error_none;

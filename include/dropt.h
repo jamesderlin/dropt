@@ -2,9 +2,9 @@
   *
   * A deliberately rudimentary command-line option parser.
   *
-  * Version 1.1.1
+  * Version 2.0.0
   *
-  * Copyright (C) 2006-2012 James D. Lin <jameslin@cal.berkeley.edu>
+  * Copyright (C) 2006-2018 James D. Lin <jameslin@cal.berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>
@@ -81,6 +81,8 @@ typedef unsigned char dropt_bool;
 /* Opaque. */
 typedef struct dropt_context dropt_context;
 
+/* Forward declarations. */
+typedef struct dropt_option dropt_option;
 
 /** dropt_option_handler_func callbacks are responsible for parsing
   * individual options.
@@ -106,6 +108,7 @@ typedef struct dropt_context dropt_context;
   * table.
   */
 typedef dropt_error dropt_option_handler_decl(dropt_context* context,
+                                              const dropt_option* option,
                                               const dropt_char* optionArgument,
                                               void* handlerData);
 typedef dropt_option_handler_decl* dropt_option_handler_func;
@@ -155,7 +158,7 @@ typedef int (*dropt_strncmp_func)(const dropt_char* s, const dropt_char* t, size
   * attr:
   *     Miscellaneous attributes.  See below.
   */
-typedef struct dropt_option
+struct dropt_option
 {
     dropt_char short_name;
     const dropt_char* long_name;
@@ -164,7 +167,7 @@ typedef struct dropt_option
     dropt_option_handler_func handler;
     void* handler_data;
     unsigned int attr;
-} dropt_option;
+};
 
 
 /** Bitwise flags for option attributes:

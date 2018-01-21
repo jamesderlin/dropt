@@ -99,13 +99,15 @@ There's no formal documentation yet.  In the meantime, [`dropt_example.c`] or
 Download
 --------
 
-* [`dropt-1.1.1.zip`](https://github.com/jamesderlin/dropt/archive/v1.1.1.zip)
-* [`dropt-1.1.1.tar.gz`](https://github.com/jamesderlin/dropt/archive/v1.1.1.tar.gz)
+* [`dropt-2.0.0.zip`](https://github.com/jamesderlin/dropt/archive/v2.0.0.zip)
+* [`dropt-2.0.0.tar.gz`](https://github.com/jamesderlin/dropt/archive/v2.0.0.tar.gz)
 
 
 Version History
 ---------------
-
+* 2.0.0 (2018-01-21)
+  * Modified the signature for option handlers to accept a pointer to the
+    matched `dropt_option` entry.
 * 1.1.1 (2013-03-17)
   * Fixed a build issue with gcc with optimizations enabled.
   * Changed `dropt_error` to be an `unsigned int` type instead of an `enum`
@@ -169,7 +171,7 @@ Version History
 
 Questions?  Comments?  Bugs?  I welcome feedback. [Contact me].
 
-Copyright © 2010–2016 James D. Lin
+Copyright © 2010–2018 James D. Lin
 <http://www.taenarum.com/software/>
 
 

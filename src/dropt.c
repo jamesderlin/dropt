@@ -2,7 +2,7 @@
   *
   * A deliberately rudimentary command-line option parser.
   *
-  * Copyright (C) 2006-2012 James D. Lin <jameslin@cal.berkeley.edu>
+  * Copyright (C) 2006-2018 James D. Lin <jameslin@cal.berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>
@@ -967,7 +967,8 @@ set_option_value(dropt_context* context,
         return dropt_error_bad_configuration;
     }
 
-    return option->handler(context, optionArgument, option->handler_data);
+    return option->handler(context, option, optionArgument,
+                           option->handler_data);
 }
 
 

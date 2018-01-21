@@ -2,7 +2,7 @@
   *
   * Unit tests for dropt.
   *
-  * Copyright (C) 2007-2012 James D. Lin <jameslin@cal.berkeley.edu>
+  * Copyright (C) 2007-2018 James D. Lin <jameslin@cal.berkeley.edu>
   *
   * This software is provided 'as-is', without any express or implied
   * warranty.  In no event will the authors be held liable for any damages
@@ -124,7 +124,10 @@ init_option_defaults(void)
 
 
 static dropt_error
-handle_optional_uint(dropt_context* context, const dropt_char* optionArgument, void* handlerData)
+handle_optional_uint(dropt_context* context,
+                     const dropt_option* option,
+                     const dropt_char* optionArgument,
+                     void* handlerData)
 {
     dropt_error err = dropt_error_none;
 
@@ -139,7 +142,8 @@ handle_optional_uint(dropt_context* context, const dropt_char* optionArgument, v
 
         if (optionArgument != NULL)
         {
-            err = dropt_handle_uint(context, optionArgument, &(p->value));
+            err = dropt_handle_uint(context, option, optionArgument,
+                                    &(p->value));
         }
 
         if (err == dropt_error_none) { p->is_set = true; }
@@ -150,7 +154,10 @@ handle_optional_uint(dropt_context* context, const dropt_char* optionArgument, v
 
 
 static dropt_error
-handle_ip_address(dropt_context* context, const dropt_char* optionArgument, void* handlerData)
+handle_ip_address(dropt_context* context,
+                  const dropt_option* option,
+                  const dropt_char* optionArgument,
+                  void* handlerData)
 {
     dropt_error err = dropt_error_none;
     unsigned int octet[4];
@@ -435,7 +442,7 @@ test_ ## handler(dropt_context* context, const dropt_char* optionArgument, \
 { \
     bool success = false; \
     type value = initValue; \
-    dropt_error error = handler(context, optionArgument, &value); \
+    dropt_error error = handler(context, NULL, optionArgument, &value); \
     if (error == expectedError && valueEqualityFunc(value, expectedValue)) \
     { \
         success = true; \
@@ -576,7 +583,7 @@ test_dropt_handlers(dropt_context* context)
     {
         const dropt_char* s = T("1e-1024");
         double value = d;
-        dropt_error error = dropt_handle_double(context, s, &value);
+        dropt_error error = dropt_handle_double(context, NULL, s, &value);
         if (!(   (error == dropt_error_underflow && value == d)
               || (error == dropt_error_none && value == 0)))
         {
