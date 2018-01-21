@@ -108,6 +108,7 @@ Version History
 * 2.0.0 (2018-01-21)
   * Modified the signature for option handlers to accept a pointer to the
     matched `dropt_option` entry.
+  * Reformatted code and comments.
 * 1.1.1 (2013-03-17)
   * Fixed a build issue with gcc with optimizations enabled.
   * Changed `dropt_error` to be an `unsigned int` type instead of an `enum`

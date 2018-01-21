@@ -66,18 +66,18 @@ enum
 };
 
 
-/** A string that might not be NUL-terminated. */
+/** A string that might not be `NUL`-terminated. */
 typedef struct
 {
     const dropt_char* s;
 
-    /* The length of s, excluding any NUL terminator. */
+    /* The length of s, excluding any `NUL` terminator. */
     size_t len;
 } char_array;
 
 
-/** A proxy for a dropt_option used for qsort and bsearch.  Instead of
-  * sorting the dropt_option table directly, we sort arrays of option_proxy
+/** A proxy for a `dropt_option` used for `qsort` and `bsearch`.  Instead of
+  * sorting the `dropt_option` table directly, we sort arrays of `option_proxy`
   * structures.  This allows us to have separate arrays sorted by different
   * keys and allows passing along additional data.
   */
@@ -85,9 +85,9 @@ typedef struct
 {
     const dropt_option* option;
 
-    /* The qsort and bsearch comparison callbacks don't pass along any
-     * client-supplied contextual data, so we have to embed it alongside
-     * the regular data.
+    /* The `qsort` and `bsearch` comparison callbacks don't pass along any
+     * client-supplied contextual data, so we have to embed it alongside the
+     * regular data.
      */
     const dropt_context* context;
 } option_proxy;
@@ -136,8 +136,8 @@ typedef struct
   *
   * PARAMETERS:
   *     IN s : A string.  Might not be NUL-terminated.
-  *            May be NULL.
-  *     len  : The length of s, excluding any NUL terminator.
+  *            May be `NULL`.
+  *     len  : The length of `s`, excluding any `NUL` terminator.
   *
   * RETURNS:
   *     The constructed char_array structure.
@@ -157,18 +157,18 @@ make_char_array(const dropt_char* s, size_t len)
 
 /** cmp_key_option_proxy_long
   *
-  *     Comparison callback for bsearch.  Compares a char_array structure
-  *     against an option_proxy structure based on long option names.
+  *     Comparison callback for `bsearch`.  Compares a `char_array` structure
+  *     against an `option_proxy` structure based on long option names.
   *
   * PARAMETERS:
-  *     IN key  : A pointer to the char_array structure to search for.
-  *     IN item : A pointer to the option_proxy structure being searched
+  *     IN key  : A pointer to the `char_array` structure to search for.
+  *     IN item : A pointer to the `option_proxy` structure being searched
   *                 against.
   *
   * RETURNS:
-  *     0 if key and item are equivalent,
-  *     < 0 if key should precede item,
-  *     > 0 if key should follow item.
+  *     0 if `key` and `item` are equivalent,
+  *     < 0 if `key` should precede `item`,
+  *     > 0 if `key` should follow `item`.
   */
 static int
 cmp_key_option_proxy_long(const void* key, const void* item)
@@ -198,8 +198,8 @@ cmp_key_option_proxy_long(const void* key, const void* item)
         return +1;
     }
 
-    /* Although the longName key might not be NUL-terminated, the
-     * option_proxy item we're searching against must be.
+    /* Although the `longName` key might not be `NUL`-terminated, the
+     * `option_proxy` item we're searching against must be.
      */
     optionLen = dropt_strlen(op->option->long_name);
     ret = op->context->ncmpstr(longName->s,
@@ -225,16 +225,16 @@ cmp_key_option_proxy_long(const void* key, const void* item)
 
 /** cmp_option_proxies_long
   *
-  *     Comparison callback for qsort.  Compares two option_proxy
+  *     Comparison callback for `qsort`.  Compares two `option_proxy`
   *     structures based on long option names.
   *
   * PARAMETERS:
-  *     IN p1, p2 : Pointers to the option_proxy structures to compare.
+  *     IN p1, p2 : Pointers to the `option_proxy` structures to compare.
   *
   * RETURNS:
-  *     0 if p1 and p2 are equivalent,
-  *     < 0 if p1 should precede p2,
-  *     > 0 if p1 should follow p2.
+  *     0 if `p1` and `p2` are equivalent,
+  *     < 0 if `p1` should precede `p2`,
+  *     > 0 if `p1` should follow `p2`.
   */
 static int
 cmp_option_proxies_long(const void* p1, const void* p2)
@@ -259,18 +259,18 @@ cmp_option_proxies_long(const void* p1, const void* p2)
 
 /** cmp_key_option_proxy_short
   *
-  *     Comparison callback for bsearch.  Compares a dropt_char against an
-  *     option_proxy structure based on short option names.
+  *     Comparison callback for `bsearch`.  Compares a `dropt_char` against an
+  *     `option_proxy` structure based on short option names.
   *
   * PARAMETERS:
-  *     IN key  : A pointer to the dropt_char to search for.
-  *     IN item : A pointer to the option_proxy structure being searched
+  *     IN key  : A pointer to the `dropt_char` to search for.
+  *     IN item : A pointer to the `option_proxy` structure being searched
   *                 against.
   *
   * RETURNS:
-  *     0 if key and item are equivalent,
-  *     < 0 if key should precede item,
-  *     > 0 if key should follow item.
+  *     0 if `key` and `item` are equivalent,
+  *     < 0 if `key` should precede `item`,
+  *     > 0 if `key` should follow `item`.
   */
 static int
 cmp_key_option_proxy_short(const void* key, const void* item)
@@ -292,16 +292,16 @@ cmp_key_option_proxy_short(const void* key, const void* item)
 
 /** cmp_option_proxies_short
   *
-  *     Comparison callback for qsort.  Compares two option_proxy
+  *     Comparison callback for `qsort`.  Compares two `option_proxy`
   *     structures based on short option names.
   *
   * PARAMETERS:
-  *     IN p1, p2 : Pointers to the option_proxy structures to compare.
+  *     IN p1, p2 : Pointers to the `option_proxy` structures to compare.
   *
   * RETURNS:
-  *     0 if p1 and p2 are equivalent,
-  *     < 0 if p1 should precede p2,
-  *     > 0 if p1 should follow p2.
+  *     0 if `p1` and `p2` are equivalent,
+  *     < 0 if `p1` should precede `p2`,
+  *     > 0 if `p1` should follow `p2`.
   */
 static int
 cmp_option_proxies_short(const void* p1, const void* p2)
@@ -320,12 +320,12 @@ cmp_option_proxies_short(const void* p1, const void* p2)
 
 /** init_lookup_tables
   *
-  *     Initializes the sorted lookup tables in a dropt context if not
-  *     already initialized.
+  *     Initializes the sorted lookup tables in a dropt context if not already
+  *     initialized.
   *
   * PARAMETERS:
   *     IN/OUT context : The dropt context.
-  *                      Must not be NULL.
+  *                      Must not be `NULL`.
   */
 static void
 init_lookup_tables(dropt_context* context)
@@ -340,7 +340,8 @@ init_lookup_tables(dropt_context* context)
 
     if (context->sortedByLong == NULL)
     {
-        context->sortedByLong = dropt_safe_malloc(n, sizeof *(context->sortedByLong));
+        context->sortedByLong
+            = dropt_safe_malloc(n, sizeof *(context->sortedByLong));
         if (context->sortedByLong != NULL)
         {
             size_t i;
@@ -358,7 +359,8 @@ init_lookup_tables(dropt_context* context)
 
     if (context->sortedByShort == NULL)
     {
-        context->sortedByShort = dropt_safe_malloc(n, sizeof *(context->sortedByShort));
+        context->sortedByShort
+            = dropt_safe_malloc(n, sizeof *(context->sortedByShort));
         if (context->sortedByShort != NULL)
         {
             size_t i;
@@ -382,7 +384,7 @@ init_lookup_tables(dropt_context* context)
   *
   * PARAMETERS:
   *     IN/OUT context : The dropt context.
-  *                      May be NULL.
+  *                      May be `NULL`.
   */
 static void
 free_lookup_tables(dropt_context* context)
@@ -404,8 +406,7 @@ free_lookup_tables(dropt_context* context)
   *     IN option : Specification for an individual option.
   *
   * RETURNS:
-  *     true if the specified option is valid, false if it's a sentinel
-  *       value.
+  *     true if the specified option is valid, false if it's a sentinel value.
   */
 static bool
 is_valid_option(const dropt_option* option)
@@ -423,17 +424,17 @@ is_valid_option(const dropt_option* option)
 
 /** find_option_long
   *
-  *     Finds the option specification for a long option name (i.e., an
-  *     option of the form "--option").
+  *     Finds the option specification for a long option name (i.e., an option
+  *     of the form "--option").
   *
   * PARAMETERS:
   *     IN context     : The dropt context.
-  *     IN longName    : The long option name to search for (excluding
-  *                        leading dashes).
-  *                      longName.s must not be NULL.
+  *     IN longName    : The long option name to search for (excluding leading
+  *                        dashes).
+  *                      `longName.s` must not be `NULL`.
   *
   * RETURNS:
-  *     A pointer to the corresponding option specification or NULL if not
+  *     A pointer to the corresponding option specification or `NULL` if not
   *       found.
   */
 static const dropt_option*
@@ -446,7 +447,8 @@ find_option_long(const dropt_context* context,
     if (context->sortedByLong != NULL)
     {
         option_proxy* found = bsearch(&longName, context->sortedByLong,
-                                      context->numOptions, sizeof *(context->sortedByLong),
+                                      context->numOptions,
+                                      sizeof *(context->sortedByLong),
                                       cmp_key_option_proxy_long);
         return (found == NULL) ? NULL : found->option;
     }
@@ -455,7 +457,9 @@ find_option_long(const dropt_context* context,
     {
         option_proxy item = { 0 };
         item.context = context;
-        for (item.option = context->options; is_valid_option(item.option); item.option++)
+        for (item.option = context->options;
+             is_valid_option(item.option);
+             item.option++)
         {
             if (cmp_key_option_proxy_long(&longName, &item) == 0)
             {
@@ -477,7 +481,7 @@ find_option_long(const dropt_context* context,
   *     IN shortName : The short option name to search for.
   *
   * RETURNS:
-  *     A pointer to the corresponding option specification or NULL if not
+  *     A pointer to the corresponding option specification or `NULL` if not
   *       found.
   */
 static const dropt_option*
@@ -490,7 +494,8 @@ find_option_short(const dropt_context* context, dropt_char shortName)
     if (context->sortedByShort != NULL)
     {
         option_proxy* found = bsearch(&shortName, context->sortedByShort,
-                                      context->numOptions, sizeof *(context->sortedByShort),
+                                      context->numOptions,
+                                      sizeof *(context->sortedByShort),
                                       cmp_key_option_proxy_short);
         return (found == NULL) ? NULL : found->option;
     }
@@ -516,12 +521,12 @@ find_option_short(const dropt_context* context, dropt_char shortName)
   *
   * PARAMETERS:
   *     IN/OUT context    : The dropt context.
-  *                         Must not be NULL.
+  *                         Must not be `NULL`.
   *     IN err            : The error code.
   *     IN optionName     : The name of the option we failed on.
-  *                         optionName.s must not be NULL.
+  *                         `optionName.s` must not be `NULL`.
   *     IN optionArgument : The value of the option we failed on.
-  *                         Pass NULL if unwanted.
+  *                         Pass `NULL` if unwanted.
   */
 static void
 set_error_details(dropt_context* context, dropt_error err,
@@ -536,7 +541,8 @@ set_error_details(dropt_context* context, dropt_error err,
     free(context->errorDetails.optionName);
     free(context->errorDetails.optionArgument);
 
-    context->errorDetails.optionName = dropt_strndup(optionName.s, optionName.len);
+    context->errorDetails.optionName = dropt_strndup(optionName.s,
+                                                     optionName.len);
     context->errorDetails.optionArgument = (optionArgument == NULL)
                                            ? NULL
                                            : dropt_strdup(optionArgument);
@@ -556,11 +562,12 @@ set_error_details(dropt_context* context, dropt_error err,
   *     IN err            : The error code.
   *     IN shortName      : the "short" name of the option we failed on.
   *     IN optionArgument : The value of the option we failed on.
-  *                         Pass NULL if unwanted.
+  *                         Pass `NULL` if unwanted.
   */
 static void
 set_short_option_error_details(dropt_context* context, dropt_error err,
-                               dropt_char shortName, const dropt_char* optionArgument)
+                               dropt_char shortName,
+                               const dropt_char* optionArgument)
 {
     /* "-?" is just a placeholder. */
     dropt_char shortNameBuf[] = DROPT_TEXT_LITERAL("-?");
@@ -571,7 +578,8 @@ set_short_option_error_details(dropt_context* context, dropt_error err,
     shortNameBuf[1] = shortName;
 
     set_error_details(context, err,
-                      make_char_array(shortNameBuf, ARRAY_LENGTH(shortNameBuf) - 1),
+                      make_char_array(shortNameBuf,
+                                      ARRAY_LENGTH(shortNameBuf) - 1),
                       optionArgument);
 }
 
@@ -605,18 +613,25 @@ dropt_get_error(const dropt_context* context)
   *     IN context         : The dropt context.
   *     OUT optionName     : On output, the name of the option we failed
   *                            on.  Do not free this string.
-  *                          Pass NULL if unwanted.
-  *     OUT optionArgument : On output, the value (possibly NULL) of the
+  *                          Pass `NULL` if unwanted.
+  *     OUT optionArgument : On output, the value (possibly `NULL`) of the
   *                            option we failed on.  Do not free this
   *                            string.
-  *                          Pass NULL if unwanted.
+  *                          Pass `NULL` if unwanted.
   */
 void
 dropt_get_error_details(const dropt_context* context,
                         dropt_char** optionName, dropt_char** optionArgument)
 {
-    if (optionName != NULL) { *optionName = context->errorDetails.optionName; }
-    if (optionArgument != NULL) { *optionArgument = context->errorDetails.optionArgument; }
+    if (optionName != NULL)
+    {
+        *optionName = context->errorDetails.optionName;
+    }
+
+    if (optionArgument != NULL)
+    {
+        *optionArgument = context->errorDetails.optionArgument;
+    }
 }
 
 
@@ -624,13 +639,13 @@ dropt_get_error_details(const dropt_context* context,
   *
   * PARAMETERS:
   *     IN context : The dropt context.
-  *                  Must not be NULL.
+  *                  Must not be `NULL`.
   *
   * RETURNS:
   *     The current error message waiting in the dropt context or the empty
   *       string if there are no errors.  Note that calling any dropt
-  *       function other than dropt_get_error, dropt_get_error_details, and
-  *       dropt_get_error_message may invalidate a previously-returned
+  *       function other than `dropt_get_error`, `dropt_get_error_details`, and
+  *       `dropt_get_error_message` may invalidate a previously-returned
   *       string.
   */
 const dropt_char*
@@ -680,7 +695,7 @@ dropt_get_error_message(dropt_context* context)
   *
   * PARAMETERS:
   *     IN/OUT context : The dropt context to free.
-  *                      May be NULL.
+  *                      May be `NULL`.
   */
 void
 dropt_clear_error(dropt_context* context)
@@ -710,12 +725,12 @@ dropt_clear_error(dropt_context* context)
   *     IN error          : The error code.
   *     IN optionName     : The name of the option we failed on.
   *     IN optionArgument : The value of the option we failed on.
-  *                         Pass NULL if unwanted.
+  *                         Pass `NULL` if unwanted.
   *
   * RETURNS:
-  *     An allocated string for the given error.  The caller is responsible
-  *       for calling free() on it when no longer needed.
-  *     May return NULL.
+  *     An allocated string for the given error.  The caller is responsible for
+  *       calling `free()` on it when no longer needed.
+  *     May return `NULL`.
   */
 dropt_char*
 dropt_default_error_handler(dropt_error error,
@@ -734,9 +749,8 @@ dropt_default_error_handler(dropt_error error,
     switch (error)
     {
         case dropt_error_none:
-            /* This shouldn't happen (unless client code invokes this
-             * directly with dropt_error_none), but it's here for
-             * completeness.
+            /* This shouldn't happen (unless client code invokes this directly
+             * with `dropt_error_none`), but it's here for completeness.
              */
             break;
 
@@ -782,17 +796,18 @@ dropt_default_error_handler(dropt_error error,
   *
   * PARAMETERS:
   *     IN context    : The dropt context.
-  *                     Must not be NULL.
+  *                     Must not be `NULL`.
   *     IN helpParams : The help parameters.
-  *                     Pass NULL to use the default help parameters.
+  *                     Pass `NULL` to use the default help parameters.
   *
   * RETURNS:
   *     An allocated help string for the available options.  The caller is
-  *       responsible for calling free() on it when no longer needed.
-  *     Returns NULL on error.
+  *       responsible for calling `free()` on it when no longer needed.
+  *     Returns `NULL` on error.
   */
 dropt_char*
-dropt_get_help(const dropt_context* context, const dropt_help_params* helpParams)
+dropt_get_help(const dropt_context* context,
+               const dropt_help_params* helpParams)
 {
     dropt_char* helpText = NULL;
     dropt_stringstream* ss = dropt_ssopen();
@@ -824,7 +839,8 @@ dropt_get_help(const dropt_context* context, const dropt_help_params* helpParams
             /* The number of characters printed on the current line so far. */
             int n;
 
-            if (option->description == NULL || (option->attr & dropt_attr_hidden))
+            if (   option->description == NULL
+                || (option->attr & dropt_attr_hidden))
             {
                 /* Undocumented option.  Ignore it and move on. */
                 continue;
@@ -924,9 +940,9 @@ dropt_get_help(const dropt_context* context, const dropt_help_params* helpParams
   * PARAMETERS:
   *     IN/OUT f      : The file stream to print to.
   *     IN context    : The dropt context.
-  *                     Must not be NULL.
+  *                     Must not be `NULL`.
   *     IN helpParams : The help parameters.
-  *                     Pass NULL to use the default help parameters.
+  *                     Pass `NULL` to use the default help parameters.
   */
 void
 dropt_print_help(FILE* f, const dropt_context* context,
@@ -950,7 +966,7 @@ dropt_print_help(FILE* f, const dropt_context* context,
   * PARAMETERS:
   *     IN/OUT context    : The dropt context.
   *     IN option         : The option.
-  *     IN optionArgument : The option's value.  May be NULL.
+  *     IN optionArgument : The option's value.  May be `NULL`.
   *
   * RETURNS:
   *     An error code.
@@ -1042,16 +1058,15 @@ exit:
   *
   * PARAMETERS:
   *     IN/OUT context : The dropt context.
-  *                      Must not be NULL.
-  *     IN argc        : The maximum number of arguments to parse from
-  *                        argv.
-  *                      Pass -1 to parse all arguments up to a NULL
-  *                        sentinel value.
-  *     IN argv        : The list of command-line arguments, not including
-  *                        the initial program name.
+  *                      Must not be `NULL`.
+  *     IN argc        : The maximum number of arguments to parse from argv.
+  *                      Pass -1 to parse all arguments up to a `NULL` sentinel
+  *                        value.
+  *     IN argv        : The list of command-line arguments, not including the
+  *                        initial program name.
   *
   * RETURNS:
-  *     A pointer to the first unprocessed element in argv.
+  *     A pointer to the first unprocessed element in `argv`.
   */
 dropt_char**
 dropt_parse(dropt_context* context,
@@ -1120,7 +1135,7 @@ dropt_parse(dropt_context* context,
 
             /* This intentionally leaves "-" unprocessed for the caller to
              * deal with.  This allows construction of programs that treat
-             * "-" to mean "stdin".
+             * "-" to mean `stdin`.
              */
             goto exit;
         }
@@ -1156,7 +1171,8 @@ dropt_parse(dropt_context* context,
             else
             {
                 /* --longName */
-                const dropt_char* p = dropt_strchr(longName, DROPT_TEXT_LITERAL('='));
+                const dropt_char* p = dropt_strchr(longName,
+                                                   DROPT_TEXT_LITERAL('='));
                 const dropt_char* longNameEnd;
                 if (p != NULL)
                 {
@@ -1172,7 +1188,7 @@ dropt_parse(dropt_context* context,
 
                 /* Pass the length of the option name so that we don't need
                  * to mutate the original string by inserting a
-                 * NUL-terminator.
+                 * `NUL`-terminator.
                  */
                 ps.option = find_option_long(context,
                                              make_char_array(longName,
@@ -1190,7 +1206,8 @@ dropt_parse(dropt_context* context,
                     if (err != dropt_error_none)
                     {
                         set_error_details(context, err,
-                                          make_char_array(arg, longNameEnd - arg),
+                                          make_char_array(arg,
+                                                          longNameEnd - arg),
                                           ps.optionArgument);
                     }
                 }
@@ -1271,7 +1288,8 @@ dropt_parse(dropt_context* context,
 
                     if (err != dropt_error_none)
                     {
-                        set_short_option_error_details(context, err, arg[j], &arg[j + 1]);
+                        set_short_option_error_details(context, err, arg[j],
+                                                       &arg[j + 1]);
                         goto exit;
                     }
 
@@ -1296,7 +1314,8 @@ dropt_parse(dropt_context* context,
                     err = set_option_value(context, ps.option, NULL);
                     if (err != dropt_error_none)
                     {
-                        set_short_option_error_details(context, err, arg[j], NULL);
+                        set_short_option_error_details(context, err, arg[j],
+                                                       NULL);
                         goto exit;
                     }
                 }
@@ -1320,12 +1339,12 @@ exit:
   *
   * PARAMETERS:
   *     IN options : The list of option specifications.
-  *                  Must not be NULL.
+  *                  Must not be `NULL`.
   *
   * RETURNS:
   *     An allocated dropt context.  The caller is responsible for freeing
-  *       it with dropt_free_context when no longer needed.
-  *     Returns NULL on error.
+  *       it with `dropt_free_context` when no longer needed.
+  *     Returns `NULL` on error.
   */
 dropt_context*
 dropt_new_context(const dropt_option* options)
@@ -1377,7 +1396,7 @@ exit:
   *
   * PARAMETERS:
   *     IN/OUT context : The dropt context to free.
-  *                      May be NULL.
+  *                      May be `NULL`.
   */
 void
 dropt_free_context(dropt_context* context)
@@ -1392,7 +1411,7 @@ dropt_free_context(dropt_context* context)
   *
   * PARAMETERS:
   *     IN context : The dropt context.
-  *                  Must not be NULL.
+  *                  Must not be `NULL`.
   *
   * RETURNS:
   *     The context's list of option specifications.
@@ -1412,12 +1431,11 @@ dropt_get_options(const dropt_context* context)
 
 /** dropt_init_help_params
   *
-  *     Initializes a dropt_help_params structure with the default
-  *     values.
+  *     Initializes a `dropt_help_params` structure with the default values.
   *
   * PARAMETERS:
   *     OUT helpParams : On output, set to the default help parameters.
-  *                      Must not be NULL.
+  *                      Must not be `NULL`.
   */
 void
 dropt_init_help_params(dropt_help_params* helpParams)
@@ -1436,18 +1454,20 @@ dropt_init_help_params(dropt_help_params* helpParams)
 
 /** dropt_set_error_handler
   *
-  *     Sets the callback function used to generate error strings from
-  *     error codes.
+  *     Sets the callback function used to generate error strings from error
+  *     codes.
   *
   * PARAMETERS:
   *     IN/OUT context : The dropt context.
-  *                      Must not be NULL.
+  *                      Must not be `NULL`.
   *     IN handler     : The error handler callback.
-  *                      Pass NULL to use the default error handler.
+  *                      Pass `NULL` to use the default error handler.
   *     IN handlerData : Caller-defined callback data.
   */
 void
-dropt_set_error_handler(dropt_context* context, dropt_error_handler_func handler, void* handlerData)
+dropt_set_error_handler(dropt_context* context,
+                        dropt_error_handler_func handler,
+                        void* handlerData)
 {
     if (context == NULL)
     {
@@ -1466,9 +1486,9 @@ dropt_set_error_handler(dropt_context* context, dropt_error_handler_func handler
   *
   * PARAMETERS:
   *     IN/OUT context : The dropt context.
-  *                      Must not be NULL.
+  *                      Must not be `NULL`.
   *     IN cmp         : The string comparison function.
-  *                      Pass NULL to use the default string comparison
+  *                      Pass `NULL` to use the default string comparison
   *                        function.
   */
 void
@@ -1521,15 +1541,14 @@ dropt_allow_concatenated_arguments(dropt_context* context, dropt_bool allow)
   *     In debug builds, terminates the program and prints the filename and
   *     line number of the failure.
   *
-  *     For logical errors entirely internal to dropt, use assert()
+  *     For logical errors entirely internal to dropt, use `assert()`
   *     instead.
   *
   * PARAMETERS:
   *     IN message  : The error message.
-  *                   Must not be NULL.
-  *     IN filename : The name of the file where the logical error
-  *                     occurred.
-  *                   Must not be NULL.
+  *                   Must not be `NULL`.
+  *     IN filename : The name of the file where the logical error occurred.
+  *                   Must not be `NULL`.
   *     IN line     : The line number where the logical error occurred.
   */
 void

@@ -186,7 +186,8 @@ handle_ip_address(dropt_context* context,
         }
     }
 
-    if (stscanf(optionArgument, T("%u.%u.%u.%u"), &octet[0], &octet[1], &octet[2], &octet[3])
+    if (stscanf(optionArgument, T("%u.%u.%u.%u"),
+                &octet[0], &octet[1], &octet[2], &octet[3])
         != ARRAY_LENGTH(octet))
     {
         err = my_dropt_error_bad_ip_address;
@@ -615,7 +616,8 @@ get_and_print_dropt_error(dropt_context* context)
     dropt_error error = dropt_get_error(context);
     if (error != dropt_error_none)
     {
-        ftprintf(stderr, T("[%d] %s\n"), error, dropt_get_error_message(context));
+        ftprintf(stderr, T("[%d] %s\n"),
+                 error, dropt_get_error_message(context));
         dropt_clear_error(context);
     }
     return error;
@@ -1199,7 +1201,10 @@ main(int argc, char** argv)
     /* Most programs normally should abort if given invalid arguments, but
      * for diagnostic purposes, this test program presses on anyway.
      */
-    if (get_and_print_dropt_error(droptContext) != dropt_error_none) { fputtc(T('\n'), stdout); }
+    if (get_and_print_dropt_error(droptContext) != dropt_error_none)
+    {
+        fputtc(T('\n'), stdout);
+    }
 
     if (showHelp)
     {

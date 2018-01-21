@@ -84,27 +84,32 @@ typedef struct dropt_context dropt_context;
 /* Forward declarations. */
 typedef struct dropt_option dropt_option;
 
-/** dropt_option_handler_func callbacks are responsible for parsing
-  * individual options.
+
+/** `dropt_option_handler_func` callbacks are responsible for parsing
+  * individual options and storing the parsed value.
   *
-  * dropt_option_handler_decl may be used for declaring the callback
-  * functions; dropt_option_handler_func is the actual function pointer
-  * type.
+  * `dropt_option_handler_decl` may be used for declaring the callback
+  * functions (see the stock option handlers below for examples).
+  * `dropt_option_handler_func` is the actual function pointer type.
   *
-  * optionArgument will be NULL if no argument is specified for an option.
-  * It will be the empty string if the user explicitly passed an empty
-  * string as the argument (e.g. --option="").
+  * `option` points to the `dropt_option` entry that matched the option
+  * supplied by the user.  This will never be `NULL` when dropt invokes the
+  * handler.
   *
-  * An option that doesn't expect an argument still can receive a non-NULL
-  * value for optionArgument if the user explicitly specified one (e.g.
-  * --option=arg).
+  * `optionArgument` will be `NULL` if no argument is specified for an option.
+  * It will be the empty string if the user explicitly passed an empty string
+  * as the argument (e.g. `--option=""`).
   *
-  * If the option's argument is optional, the handler might be called
-  * twice: once with a candidate argument, and if that argument is rejected
-  * by the handler, again with no argument.  Handlers should be aware of
-  * this if they have side-effects.
+  * An option that doesn't expect an argument still can receive a non-null
+  * value for `optionArgument` if the user explicitly specified one (e.g.
+  * `--option=arg`).
   *
-  * handlerData is the client-specified value specified in the dropt_option
+  * If the option's argument is optional, the handler might be called twice:
+  * once with a candidate argument, and if that argument is rejected by the
+  * handler, again with no argument.  Handlers should be aware of this if they
+  * have side-effects.
+  *
+  * `handlerData` is the client-specified value specified in the `dropt_option`
   * table.
   */
 typedef dropt_error dropt_option_handler_decl(dropt_context* context,
@@ -113,47 +118,48 @@ typedef dropt_error dropt_option_handler_decl(dropt_context* context,
                                               void* handlerData);
 typedef dropt_option_handler_decl* dropt_option_handler_func;
 
-/** dropt_error_handler_func callbacks are responsible for generating error
-  * messages.  The returned string must be allocated on the heap and must
-  * be freeable with free().
+/** `dropt_error_handler_func` callbacks are responsible for generating error
+  * messages.  The returned string must be allocated on the heap and must be
+  * freeable with `free()`.
   */
 typedef dropt_char* (*dropt_error_handler_func)(dropt_error error,
                                                 const dropt_char* optionName,
                                                 const dropt_char* optionArgument,
                                                 void* handlerData);
 
-/** dropt_strncmp_func callbacks allow callers to provide their own (possibly
+/** `dropt_strncmp_func` callbacks allow callers to provide their own (possibly
   * case-insensitive) string comparison function.
   */
-typedef int (*dropt_strncmp_func)(const dropt_char* s, const dropt_char* t, size_t n);
+typedef int (*dropt_strncmp_func)(const dropt_char* s, const dropt_char* t,
+                                  size_t n);
 
 
 /** Properties defining each option:
   *
   * short_name:
-  *     The option's short name (e.g. the 'h' in -h).
+  *     The option's short name (e.g. the 'h' in `-h`).
   *     Use '\0' if the option has no short name.
   *
   * long_name:
-  *     The option's long name (e.g. "help" in --help).
-  *     Use NULL if the option has no long name.
+  *     The option's long name (e.g. "help" in `--help`).
+  *     Use `NULL` if the option has no long name.
   *
   * description:
   *     The description shown when generating help.
-  *     May be NULL for undocumented options.
+  *     May be `NULL` for undocumented options.
   *
   * arg_description:
-  *     The description for the option's argument (e.g. --option=argument
-  *     or --option argument), printed when generating help.  If NULL, the
-  *     option does not take an argument.
+  *     The description for the option's argument (e.g. `--option=argument` or
+  *     `--option argument`), printed when generating help.
+  *     Use `NULL` if the option does not take an argument.
   *
   * handler:
-  *     The handler callback and data invoked in response to encountering
-  *     the option.
+  *     The handler callback and data invoked in response to encountering the
+  *     option.
   *
   * handler_data:
-  *     Callback data for the handler.  For typical handlers, this is
-  *     usually the address of a variable for the handler to modify.
+  *     Callback data for the handler.  For typical handlers, this is usually
+  *     the address of a variable for the handler to modify.
   *
   * attr:
   *     Miscellaneous attributes.  See below.
@@ -176,13 +182,13 @@ struct dropt_option
   *     Stop processing when this option is encountered.
   *
   * dropt_attr_hidden:
-  *     Don't list the option when generating help.  Use this for
-  *     undocumented options.
+  *     Don't list the option when generating help.  Use this for undocumented
+  *     options.
   *
   * dropt_attr_optional_val:
-  *     The option's argument is optional.  If an option has this
-  *     attribute, the handler callback may be invoked twice (once with a
-  *     potential argument, and if that fails, again with a NULL argument).
+  *     The option's argument is optional.  If an option has this attribute,
+  *     the handler callback may be invoked twice (once with a potential
+  *     argument, and if that fails, again with a `NULL` argument).
   */
 enum
 {
@@ -206,11 +212,13 @@ void dropt_free_context(dropt_context* context);
 const dropt_option* dropt_get_options(const dropt_context* context);
 
 void dropt_set_error_handler(dropt_context* context,
-                             dropt_error_handler_func handler, void* handlerData);
+                             dropt_error_handler_func handler,
+                             void* handlerData);
 void dropt_set_strncmp(dropt_context* context, dropt_strncmp_func cmp);
 
 /* Use this only for backward compatibility purposes. */
-void dropt_allow_concatenated_arguments(dropt_context* context, dropt_bool allow);
+void dropt_allow_concatenated_arguments(dropt_context* context,
+                                        dropt_bool allow);
 
 dropt_char** dropt_parse(dropt_context* context, int argc, dropt_char** argv);
 

@@ -73,8 +73,8 @@ public:
 #endif
 
 
-/** dropt::context_ref is a simple C++ wrapper around dropt_context
-  * functions.  It does not do any management of a dropt_context.
+/** `dropt::context_ref` is a simple C++ wrapper around `dropt_context`
+  * functions.  It does not do any management of a `dropt_context`.
   */
 class context_ref
 {
@@ -108,8 +108,8 @@ protected:
 };
 
 
-/** dropt::context is equivalent to dropt::context_ref but uses an
-  * internally managed dropt_context instance.
+/** `dropt::context` is equivalent to `dropt::context_ref` but uses an
+  * internally managed `dropt_context` instance.
   */
 class context
 : public context_ref
@@ -127,7 +127,7 @@ private:
 
 dropt_error convert_exception();
 
-// These use C++ bool and std::basic_string types.
+// These use C++ `bool` and `std::basic_string` types.
 dropt_option_handler_decl handle_bool;
 dropt_option_handler_decl handle_verbose_bool;
 dropt_option_handler_decl handle_string;

@@ -19,7 +19,9 @@
 /* dropt is not limited to built-in types.  Let's use it with a custom type. */
 typedef enum { unknown, heads, tails } face_type;
 
-/* Function prototype for our custom function to parse a string to a face_type. */
+/* Function prototype for our custom function to parse a string to a
+ * `face_type`.
+ */
 static dropt_option_handler_decl handle_face;
 
 
@@ -66,7 +68,7 @@ main(int argc, char** argv)
          * allocation failure.
          *
          * This also can happen due to logical errors (e.g. if the options
-         * array is malformed).  Logical errors will trigger DROPT_MISUSE()
+         * array is malformed).  Logical errors will trigger `DROPT_MISUSE()`
          * and will terminate the program in debug builds.
          */
         exitCode = EXIT_FAILURE;
@@ -81,10 +83,11 @@ main(int argc, char** argv)
     }
     else
     {
-        /* Parse the arguments from argv.
+        /* Parse the arguments from `argv`.
          *
-         * argv[1] is always safe to access since we've established that
-         * argc > 0 and since argv[argc] is guaranteed to be a null pointer.
+         * `argv[1]` is always safe to access since we've established that
+         * `argc` > 0 and since `argv[argc]` is guaranteed to be a null
+         * pointer.
          */
         char** rest = dropt_parse(droptContext, -1, &argv[1]);
         if (dropt_get_error(droptContext) != dropt_error_none)
@@ -125,9 +128,12 @@ main(int argc, char** argv)
 
 /** handle_face
   *
-  *     Usually the stock callbacks (e.g. dropt_handle_bool, dropt_handle_int,
-  *     dropt_handle_string, etc.) should be sufficient for most purposes, but
-  *     this is an example of an option handler for a custom type.
+  *     Usually the stock callbacks (e.g. `dropt_handle_bool`,
+  *     `dropt_handle_int`, `dropt_handle_string`, etc.) should be sufficient
+  *     for most purposes, but this is an example of an option handler for a
+  *     custom type.
+  *
+  *     For more information, see the comments to `dropt_option_handler_decl`.
   */
 static dropt_error
 handle_face(dropt_context* context,
@@ -139,10 +145,9 @@ handle_face(dropt_context* context,
     face_type* face = handlerData;
     assert(face != NULL);
 
-    /* Option handlers should handle 'optionArgument' being NULL (if the
-     * option's argument is optional and wasn't supplied) or being the
-     * empty string (if a user explicitly passed an empty string (e.g.
-     * --face="").
+    /* Option handlers should handle `optionArgument` being `NULL` (if the
+     * option's argument is optional and wasn't supplied) or being the empty
+     * string (if a user explicitly passed an empty string (e.g. --face="").
      */
     if (optionArgument == NULL || optionArgument[0] == '\0')
     {

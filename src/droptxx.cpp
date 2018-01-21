@@ -37,11 +37,11 @@ namespace dropt
 
 /** dropt::context_ref::context_ref
   *
-  *     dropt::context_ref constructor.
+  *     `dropt::context_ref` constructor.
   *
   * PARAMETERS:
   *     IN context : The options context.
-  *                  Must not be NULL.
+  *                  Must not be `NULL`.
   *                  Does not take ownership of the context.
   */
 context_ref::context_ref(dropt_context* context)
@@ -53,7 +53,7 @@ context_ref::context_ref(dropt_context* context)
 /** dropt::context_ref::raw
   *
   * RETURNS:
-  *     The raw dropt_context for this dropt::context_ref.
+  *     The raw `dropt_context` for this `dropt::context_ref`.
   */
 dropt_context*
 context_ref::raw()
@@ -64,7 +64,7 @@ context_ref::raw()
 
 /** dropt::context_ref::get_options
   *
-  *     A wrapper around dropt_get_options.
+  *     A wrapper around `dropt_get_options`.
   */
 const dropt_option*
 context_ref::get_options()
@@ -76,10 +76,11 @@ context_ref::get_options()
 
 /** dropt::context_ref::set_error_handler
   *
-  *     A wrapper around dropt_set_error_handler.
+  *     A wrapper around `dropt_set_error_handler`.
   */
 void
-context_ref::set_error_handler(dropt_error_handler_func handler, void* handlerData)
+context_ref::set_error_handler(dropt_error_handler_func handler,
+                               void* handlerData)
 {
     dropt_set_error_handler(mContext, handler, handlerData);
 }
@@ -87,7 +88,7 @@ context_ref::set_error_handler(dropt_error_handler_func handler, void* handlerDa
 
 /** dropt::context_ref::set_strncmp
   *
-  *     A wrapper around dropt_set_strncmp.
+  *     A wrapper around `dropt_set_strncmp`.
   */
 void
 context_ref::set_strncmp(dropt_strncmp_func cmp)
@@ -98,7 +99,7 @@ context_ref::set_strncmp(dropt_strncmp_func cmp)
 
 /** dropt::allow_concatenated_arguments
   *
-  *     A wrapper around dropt_allow_concatenated_arguments.
+  *     A wrapper around `dropt_allow_concatenated_arguments`.
   */
 void
 context_ref::allow_concatenated_arguments(bool allow)
@@ -110,7 +111,7 @@ context_ref::allow_concatenated_arguments(bool allow)
 
 /** dropt::context_ref::parse
   *
-  *     Wrappers around dropt_parse.
+  *     Wrappers around `dropt_parse`.
   */
 dropt_char**
 context_ref::parse(int argc, dropt_char** argv)
@@ -128,7 +129,7 @@ context_ref::parse(dropt_char** argv)
 
 /** dropt::context_ref::get_error
   *
-  *     A wrapper around dropt_get_error.
+  *     A wrapper around `dropt_get_error`.
   */
 dropt_error
 context_ref::get_error() const
@@ -139,10 +140,11 @@ context_ref::get_error() const
 
 /** dropt::context_ref::get_error_details
   *
-  *     A wrapper around dropt_get_error_details.
+  *     A wrapper around `dropt_get_error_details`.
   */
 void
-context_ref::get_error_details(dropt_char** optionName, dropt_char** optionArgument) const
+context_ref::get_error_details(dropt_char** optionName,
+                               dropt_char** optionArgument) const
 {
     dropt_get_error_details(mContext, optionName, optionArgument);
 }
@@ -150,7 +152,7 @@ context_ref::get_error_details(dropt_char** optionName, dropt_char** optionArgum
 
 /** dropt::context_ref::get_error_message
   *
-  *     A wrapper around dropt_get_error_message.
+  *     A wrapper around `dropt_get_error_message`.
   */
 const dropt_char*
 context_ref::get_error_message()
@@ -161,7 +163,7 @@ context_ref::get_error_message()
 
 /** dropt::context_ref::clear_error
   *
-  *     A wrapper around dropt_clear_error.
+  *     A wrapper around `dropt_clear_error`.
   */
 void
 context_ref::clear_error()
@@ -173,7 +175,7 @@ context_ref::clear_error()
 #ifndef DROPT_NO_STRING_BUFFERS
 /** dropt::context_ref::get_help
   *
-  *     A wrapper around dropt_get_help.
+  *     A wrapper around `dropt_get_help`.
   *
   * PARAMETERS:
   *     IN help_params : The help parameters.
@@ -204,11 +206,11 @@ context_ref::get_help(const help_params& helpParams) const
 
 /** dropt::context::context
   *
-  *     dropt::context constructor.
+  *     `dropt::context` constructor.
   *
   * PARAMETERS:
   *     IN options : The list of option specifications.
-  *                  Must not be NULL.
+  *                  Must not be `NULL`.
   */
 context::context(const dropt_option* options)
 : context_ref(dropt_new_context(options))
@@ -219,7 +221,7 @@ context::context(const dropt_option* options)
 
 /** dropt::context::~context
   *
-  *     dropt::context destructor.
+  *     `dropt::context` destructor.
   */
 context::~context()
 {
@@ -230,7 +232,7 @@ context::~context()
 
 /** dropt::convert_exception
   *
-  *     Converts the last thrown C++ exception to a dropt_error.
+  *     Converts the last thrown C++ exception to a `dropt_error`.
   *
   * RETURNS:
   *     An error code.
@@ -259,22 +261,20 @@ convert_exception()
 
 /** dropt::handle_bool
   *
-  *     Parses a C++ bool value from the given string if possible.
+  *     Stores a C++ `bool` value parsed from the given string if possible.
   *
   * PARAMETERS:
   *     IN/OUT context    : The options context.
   *     IN option         : The matched option.  For more information, see
-  *                         dropt_option_handler_decl.
+  *                         `dropt_option_handler_decl`.
   *     IN optionArgument : A string representing a boolean value (0 or 1).
-  *                         If NULL, the boolean value is assumed to be
-  *                         true.
-  *     OUT handlerData   : A pointer to a C++ bool.
-  *                         On success, set to the interpreted boolean
-  *                           value.
+  *                         If `NULL`, the boolean value is assumed to be true.
+  *     OUT handlerData   : A pointer to a C++ `bool`.
+  *                         On success, set to the interpreted boolean value.
   *                         On error, left untouched.
   *
   * RETURNS:
-  *     See dropt_handle_bool.
+  *     See `dropt_handle_bool`.
   */
 dropt_error
 handle_bool(dropt_context* context,
@@ -294,23 +294,21 @@ handle_bool(dropt_context* context,
 
 /** dropt::handle_verbose_bool
   *
-  *     Like dropt::handle_bool but accepts "true" and "false" string
-  *     values.
+  *     Like `dropt::handle_bool` but accepts "true" and "false" string values.
   *
   * PARAMETERS:
   *     IN/OUT context    : The options context.
   *     IN option         : The matched option.  For more information, see
-  *                         dropt_option_handler_decl.
+  *                         `dropt_option_handler_decl`.
   *     IN optionArgument : A string representing a boolean value (0 or 1).
-  *                         If NULL, the boolean value is assumed to be
+  *                         If `NULL`, the boolean value is assumed to be
   *                           true.
-  *     OUT handlerData   : A pointer to a C++ bool.
-  *                         On success, set to the interpreted boolean
-  *                           value.
+  *     OUT handlerData   : A `bool*`.
+  *                         On success, set to the interpreted boolean value.
   *                         On error, left untouched.
   *
   * RETURNS:
-  *     See dropt_handle_bool.
+  *     See `dropt_handle_bool`.
   */
 dropt_error
 handle_verbose_bool(dropt_context* context,
@@ -333,15 +331,16 @@ handle_verbose_bool(dropt_context* context,
 
 /** dropt::handle_string
   *
-  *     Obtains a C++ string.
+  *     Stores a C++ string.
   *
   * PARAMETERS:
   *     IN/OUT context    : The options context.
   *     IN option         : The matched option.  For more information, see
-  *                         dropt_option_handler_decl.
+  *                         `dropt_option_handler_decl`.
   *     IN optionArgument : A string.
-  *                         If NULL, returns dropt_error_insufficient_arguments.
-  *     OUT handlerData   : A pointer to a dropt::string.
+  *                         If `NULL`, returns
+  *                           `dropt_error_insufficient_arguments`.
+  *     OUT handlerData   : A `dropt::string*`.
   *                         On success, set to the input string.
   *                         On error, left untouched.
   *
@@ -376,7 +375,7 @@ handle_string(dropt_context* context,
 
 /** dropt::handle_int
   *
-  *     A wrapper around dropt_handle_int.
+  *     A wrapper around `dropt_handle_int`.
   */
 dropt_error
 handle_int(dropt_context* context,
@@ -390,7 +389,7 @@ handle_int(dropt_context* context,
 
 /** dropt::handle_uint
   *
-  *     A wrapper around dropt_handle_uint.
+  *     A wrapper around `dropt_handle_uint`.
   */
 dropt_error
 handle_uint(dropt_context* context,
@@ -404,7 +403,7 @@ handle_uint(dropt_context* context,
 
 /** dropt::handle_double
   *
-  *     A wrapper around dropt_handle_double.
+  *     A wrapper around `dropt_handle_double`.
   */
 dropt_error
 handle_double(dropt_context* context,

@@ -20,7 +20,9 @@
 /* dropt is not limited to built-in types.  Let's use it with a custom type. */
 typedef enum { unknown, heads, tails } face_type;
 
-/* Function prototype for our custom function to parse a string to a face_type. */
+/* Function prototype for our custom function to parse a string to a
+ * `face_type`.
+ */
 static dropt_option_handler_decl handle_face;
 
 
@@ -102,10 +104,11 @@ main(int argc, char** argv)
     }
     else
     {
-        /* Parse the arguments from argv.
+        /* Parse the arguments from `argv`.
          *
-         * argv[1] is always safe to access since we've established that
-         * argc > 0 and since argv[argc] is guaranteed to be a null pointer.
+         * `argv[1]` is always safe to access since we've established that
+         * `argc` > 0 and since `argv[argc]` is guaranteed to be a null
+         * pointer.
          */
         char** rest = droptContext.parse(-1, &argv[1]);
         if (droptContext.get_error() != dropt_error_none)
@@ -144,9 +147,12 @@ main(int argc, char** argv)
 
 /** handle_face
   *
-  *     Usually the stock callbacks (e.g. dropt_handle_bool, dropt_handle_int,
-  *     dropt_handle_string, etc.) should be sufficient for most purposes, but
-  *     this is an example of an option handler for a custom type.
+  *     Usually the stock callbacks (e.g. `dropt::handle_bool`,
+  *     `dropt_::handle_int`, `dropt::handle_string`, etc.) should be sufficient
+  *     for most purposes, but this is an example of an option handler for a
+  *     custom type.
+  *
+  *     For more information, see the comments to `dropt_option_handler_decl`.
   */
 static dropt_error
 handle_face(dropt_context* context,
@@ -158,7 +164,7 @@ handle_face(dropt_context* context,
     face_type* face = static_cast<face_type*>(handlerData);
     assert(face != NULL);
 
-    /* Option handlers should handle 'optionArgument' being null (if the
+    /* Option handlers should handle `optionArgument` being null (if the
      * option's argument is optional and wasn't supplied) or being the
      * empty string (if a user explicitly passed an empty string (e.g.
      * --face="").

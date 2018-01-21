@@ -42,18 +42,16 @@ typedef enum { false, true } bool;
 
 /** dropt_handle_bool
   *
-  *     Parses a boolean value from the given string if possible.
+  *     Stores a boolean value parsed from the given string if possible.
   *
   * PARAMETERS:
   *     IN/OUT context    : The options context.
   *     IN option         : The matched option.  For more information, see
-  *                         dropt_option_handler_decl.
+  *                         `dropt_option_handler_decl`.
   *     IN optionArgument : A string representing a boolean value (0 or 1).
-  *                         If NULL, the boolean value is assumed to be
-  *                           true.
-  *     OUT handlerData   : A dropt_bool*.
-  *                         On success, set to the interpreted boolean
-  *                           value.
+  *                         If `NULL`, the boolean value is assumed to be true.
+  *     OUT handlerData   : A `dropt_bool*`.
+  *                         On success, set to the interpreted boolean value.
   *                         On error, left untouched.
   *
   * RETURNS:
@@ -118,19 +116,16 @@ dropt_handle_bool(dropt_context* context,
 
 /** dropt_handle_verbose_bool
   *
-  *     Like dropt_handle_bool but accepts "true" and "false" string
-  *     values.
+  *     Like `dropt_handle_bool` but accepts "true" and "false" string values.
   *
   * PARAMETERS:
   *     IN/OUT context    : The options context.
   *     IN option         : The matched option.  For more information, see
-  *                         dropt_option_handler_decl.
+  *                         `dropt_option_handler_decl`.
   *     IN optionArgument : A string representing a boolean value.
-  *                         If NULL, the boolean value is assumed to be
-  *                           true.
-  *     OUT handlerData   : A dropt_bool*.
-  *                         On success, set to the interpreted boolean
-  *                           value.
+  *                         If `NULL`, the boolean value is assumed to be true.
+  *     OUT handlerData   : A `dropt_bool*`.
+  *                         On success, set to the interpreted boolean value.
   *                         On error, left untouched.
   *
   * RETURNS:
@@ -149,7 +144,7 @@ dropt_handle_verbose_bool(dropt_context* context,
         bool val = false;
         dropt_bool* out = handlerData;
 
-        /* dropt_handle_bool already checks for this. */
+        /* `dropt_handle_bool` already checks for this. */
         assert(out != NULL);
 
         if (dropt_stricmp(optionArgument, DROPT_TEXT_LITERAL("false")) == 0)
@@ -171,15 +166,16 @@ dropt_handle_verbose_bool(dropt_context* context,
 
 /** dropt_handle_int
   *
-  *     Parses an integer from the given string.
+  *     Stores an integer parsed from the given string.
   *
   * PARAMETERS:
   *     IN/OUT context    : The options context.
   *     IN option         : The matched option.  For more information, see
-  *                         dropt_option_handler_decl.
+  *                         `dropt_option_handler_decl`.
   *     IN optionArgument : A string representing a base-10 integer.
-  *                         If NULL, returns dropt_error_insufficient_arguments.
-  *     OUT handlerData   : An int*.
+  *                         If `NULL`, returns
+  *                           `dropt_error_insufficient_arguments`.
+  *     OUT handlerData   : An `int*`.
   *                         On success, set to the interpreted integer.
   *                         On error, left untouched.
   *
@@ -206,7 +202,8 @@ dropt_handle_int(dropt_context* context,
         DROPT_MISUSE("No handler data specified.");
         err = dropt_error_bad_configuration;
     }
-    else if (optionArgument == NULL || optionArgument[0] == DROPT_TEXT_LITERAL('\0'))
+    else if (   optionArgument == NULL
+             || optionArgument[0] == DROPT_TEXT_LITERAL('\0'))
     {
         err = dropt_error_insufficient_arguments;
     }
@@ -218,7 +215,7 @@ dropt_handle_int(dropt_context* context,
         n = dropt_strtol(optionArgument, &end, 10);
 
         /* Check that we matched at least one digit.
-         * (strtol/strtoul will return 0 if fed a string with no digits.)
+         * (`strtol`/`strtoul` will return 0 if fed a string with no digits.)
          */
         if (*end == DROPT_TEXT_LITERAL('\0') && end > optionArgument)
         {
@@ -249,16 +246,18 @@ dropt_handle_int(dropt_context* context,
 
 /** dropt_handle_uint
   *
-  *     Parses an unsigned integer from the given string.
+  *     Stores an unsigned integer parsed from the given string.
   *
   * PARAMETERS:
   *     IN/OUT context    : The options context.
-  *     IN optionArgument : A string representing an unsigned base-10
-  *                           integer.
-  *                         If NULL, returns dropt_error_insufficient_arguments.
+  *     IN option         : The matched option.  For more information, see
+  *                         `dropt_option_handler_decl`.
+  *     IN optionArgument : A string representing an unsigned base-10 integer.
+  *                         If `NULL`, returns
+  *                           `dropt_error_insufficient_arguments`.
   *     IN option         : The matched option.  For more information, see
   *                         dropt_option_handler_decl.
-  *     OUT handlerData   : An unsigned int*.
+  *     OUT handlerData   : An `unsigned int*`.
   *                         On success, set to the interpreted integer.
   *                         On error, left untouched.
   *
@@ -302,7 +301,7 @@ dropt_handle_uint(dropt_context* context,
         n = dropt_strtoul(optionArgument, &end, 10);
 
         /* Check that we matched at least one digit.
-         * (strtol/strtoul will return 0 if fed a string with no digits.)
+         * (`strtol`/`strtoul` will return 0 if fed a string with no digits.)
          */
         if (*end == DROPT_TEXT_LITERAL('\0') && end > optionArgument)
         {
@@ -333,17 +332,18 @@ dropt_handle_uint(dropt_context* context,
 
 /** dropt_handle_double
   *
-  *     Parses a double from the given string.
+  *     Stores a `double` parsed from the given string.
   *
   * PARAMETERS:
   *     IN/OUT context    : The options context.
   *     IN option         : The matched option.  For more information, see
-  *                         dropt_option_handler_decl.
+  *                         `dropt_option_handler_decl`.
   *     IN optionArgument : A string representing a base-10 floating-point
   *                           number.
-  *                         If NULL, returns dropt_error_insufficient_arguments.
-  *     OUT handlerData   : A double*.
-  *                         On success, set to the interpreted double.
+  *                         If `NULL`, returns
+  *                           `dropt_error_insufficient_arguments`.
+  *     OUT handlerData   : A `double*`.
+  *                         On success, set to the interpreted `double`.
   *                         On error, left untouched.
   *
   * RETURNS:
@@ -382,17 +382,17 @@ dropt_handle_double(dropt_context* context,
         val = dropt_strtod(optionArgument, &end);
 
         /* Check that we matched at least one digit.
-         * (strtod will return 0 if fed a string with no digits.)
+         * (`strtod` will return 0 if fed a string with no digits.)
          */
         if (*end == DROPT_TEXT_LITERAL('\0') && end > optionArgument)
         {
             if (errno == ERANGE)
             {
-                /* Note that setting errno to ERANGE for underflow errors
+                /* Note that setting `errno` to `ERANGE` for underflow errors
                  * is implementation-defined behavior, but glibc, BSD's
                  * libc, and Microsoft's CRT all have implementations of
-                 * strtod documented to return 0 and to set errno to ERANGE
-                 * for such cases.
+                 * `strtod` documented to return 0 and to set `errno` to
+                 * `ERANGE` for such cases.
                  */
                 err = (ABS(val) <= DBL_MIN)
                       ? dropt_error_underflow
@@ -416,18 +416,19 @@ dropt_handle_double(dropt_context* context,
 
 /** dropt_handle_string
   *
-  *     Obtains a string.
+  *     Stores a string.
   *
   * PARAMETERS:
   *     IN/OUT context    : The options context.
   *     IN option         : The matched option.  For more information, see
-  *                         dropt_option_handler_decl.
+  *                         `dropt_option_handler_decl`.
   *     IN optionArgument : A string.
-  *                         If NULL, returns dropt_error_insufficient_arguments.
-  *     OUT handlerData   : A dropt_char**.
-  *                         On success, set to the input string.  The
-  *                           string is NOT copied from the original argv
-  *                           array, so do not free it.
+  *                         If `NULL`, returns
+  *                           `dropt_error_insufficient_arguments`.
+  *     OUT handlerData   : A `dropt_char**`.
+  *                         On success, set to the input string.  The string is
+  *                           NOT copied from the original `argv` array, so do
+  *                           not free it.
   *                         On error, left untouched.
   *
   * RETURNS:
