@@ -36,9 +36,17 @@
 #include "dropt.h"
 #include "dropt_string.h"
 
+
+#define CONCAT(s, t) s ## t
+#define XCONCAT(s, t) CONCAT(s, t)
+
+#define STATIC_ASSERT(cond) \
+  enum { XCONCAT(static_assert_line_,  __LINE__) = 1 / ((cond) != 0) }
+
 #define ABS(x) (((x) < 0) ? -(x) : (x))
 
 typedef enum { false, true } bool;
+
 
 /** dropt_handle_bool
   *
@@ -50,7 +58,7 @@ typedef enum { false, true } bool;
   *                         `dropt_option_handler_decl`.
   *     IN optionArgument : A string representing a boolean value (0 or 1).
   *                         If `NULL`, the boolean value is assumed to be true.
-  *     OUT handlerData   : A `dropt_bool*`.
+  *     OUT dest          : A `dropt_bool*`.
   *                         On success, set to the interpreted boolean value.
   *                         On error, left untouched.
   *
@@ -64,15 +72,15 @@ dropt_error
 dropt_handle_bool(dropt_context* context,
                   const dropt_option* option,
                   const dropt_char* optionArgument,
-                  void* handlerData)
+                  void* dest)
 {
     dropt_error err = dropt_error_none;
     bool val = false;
-    dropt_bool* out = handlerData;
+    dropt_bool* out = dest;
 
     if (out == NULL)
     {
-        DROPT_MISUSE("No handler data specified.");
+        DROPT_MISUSE("No handler destination specified.");
         err = dropt_error_bad_configuration;
     }
     else if (optionArgument == NULL)
@@ -124,7 +132,7 @@ dropt_handle_bool(dropt_context* context,
   *                         `dropt_option_handler_decl`.
   *     IN optionArgument : A string representing a boolean value.
   *                         If `NULL`, the boolean value is assumed to be true.
-  *     OUT handlerData   : A `dropt_bool*`.
+  *     OUT dest          : A `dropt_bool*`.
   *                         On success, set to the interpreted boolean value.
   *                         On error, left untouched.
   *
@@ -135,14 +143,13 @@ dropt_error
 dropt_handle_verbose_bool(dropt_context* context,
                           const dropt_option* option,
                           const dropt_char* optionArgument,
-                          void* handlerData)
+                          void* dest)
 {
-    dropt_error err = dropt_handle_bool(context, option, optionArgument,
-                                        handlerData);
+    dropt_error err = dropt_handle_bool(context, option, optionArgument, dest);
     if (err == dropt_error_mismatch)
     {
         bool val = false;
-        dropt_bool* out = handlerData;
+        dropt_bool* out = dest;
 
         /* `dropt_handle_bool` already checks for this. */
         assert(out != NULL);
@@ -175,7 +182,7 @@ dropt_handle_verbose_bool(dropt_context* context,
   *     IN optionArgument : A string representing a base-10 integer.
   *                         If `NULL`, returns
   *                           `dropt_error_insufficient_arguments`.
-  *     OUT handlerData   : An `int*`.
+  *     OUT dest          : An `int*`.
   *                         On success, set to the interpreted integer.
   *                         On error, left untouched.
   *
@@ -191,15 +198,15 @@ dropt_error
 dropt_handle_int(dropt_context* context,
                  const dropt_option* option,
                  const dropt_char* optionArgument,
-                 void* handlerData)
+                 void* dest)
 {
     dropt_error err = dropt_error_none;
     int val = 0;
-    int* out = handlerData;
+    int* out = dest;
 
     if (out == NULL)
     {
-        DROPT_MISUSE("No handler data specified.");
+        DROPT_MISUSE("No handler destination specified.");
         err = dropt_error_bad_configuration;
     }
     else if (   optionArgument == NULL
@@ -257,7 +264,7 @@ dropt_handle_int(dropt_context* context,
   *                           `dropt_error_insufficient_arguments`.
   *     IN option         : The matched option.  For more information, see
   *                         dropt_option_handler_decl.
-  *     OUT handlerData   : An `unsigned int*`.
+  *     OUT dest          : An `unsigned int*`.
   *                         On success, set to the interpreted integer.
   *                         On error, left untouched.
   *
@@ -273,15 +280,15 @@ dropt_error
 dropt_handle_uint(dropt_context* context,
                   const dropt_option* option,
                   const dropt_char* optionArgument,
-                  void* handlerData)
+                  void* dest)
 {
     dropt_error err = dropt_error_none;
     int val = 0;
-    unsigned int* out = handlerData;
+    unsigned int* out = dest;
 
     if (out == NULL)
     {
-        DROPT_MISUSE("No handler data specified.");
+        DROPT_MISUSE("No handler destination specified.");
         err = dropt_error_bad_configuration;
     }
     else if (   optionArgument == NULL
@@ -342,7 +349,7 @@ dropt_handle_uint(dropt_context* context,
   *                           number.
   *                         If `NULL`, returns
   *                           `dropt_error_insufficient_arguments`.
-  *     OUT handlerData   : A `double*`.
+  *     OUT dest          : A `double*`.
   *                         On success, set to the interpreted `double`.
   *                         On error, left untouched.
   *
@@ -359,15 +366,15 @@ dropt_error
 dropt_handle_double(dropt_context* context,
                     const dropt_option* option,
                     const dropt_char* optionArgument,
-                    void* handlerData)
+                    void* dest)
 {
     dropt_error err = dropt_error_none;
     double val = 0.0;
-    double* out = handlerData;
+    double* out = dest;
 
     if (out == NULL)
     {
-        DROPT_MISUSE("No handler data specified.");
+        DROPT_MISUSE("No handler destination specified.");
         err = dropt_error_bad_configuration;
     }
     else if (   optionArgument == NULL
@@ -425,7 +432,7 @@ dropt_handle_double(dropt_context* context,
   *     IN optionArgument : A string.
   *                         If `NULL`, returns
   *                           `dropt_error_insufficient_arguments`.
-  *     OUT handlerData   : A `dropt_char**`.
+  *     OUT dest          : A `dropt_char**`.
   *                         On success, set to the input string.  The string is
   *                           NOT copied from the original `argv` array, so do
   *                           not free it.
@@ -440,14 +447,14 @@ dropt_error
 dropt_handle_string(dropt_context* context,
                     const dropt_option* option,
                     const dropt_char* optionArgument,
-                    void* handlerData)
+                    void* dest)
 {
     dropt_error err = dropt_error_none;
-    const dropt_char** out = handlerData;
+    const dropt_char** out = dest;
 
     if (out == NULL)
     {
-        DROPT_MISUSE("No handler data specified.");
+        DROPT_MISUSE("No handler destination specified.");
         err = dropt_error_bad_configuration;
     }
     else if (optionArgument == NULL)
@@ -456,5 +463,58 @@ dropt_handle_string(dropt_context* context,
     }
 
     if (err == dropt_error_none) { *out = optionArgument; }
+    return err;
+}
+
+
+/** dropt_handle_const
+  *
+  *     Stores a predefined value.  This can be used to set a single variable
+  *     to different values in response to different boolean-like command-line
+  *     options.
+  *
+  * PARAMETERS:
+  *     IN/OUT context    : The options context.
+  *     IN option         : The matched option.  For more information, see
+  *                         `dropt_option_handler_decl`.
+  *     IN optionArgument : Must be `NULL`.
+  *     OUT dest          : A `dropt_uintptr*`.
+  *                         On success, set to the constant value specified by
+  *                           `option->extra_data`.
+  *                         On error, left untouched.
+  *
+  * RETURNS:
+  *     dropt_error_none
+  *     dropt_error_bad_configuration
+  *     dropt_error_mismatch
+  */
+
+dropt_error
+dropt_handle_const(dropt_context* context,
+                   const dropt_option* option,
+                   const dropt_char* optionArgument,
+                   void* dest)
+{
+    dropt_error err = dropt_error_none;
+    dropt_uintptr* out = dest;
+
+    STATIC_ASSERT(sizeof (dropt_uintptr) >= sizeof (void*));
+
+    if (out == NULL)
+    {
+        DROPT_MISUSE("No handler destination specified.");
+        err = dropt_error_bad_configuration;
+    }
+    else if (option == NULL)
+    {
+        DROPT_MISUSE("No option entry given.");
+        err = dropt_error_bad_configuration;
+    }
+    else if (optionArgument != NULL)
+    {
+        err = dropt_error_mismatch;
+    }
+
+    if (err == dropt_error_none) { *out = option->extra_data; }
     return err;
 }

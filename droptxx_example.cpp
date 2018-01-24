@@ -54,7 +54,7 @@ main(int argc, char** argv)
     opt.short_name = 'h';
     opt.long_name = "help";
     opt.handler = dropt::handle_bool;
-    opt.handler_data = &showHelp;
+    opt.dest = &showHelp;
     opt.attr = dropt_attr_halt;
     options.push_back(opt);
 
@@ -67,7 +67,7 @@ main(int argc, char** argv)
     opt.long_name = "version";
     opt.description = "Shows version information.";
     opt.handler = dropt::handle_bool;
-    opt.handler_data = &showVersion;
+    opt.dest = &showVersion;
     opt.attr = dropt_attr_halt;
     options.push_back(opt);
 
@@ -77,7 +77,7 @@ main(int argc, char** argv)
     opt.description = "Sample integer option.";
     opt.arg_description = "value";
     opt.handler = dropt::handle_int;
-    opt.handler_data = &i;
+    opt.dest = &i;
     options.push_back(opt);
 
     opt = emptyOpt;
@@ -86,7 +86,7 @@ main(int argc, char** argv)
     opt.description = "Sample custom option.";
     opt.arg_description = "{heads, tails}";
     opt.handler = handle_face;
-    opt.handler_data = &face;
+    opt.dest = &face;
     options.push_back(opt);
 
     // Required sentinel value.
@@ -158,10 +158,10 @@ static dropt_error
 handle_face(dropt_context* context,
             const dropt_option* option,
             const char* optionArgument,
-            void* handlerData)
+            void* dest)
 {
     dropt_error err = dropt_error_none;
-    face_type* face = static_cast<face_type*>(handlerData);
+    face_type* face = static_cast<face_type*>(dest);
     assert(face != NULL);
 
     /* Option handlers should handle `optionArgument` being null (if the

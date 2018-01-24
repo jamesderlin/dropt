@@ -105,9 +105,15 @@ Download
 
 Version History
 ---------------
-* 2.0.0 (2018-01-21)
+* 2.0.0 (2018-01-24)
   * Modified the signature for option handlers to accept a pointer to the
-    matched `dropt_option` entry.
+    matched `dropt_option` entry.  Custom option handlers will need to be
+    adjusted.
+  * Added a new field to `dropt_option` to store additional callback data.
+    This warranted renaming the existing `handler_data` member.  Code that
+    initialized `dropt_option` members by name will need to be adjusted.
+  * Added a new `dropt_handle_const` handler that uses the new callback data
+    to store predefined values.
   * Reformatted code and comments.
 * 1.1.1 (2013-03-17)
   * Fixed a build issue with gcc with optimizations enabled.
@@ -132,7 +138,7 @@ Version History
   * Made some other minor style adjustments.
 * 1.0.4 (2010-09-12)
   * The `DROPT_HANDLER_DECL` macro has been replaced with a
-    `dropt_option_handler_decl` function `typedef`.  I apologize for breaking
+    `dropt_option_handler_decl` `typedef`.  I apologize for breaking
     compatibility in a minor version update, but in this case the breakage
     should be minor, and it should be trivial to fix sites that used the old
     macro:

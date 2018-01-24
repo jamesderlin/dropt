@@ -81,6 +81,7 @@ enum
 };
 
 typedef enum { false, true } bool;
+typedef enum { never, sometimes, always } tristate;
 
 static dropt_bool showHelp;
 static dropt_bool quiet;
@@ -91,6 +92,7 @@ static dropt_bool hiddenFlag;
 static dropt_char* stringVal;
 static dropt_char* stringVal2;
 static int intVal;
+static dropt_uintptr triVal;
 
 typedef struct
 {
@@ -127,18 +129,18 @@ static dropt_error
 handle_optional_uint(dropt_context* context,
                      const dropt_option* option,
                      const dropt_char* optionArgument,
-                     void* handlerData)
+                     void* dest)
 {
     dropt_error err = dropt_error_none;
 
-    if (handlerData == NULL)
+    if (dest == NULL)
     {
         DROPT_MISUSE("No handler data specified.");
         err = dropt_error_bad_configuration;
     }
     else
     {
-        optional_uint* p = handlerData;
+        optional_uint* p = dest;
 
         if (optionArgument != NULL)
         {
@@ -157,13 +159,13 @@ static dropt_error
 handle_ip_address(dropt_context* context,
                   const dropt_option* option,
                   const dropt_char* optionArgument,
-                  void* handlerData)
+                  void* dest)
 {
     dropt_error err = dropt_error_none;
     unsigned int octet[4];
     size_t i;
 
-    unsigned int* out = handlerData;
+    unsigned int* out = dest;
 
     assert(out != NULL);
 
@@ -268,7 +270,10 @@ dropt_option options[] = {
     { T('\0'), NULL, T("") },
     { T('\0'), NULL, T("Options for testing custom handlers:") },
     { T('o'),  T("optionalUInt"), T("Test an optional unsigned integer argument.\nAlso test multiple\nlines."), T("lines"), handle_optional_uint, &optionalUInt, dropt_attr_optional_val },
-    { T('\0'), T("ip"), T("Test IP address."), T("address"), handle_ip_address, &ipAddress},
+    { T('\0'), T("ip"), T("Test IP address."), T("address"), handle_ip_address, &ipAddress },
+    { T('\0'), T("never"), T("Test tristate value."), NULL, dropt_handle_const, &triVal, 0, never },
+    { T('\0'), T("sometimes"), T("Test tristate value."), NULL, dropt_handle_const, &triVal, 0, sometimes },
+    { T('\0'), T("always"), T("Test tristate value."), NULL, dropt_handle_const, &triVal, 0, always },
     { 0 }
 };
 
@@ -996,6 +1001,26 @@ test_dropt_parse(dropt_context* context)
         success &= VERIFY(*rest == NULL);
     }
 
+    /* Test dropt_handle_const. */
+    {
+        dropt_char* s = T("dummy");
+
+        dropt_char* args[] = { T("--never"), NULL, NULL };
+        triVal = always;
+        rest = dropt_parse(context, -1, args);
+        success &= VERIFY(triVal == never);
+
+        args[0] = T("--sometimes");
+        rest = dropt_parse(context, -1, args);
+        success &= VERIFY(triVal == sometimes);
+
+        args[0] = T("--always");
+        args[1] = s;
+        rest = dropt_parse(context, -1, args);
+        success &= VERIFY(triVal == always);
+        success &= VERIFY(*rest == s);
+    }
+
     /* Test dropt_attr_halt. */
     {
         dropt_char* args[] = { T("-h"), T("-n"), T("-h=invalid"), NULL };
@@ -1071,6 +1096,14 @@ test_dropt_parse(dropt_context* context)
         dropt_char* args[] = { T("--n"), NULL };
         rest = dropt_parse(context, -1, args);
         success &= VERIFY(dropt_get_error(context) == dropt_error_invalid_option);
+        success &= VERIFY(*rest == NULL);
+        dropt_clear_error(context);
+    }
+
+    {
+        dropt_char* args[] = { T("--always=1"), NULL };
+        rest = dropt_parse(context, -1, args);
+        success &= VERIFY(dropt_get_error(context) == dropt_error_mismatch);
         success &= VERIFY(*rest == NULL);
         dropt_clear_error(context);
     }
@@ -1233,6 +1266,7 @@ main(int argc, char** argv)
                          T("intVal: %d\n")
                          T("optionalUInt: %u, value: %u\n")
                          T("ipAddress: %u.%u.%u.%u (%u)\n")
+                         T("tristate: %d\n")
                          T("\n"),
 #ifdef NDEBUG
                  T("NDEBUG "),
@@ -1256,7 +1290,8 @@ main(int argc, char** argv)
                  (ipAddress >> 16) & 0xFF,
                  (ipAddress >> 8) & 0xFF,
                  ipAddress & 0xFF,
-                 ipAddress);
+                 ipAddress,
+                 triVal);
         ftprintf(stdout, T("Rest:"));
         for (arg = rest; *arg != NULL; arg++)
         {

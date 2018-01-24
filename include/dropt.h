@@ -34,6 +34,14 @@
 #include <stdio.h>
 #include <wchar.h>
 
+#if __STDC_VERSION__ >= 199901L
+    #include <stdint.h>
+    typedef uintptr_t dropt_uintptr;
+#else
+    typedef size_t dropt_uintptr;
+#endif
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -109,13 +117,13 @@ typedef struct dropt_option dropt_option;
   * handler, again with no argument.  Handlers should be aware of this if they
   * have side-effects.
   *
-  * `handlerData` is the client-specified value specified in the `dropt_option`
-  * table.
+  * `dest` is the client-specified pointer to a variable for the handler to
+  * modify.
   */
 typedef dropt_error dropt_option_handler_decl(dropt_context* context,
                                               const dropt_option* option,
                                               const dropt_char* optionArgument,
-                                              void* handlerData);
+                                              void* dest);
 typedef dropt_option_handler_decl* dropt_option_handler_func;
 
 /** `dropt_error_handler_func` callbacks are responsible for generating error
@@ -157,12 +165,14 @@ typedef int (*dropt_strncmp_func)(const dropt_char* s, const dropt_char* t,
   *     The handler callback and data invoked in response to encountering the
   *     option.
   *
-  * handler_data:
-  *     Callback data for the handler.  For typical handlers, this is usually
-  *     the address of a variable for the handler to modify.
+  * dest:
+  *     The address of a variable for the handler to modify, if necessary.
   *
   * attr:
   *     Miscellaneous attributes.  See below.
+  *
+  * extra_data:
+  *     Additional callback data for the handler.
   */
 struct dropt_option
 {
@@ -171,8 +181,9 @@ struct dropt_option
     const dropt_char* description;
     const dropt_char* arg_description;
     dropt_option_handler_func handler;
-    void* handler_data;
+    void* dest;
     unsigned int attr;
+    dropt_uintptr extra_data;
 };
 
 
@@ -249,6 +260,7 @@ dropt_option_handler_decl dropt_handle_int;
 dropt_option_handler_decl dropt_handle_uint;
 dropt_option_handler_decl dropt_handle_double;
 dropt_option_handler_decl dropt_handle_string;
+dropt_option_handler_decl dropt_handle_const;
 
 #define DROPT_MISUSE(message) dropt_misuse(message, __FILE__, __LINE__)
 void dropt_misuse(const char* message, const char* filename, int line);

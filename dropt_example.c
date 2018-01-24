@@ -139,10 +139,10 @@ static dropt_error
 handle_face(dropt_context* context,
             const dropt_option* option,
             const char* optionArgument,
-            void* handlerData)
+            void* dest)
 {
     dropt_error err = dropt_error_none;
-    face_type* face = handlerData;
+    face_type* face = dest;
     assert(face != NULL);
 
     /* Option handlers should handle `optionArgument` being `NULL` (if the

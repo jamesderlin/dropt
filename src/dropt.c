@@ -417,8 +417,9 @@ is_valid_option(const dropt_option* option)
                 && option->description == NULL
                 && option->arg_description == NULL
                 && option->handler == NULL
-                && option->handler_data == NULL
-                && option->attr == 0);
+                && option->dest == NULL
+                && option->attr == 0
+                && option->extra_data == 0);
 }
 
 
@@ -984,7 +985,7 @@ set_option_value(dropt_context* context,
     }
 
     return option->handler(context, option, optionArgument,
-                           option->handler_data);
+                           option->dest);
 }
 
 

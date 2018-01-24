@@ -269,7 +269,7 @@ convert_exception()
   *                         `dropt_option_handler_decl`.
   *     IN optionArgument : A string representing a boolean value (0 or 1).
   *                         If `NULL`, the boolean value is assumed to be true.
-  *     OUT handlerData   : A pointer to a C++ `bool`.
+  *     OUT dest          : A pointer to a C++ `bool`.
   *                         On success, set to the interpreted boolean value.
   *                         On error, left untouched.
   *
@@ -280,13 +280,13 @@ dropt_error
 handle_bool(dropt_context* context,
             const dropt_option* option,
             const dropt_char* optionArgument,
-            void* handlerData)
+            void* dest)
 {
     dropt_bool b;
     dropt_error err = dropt_handle_bool(context, option, optionArgument, &b);
     if (err == dropt_error_none)
     {
-        *static_cast<bool*>(handlerData) = (b != 0);
+        *static_cast<bool*>(dest) = (b != 0);
     }
     return err;
 }
@@ -303,7 +303,7 @@ handle_bool(dropt_context* context,
   *     IN optionArgument : A string representing a boolean value (0 or 1).
   *                         If `NULL`, the boolean value is assumed to be
   *                           true.
-  *     OUT handlerData   : A `bool*`.
+  *     OUT dest          : A `bool*`.
   *                         On success, set to the interpreted boolean value.
   *                         On error, left untouched.
   *
@@ -314,7 +314,7 @@ dropt_error
 handle_verbose_bool(dropt_context* context,
                     const dropt_option* option,
                     const dropt_char* optionArgument,
-                    void* handlerData)
+                    void* dest)
 {
     dropt_bool b;
     dropt_error err = dropt_handle_verbose_bool(context,
@@ -323,7 +323,7 @@ handle_verbose_bool(dropt_context* context,
                                                 &b);
     if (err == dropt_error_none)
     {
-        *static_cast<bool*>(handlerData) = (b != 0);
+        *static_cast<bool*>(dest) = (b != 0);
     }
     return err;
 }
@@ -340,7 +340,7 @@ handle_verbose_bool(dropt_context* context,
   *     IN optionArgument : A string.
   *                         If `NULL`, returns
   *                           `dropt_error_insufficient_arguments`.
-  *     OUT handlerData   : A `dropt::string*`.
+  *     OUT dest          : A `dropt::string*`.
   *                         On success, set to the input string.
   *                         On error, left untouched.
   *
@@ -353,7 +353,7 @@ dropt_error
 handle_string(dropt_context* context,
               const dropt_option* option,
               const dropt_char* optionArgument,
-              void* handlerData)
+              void* dest)
 {
     try
     {
@@ -362,7 +362,7 @@ handle_string(dropt_context* context,
                                               &s);
         if (err == dropt_error_none)
         {
-            *static_cast<string*>(handlerData) = s;
+            *static_cast<string*>(dest) = s;
         }
         return err;
     }
@@ -381,9 +381,9 @@ dropt_error
 handle_int(dropt_context* context,
            const dropt_option* option,
            const dropt_char* optionArgument,
-           void* handlerData)
+           void* dest)
 {
-    return dropt_handle_int(context, option, optionArgument, handlerData);
+    return dropt_handle_int(context, option, optionArgument, dest);
 }
 
 
@@ -395,9 +395,9 @@ dropt_error
 handle_uint(dropt_context* context,
             const dropt_option* option,
             const dropt_char* optionArgument,
-            void* handlerData)
+            void* dest)
 {
-    return dropt_handle_uint(context, option, optionArgument, handlerData);
+    return dropt_handle_uint(context, option, optionArgument, dest);
 }
 
 
@@ -409,9 +409,9 @@ dropt_error
 handle_double(dropt_context* context,
               const dropt_option* option,
               const dropt_char* optionArgument,
-              void* handlerData)
+              void* dest)
 {
-    return dropt_handle_double(context, option, optionArgument, handlerData);
+    return dropt_handle_double(context, option, optionArgument, dest);
 }
 
 
