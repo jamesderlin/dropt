@@ -73,7 +73,7 @@ dropt provides basic option-parsing features:
 
 The implementation is intended to be minimalistic.  What dropt does *not* do:
 
-* Localization.  dropt doesn't provide localization facilities, but it does
+* Localization.  dropt does not provide localization facilities, but it does
   try not to stand in the way of programs that want to localize their help
   text however they choose.
 
