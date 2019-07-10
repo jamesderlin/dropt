@@ -2,7 +2,7 @@
   *
   * Unit tests for dropt.
   *
-  * Copyright (C) 2007-2018 James D. Lin <jameslin@cal.berkeley.edu>
+  * Copyright (C) 2007-2018 James D. Lin <jamesdlin@berkeley.edu>
   *
   * This software is provided 'as-is', without any express or implied
   * warranty.  In no event will the authors be held liable for any damages

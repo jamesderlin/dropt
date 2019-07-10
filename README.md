@@ -38,8 +38,9 @@ Specifically, this includes:
 * **Flexibility.** dropt is designed to be callback-based.  This allows it to
   handle arbitrary arguments to command-line options.  All types are
   considered equal.  Even basic types such as integers or strings are handled
-  by callbacks; dropt provides standard handlers for them.  Exposing the
-  handlers for basic types also allows custom handlers to leverage them.
+  by callbacks; dropt provides built-in handlers for them.  Exposing the
+  handlers for basic types also allows custom handlers to leverage them via
+  composition.
 
 Secondary goals include being secure, performant, maintainable, and
 extensible; minimizing memory usage; and gracefully failing if memory is
@@ -99,12 +100,15 @@ There's no formal documentation yet.  In the meantime, [`dropt_example.c`] or
 Download
 --------
 
-* [`dropt-2.0.0.zip`](https://github.com/jamesderlin/dropt/archive/v2.0.0.zip)
-* [`dropt-2.0.0.tar.gz`](https://github.com/jamesderlin/dropt/archive/v2.0.0.tar.gz)
+* [`dropt-2.0.1.zip`](https://github.com/jamesderlin/dropt/archive/v2.0.1.zip)
+* [`dropt-2.0.1.tar.gz`](https://github.com/jamesderlin/dropt/archive/v2.0.1.tar.gz)
 
 
 Version History
 ---------------
+* 2.0.1 (2019-07-10)
+  * Fixed contact information and other minor comment and documentation tweaks.
+  * Minor code refactoring.
 * 2.0.0 (2018-01-24)
   * Modified the signature for option handlers to accept a pointer to the
     matched `dropt_option` entry.  Custom option handlers will need to be
@@ -178,7 +182,7 @@ Version History
 
 Questions?  Comments?  Bugs?  I welcome feedback. [Contact me].
 
-Copyright © 2010–2018 James D. Lin
+Copyright © 2010–2019 James D. Lin
 <http://www.taenarum.com/software/>
 
 

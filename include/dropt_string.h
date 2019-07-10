@@ -2,7 +2,7 @@
   *
   * String routines for dropt.
   *
-  * Copyright (C) 2006-2010 James D. Lin <jameslin@cal.berkeley.edu>
+  * Copyright (C) 2006-2010 James D. Lin <jamesdlin@berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>
@@ -30,11 +30,8 @@
 #define DROPT_STRING_H
 
 #include <stdarg.h>
-#include "dropt.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "dropt.h"
 
 #ifdef DROPT_USE_WCHAR
     #define dropt_strlen wcslen
@@ -56,6 +53,11 @@ extern "C" {
     #define dropt_strtod strtod
     #define dropt_tolower tolower
     #define dropt_fputs fputs
+#endif
+
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 void* dropt_safe_malloc(size_t numElements, size_t elementSize);

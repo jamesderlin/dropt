@@ -2,7 +2,7 @@
   *
   * Default type handlers for dropt.
   *
-  * Copyright (C) 2006-2018 James D. Lin <jameslin@cal.berkeley.edu>
+  * Copyright (C) 2006-2018 James D. Lin <jamesdlin@berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>

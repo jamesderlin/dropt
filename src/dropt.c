@@ -2,7 +2,7 @@
   *
   * A deliberately rudimentary command-line option parser.
   *
-  * Copyright (C) 2006-2018 James D. Lin <jameslin@cal.berkeley.edu>
+  * Copyright (C) 2006-2018 James D. Lin <jamesdlin@berkeley.edu>
   *
   * The latest version of this file can be downloaded from:
   * <http://www.taenarum.com/software/dropt/>
@@ -58,6 +58,7 @@
 #define IMPLIES(p, q) (!(p) || q)
 
 #define OPTION_TAKES_ARG(option) ((option)->arg_description != NULL)
+
 
 enum
 {
@@ -1401,6 +1402,8 @@ exit:
   * PARAMETERS:
   *     IN options : The list of option specifications.
   *                  Must not be `NULL`.
+  *                  The list is *not* copied and must outlive the dropt
+  *                    context.
   *
   * RETURNS:
   *     An allocated dropt context.  The caller is responsible for freeing
