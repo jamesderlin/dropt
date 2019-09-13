@@ -28,6 +28,8 @@ cmake_minimum_required(VERSION 2.8.11)
 
 project(dropt)
 
+include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
+
 set(dropt_h_files
     ./include/dropt.h
     ./include/dropt_string.h
@@ -44,9 +46,32 @@ add_library(dropt
     ${dropt_h_files}
 )
 
-include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
-
 target_include_directories(dropt PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
+
+set(droptxx_hpp_files
+    ./include/droptxx.hpp
+)
+
+set(droptxx_cpp_files
+    ./src/droptxx.cpp
+)
+
+add_library(droptxx
+    ${droptxx_cpp_files}
+    ${droptxx_hpp_files}
+)
+
+target_include_directories(droptxx PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
+
+set(test_dropt_c_files
+    ./src/test_dropt.c
+)
+
+add_executable(test_dropt
+    ${test_dropt_c_files}
+)
+
+target_link_libraries(test_dropt dropt)
 
 set(dropt_example_h_files
     ./include/dropt.h
