@@ -44,3 +44,16 @@ Targets:
     test        Builds and runs the dropt unit tests.
 
     The default target builds lib and libxx.
+
+------------------------------------------
+
+Building with cmake
+===================
+
+Build files for dropt can be generated with `cmake` by using these steps:
+
+- Create a folder where the cmake output would be placed (i.e. `cmake`)
+- Run in that folder:
+
+cmake ..
+
